@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">My Rhythm</string>
+    <string name="str_yi">一</string>
+    <string name="imvDscp_logo">just a logo.</string>
+    <string name="app_name_2">程序：节奏库</string>
+    <string name="author_plus_name">created by 杨镇时</string>
+    <string name="author_info_1">yangsheng@ouc.edu.cn</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="str_mostUsingRhythm">常用节奏</string>
+    <string name="str_mostUsingRhythm_2">常用及新增节奏</string>
+    <string name="psh_totalRhythmAmount">当前共有%1$d条节奏记录</string>
+    <string name="str_toAllRhythms">查看所有</string>
+    <string name="str_Rhythms">Rhythms!</string>
+    <string name="bar_star_bar">———☆———</string>
+    <string name="alpha_testing_string">（工程测试α-0.1.1）</string>
+    <string name="hold_for_loading">正则加载数据，请稍候……</string>
+    <string name="str_pitchSerial_add">创作一组\n使用默认节奏的音高序列</string>
+    <string name="str_wordsSerial_add">词创作</string>
+    <string name="str_rhythm_add">新增一条节奏记录</string>
+
+</resources>

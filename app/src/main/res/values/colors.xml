@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="myRhythm_teal">#1de9b6</color>
+    <color name="myRhythm_orange">#ff9800</color>
+    <color name="myRhythm_light_green">#b2ff59</color>
+    <color name="myRhythm_red">#dd2c00</color>
+    <color name="myRhythm_cyan">#26c6da</color>
+
+
+    <color name="rhythmView_generalGray">#e0e0e0</color>
+    rhythmView_generalGray
+</resources>

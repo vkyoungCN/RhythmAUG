@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:orientation="vertical"
+    >
+
+
+    <!--顶部-->
+    <android.support.v7.widget.CardView
+        android:id="@+id/cv_MA"
+        android:layout_alignParentTop="true"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        app:cardCornerRadius="4dp"
+        android:layout_margin="2dp"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal|bottom"
+                android:text="@string/str_Rhythms"
+                android:textColor="#3F51B5"
+                android:textSize="22sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bar_star_bar"
+                android:textSize="20sp"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal|top"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/alpha_testing_string"
+                android:textSize="14sp"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal|top"
+                />
+
+        </LinearLayout>
+
+
+    </android.support.v7.widget.CardView>
+
+    <!--下部，RV标题、RV、底边操作区、FAB主按钮-->
+    <FrameLayout
+        android:id="@+id/flt_downSide_MA"
+        android:layout_below="@id/cv_MA"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!--遮盖区，加载数据-->
+        <FrameLayout
+            android:id="@+id/flt_mask_MA"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clickable="true"
+            >
+
+            <TextView
+                android:id="@+id/tv_rhythmAmount_MA"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="@string/hold_for_loading"
+                android:textSize="16sp"
+                android:visibility="gone" />
+
+        </FrameLayout>
+        <!--Rv标题区-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:background="#efefef"
+                android:gravity="center"
+                android:text="@string/str_mostUsingRhythm_2"
+                android:textSize="16sp" />
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="5dp"
+                android:alpha="0.4"
+                android:scaleType="centerCrop"
+                android:src="@drawable/slash_bar_orange" />
+
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_some_rhythm_MA"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
+        <!--FAB主按键，位于Fl底部-->
+        <!--【FAB中的图像，似乎只有centerCrop设置较合适；且需要图片本身存在恰当的内边距】-->
+        <android.support.design.widget.FloatingActionButton
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginBottom="64dp"
+            android:layout_marginEnd="12dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/fab_new_2"
+            android:onClick="fabMainClick"
+            app:backgroundTint="@color/myRhythm_orange" />
+
+
+        <!--底部信息及按键，横置覆盖于rv上层-->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:layout_gravity="bottom"
+            android:background="#efefef"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="4dp"
+                android:text="@string/psh_totalRhythmAmount"
+                />
+            <TextView
+                android:layout_width="96dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:gravity="center"
+                android:text="@string/str_toAllRhythms"
+                android:background="@color/myRhythm_teal"
+                />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/myRhythm_red"
+                android:layout_gravity="bottom"
+                />
+        </FrameLayout>
+
+
+
+
+
+    </FrameLayout>
+
+
+    <!--伪FAB组件，默认隐藏；展开时需要遮盖其他组件因而位于前方上部是按钮，下方是解释文本，底部有边线；整体距底边40+dp，以让出主按键-->
+    <!--注意代码的书写位置与各行的实际先后位置大体是相反的，因为要借用靠下的行标定靠上的行的位置-->
+    <RelativeLayout
+        android:id="@+id/rlt_fabPanel_MA"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.7"
+        android:background="#111111"
+        android:clickable="true"
+        android:translationZ="4dp"
+        android:visibility="gone">
+
+        <!--FAB组（音+、词+）的解释性文本组，位于FAB下方。-->
+        <LinearLayout
+            android:id="@+id/lltInRlt_FAB_MA"
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="124dp"
+            android:orientation="horizontal">
+
+            <Space
+                android:layout_width="36dp"
+                android:layout_height="match_parent" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="@string/str_pitchSerial_add"
+                android:textColor="#ffffff"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:ellipsize="marquee"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="@string/str_wordsSerial_add"
+                android:textColor="#ffffff"
+                android:textSize="12sp" />
+
+
+        </LinearLayout>
+
+        <!--FAB组底边线。在文本组下方-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="122dp"
+            android:orientation="horizontal">
+
+            <Space
+                android:layout_width="36dp"
+                android:layout_height="match_parent" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="#ffffff" />
+
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_marginStart="2dp"
+                android:layout_weight="1"
+                android:background="#ffffff" />
+            <!--
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_marginStart="3dp"
+                android:layout_weight="1"
+                android:background="#ffffff" />-->
+        </LinearLayout>
+
+        <!--FAB组的按键组，这里没有使用support.design库，而是直接用了普通的ImageView，
+        本组位于解释文本组上方-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_above="@id/lltInRlt_FAB_MA"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Space
+                android:layout_width="36dp"
+                android:layout_height="match_parent" />
+
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:onClick="createPitchSerial"
+                android:paddingTop="8dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/add_pitchs" />
+
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:onClick="createWords"
+                android:paddingTop="8dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/add_words" />
+
+            <!-- <ImageView
+                android:layout_width="0dp"
+                android:layout_height="34dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:onClick="learnAndAddRandom"
+                android:scaleType="centerInside"
+                android:src="@drawable/learn_and_add_random_2" />
+            />-->
+        </LinearLayout>
+
+
+        <!--FAB组（上）的底边线。在上文本组的下方-->
+        <LinearLayout
+            android:id="@+id/fab_BottomLine_IMA"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="220dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:orientation="horizontal">
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="2dp"
+                android:layout_weight="1" />
+
+            <!--用于长度调整的小短线-->
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="1dp"
+                android:background="@color/myRhythm_light_green" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="@color/myRhythm_light_green" />
+        </LinearLayout>
+
+        <!--FAB组的解释性文本组（上）-->
+        <LinearLayout
+            android:id="@+id/fabText_IMA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/fab_BottomLine_IMA"
+            android:layout_marginBottom="4dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:orientation="horizontal">
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="@string/str_rhythm_add"
+                android:textColor="#ffffff" />
+
+
+        </LinearLayout>
+
+        <!--FAB组的按键组（上）-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_above="@id/fabText_IMA"
+            android:layout_marginBottom="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginStart="4dp"
+            android:orientation="horizontal">
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:onClick="addRhythm"
+                android:paddingTop="2dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/add_rhythm" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</RelativeLayout>
