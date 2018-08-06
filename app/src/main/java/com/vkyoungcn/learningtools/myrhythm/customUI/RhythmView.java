@@ -3,6 +3,8 @@ package com.vkyoungcn.learningtools.myrhythm.customUI;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -22,7 +24,8 @@ public class RhythmView extends View {
 //* 有“折行、单行”两种模式；字符及字宽有“大中小三种模式”
 //* 无数据时先将字符区绘制rect形式；填充数据后再根据数据生成绘制信息重新绘制。
 //*
-//*
+//* 三种工作模式：“节奏/旋律/有词”
+//* 其中有词模式下需要绘制上方连音弧线；旋律模式下需要绘制上下方的加点。
 //*
 
     private static final String TAG = "RhythmView";
@@ -45,14 +48,15 @@ public class RhythmView extends View {
 
     private ArrayList<Byte> rhythmCodes; //数据源，节奏序列的编码。根据该数据生成各字符单元上的绘制信息。
     private int rhythmType;//节拍类型（如4/4），会影响分节的绘制。【不能直接传递在本程序所用的节奏编码方案下的时值总长，因为3/4和6/8等长但绘制不同】
-//    private String rhythmCodes = "";//用于比较的目标字串
-
-//    private LimitedStack<Character> characters;
     private DrawingUnit drawingUnits[];
-//    private int currentPosition = 0;//第一个字母的位置是1。
-    // 的输入记录列表；（考虑取消onCode单个改变的监听）②
 
-//    private boolean isDataInitBeInterruptedBecauseOfNoSize = false;
+    /* 设置参数*/
+    //设置参数与数据源一并设置
+    private boolean useMelodyMode = false;//如果使用旋律模式，则需要数字替代X且在onD中处理上下加点的绘制。
+    private boolean useMultiLine = true;//在某些特殊模式下，需使用单行模式（如在显示某节奏所对应的单条旋律时，计划以可横向滑动的单行模式进行显示，以节省纵向空间。）
+
+
+    //    private boolean isDataInitBeInterruptedBecauseOfNoSize = false;
 
     /* 画笔组*/
     private Paint bottomLinePaint;
@@ -67,25 +71,18 @@ public class RhythmView extends View {
     private float unitSizeMedium;//30
     private float unitSizeLarge;//36
 
-    private float unitSize;//最终选定的单位尺寸
-    private float beatGap;//节拍之间、小节之间需要有额外间隔（但似乎没有统一规范），这里采取拍间半字符、节间全字符间隔。
+    private float unitSize = unitSizeSmall;//最终选定的单位尺寸【默认最小】
+    private float beatGap;//节拍之间、小节之间需要有额外间隔（但似乎没有统一规范），暂定12dp。
     //注意，一个节拍内的音符之间没有额外间隔。
-
-    private float heightAddition_singleSide;//在上方留出连音线位置、上加点位置、下方留出下加点位置。单侧8dp
+    private float lineGap;//不同行之间的间隔。暂定12dp；如果有文字行则需额外安排文字空间。
+    private float additionalHeight;//用于上下加点绘制的保留区域，暂定6dp
+    private float curveOrLinesHeight;//用于绘制上方连音线或下方下划线的空间（上下各一份），暂定8dp
 
     //下划线绘制为2dp(或1dp)每条
     private float textSizeSmall;//14sp
     private float textSizeMedium;//16sp
     private float textSizeLarge;//24sp
 
-
-//    private float sectionGapLarge;//6dp【根据模拟器表现调整】
-//    private float sectionGapSmall;//4dp
-//    private float bottomLineHeightLarge;//4dp
-//    private float bottomLineHeightSmall;//2dp
-
-//    private float maxSectionWidth;//给定一个宽度的最大值；当字符过多总长超出屏幕时，缩小这一宽度（相应的字体也要缩小）
-//    private float finalLineWidth;//最终确定的每节宽度（由计算获得，而不是初始化时设定）
 
     private float textSize;//【考虑让文字尺寸后期改用和section宽度一致或稍小的直接数据.已尝试不可用】
     private float textBaseLineBottomGap;
@@ -95,63 +92,80 @@ public class RhythmView extends View {
     private int sizeChangedHeight = 0;//是控件onSizeChanged后获得的尺寸之高度，也是传给onDraw进行线段绘制的canvas-Y坐标(单行时)
     private int sizeChangedWidth = 0;//未获取数据前设置为0
 
-//    private int bottomLineSectionAmount = DEFAULT_LENGTH;
 
     /* 色彩组 */
     private int generalColor_Gray;
-//    private int bottomErrColor;
-//    private int textColor;
-//    private int textErrColor;
-//    private int backgroundColor;
-//    private int backgroundErrColor;
-//    private int mInputType;
 
-//    private boolean stopDrawing = false;
 
     //用于描述各字符对应的下划线的一个内部类
     public class DrawingUnit {
+        //在横向上，各字符基本是等宽的；
+        // 但是当位于节拍或小节末尾时，右侧会附加上额外的空间
+        // 这些额外的空间会影响后续字符的横向位置，因而必须记录到所有受影响的字符中；
+        //（另外，小节之间的小节线的绘制信息不记录在DU中，而是由onD方法现场计算绘制。但位于小节末尾
+        // 的DU中会持有一个节末标记变量）
+
+
+        //用于描述各音符下划线绘制信息的类，用在DrawingUnit中
+        private class BottomLine {
+            float startX;
+            float startY;
+            float toX;
+            float toY;
+        }
+
 
         private String code = "X";//默认是X，当作为旋律绘制时绘制具体音高的数值。
         private boolean isLastCodeInSection = false;//如果是小节内最后一个音符，需要记录一下，以便在遍历绘制时在后面绘制一条竖线（小节线）
-        //拍子之间、小节之间有额外间隔，由设置方法负责逻辑计算然后存给本数据类，本类不需持有相应位置信息。
+        //拍子之间、小节之间有额外间隔，由设置方法计算出位置后直接存储给相应字段，本类不需持有相应位置信息。
         //最前端的一条小节线由绘制方法默认绘制，不需记录。
 
-        private byte additionalSpotType = 0;//上下加点类型，默认0（无加点）；下加负值、上加正值。原则上不超正负3。
-        private byte bottomLineAmount = 0;//并不是所有音符都有下划线。
+//        private byte additionalSpotType = 0;//上下加点类型，默认0（无加点）；下加负值、上加正值。原则上不超正负3。
+//        private byte bottomLineAmount = 0;//并不是所有音符都有下划线。
 
 
         private float codeCenterX;//用于字符绘制（字符底边中点）
         private float codeBaseY;//字符底边【待？基线还是底边？】
 
-        private float firstBottomLineFromX;//其实所有下划线的X一致
-        private float firstBottomLineFromY;//第2、3线手动加上间隔像素值（暂定间隔4像素）
-        private float firstBottomLineToX;
-        private float firstBottomLineToY;
+        private BottomLine[] bottomLines = new BottomLine[]{};
+        private RectF[] additionalPoints = new RectF[]{};
 
+        /* 作为一个绘制单位，其整体的左端起始位置*/
+        float left;
+        float right;
+        float top;
+        float bottom;
+        //一个字符的空间方案暂定如下：标志尺寸ss,字符区域占宽=ss（字体尺寸本身不足的留空即可），
+        // 字符占高=展宽；字符上方预留半ss的顶弧线高度，其中保留一小层的高度作为上加点区域；
+        //字符下方半ss空间是下划线区域，下划线下方保留一小层高度作为下加点区域。（小层高度待定，暂定5~8dp）
+        //非首尾拍字符之间是没有间隔的，以便令下划线相接。
 
-        //连音线的绘制，由RhV直接提供方法。程序根据词序缺少位置，指定Rhv在哪些（起止）位置上绘制连音线
+//        private float firstBottomLineFromX;//其实所有下划线的X一致
+//        private float firstBottomLineFromY;//第2、3线手动加上间隔像素值（暂定间隔4像素）
+//        private float firstBottomLineToX;
+//        private float firstBottomLineToY;
+
+        //连音线的绘制，将由RhV直接提供方法。程序根据词序缺少位置，指定Rhv在哪些（起止）位置上绘制连音线
 
 
         public DrawingUnit() {
         }
 
-        public DrawingUnit(String code, byte additionalSpotType, byte bottomLineAmount, float codeCenterX, float codeBaseY, float firstBottomLineFromX, float firstBottomLineFromY, float firstBottomLineToX, float firstBottomLineToY) {
+        public DrawingUnit(String code, boolean isLastCodeInSection, float codeCenterX, float codeBaseY, BottomLine[] bottomLines, RectF[] additionalPoints, float left, float right, float top, float bottom) {
             this.code = code;
-            this.additionalSpotType = additionalSpotType;
-            this.bottomLineAmount = bottomLineAmount;
+            this.isLastCodeInSection = isLastCodeInSection;
             this.codeCenterX = codeCenterX;
             this.codeBaseY = codeBaseY;
-            this.firstBottomLineFromX = firstBottomLineFromX;
-            this.firstBottomLineFromY = firstBottomLineFromY;
-            this.firstBottomLineToX = firstBottomLineToX;
-            this.firstBottomLineToY = firstBottomLineToY;
+            this.bottomLines = bottomLines;
+            this.additionalPoints = additionalPoints;
+            this.left = left;
+            this.right = right;
+            this.top = top;
+            this.bottom = bottom;
         }
 
-        public byte getBottomLineAmount() {
-            return bottomLineAmount;
-        }
 
-        public void setBottomLineAmount(byte bottomLineAmount) {
+        /*public void setBottomLineAmount(byte bottomLineAmount) {
             if(bottomLineAmount>3){
                 Toast.makeText(mContext, "音符下划线过多？请检查谱子是否正确。", Toast.LENGTH_SHORT).show();
                 return;
@@ -160,7 +174,7 @@ public class RhythmView extends View {
 
             }
             this.bottomLineAmount = bottomLineAmount;
-        }
+        }*/
 
         public String getCode() {
             return code;
@@ -171,10 +185,8 @@ public class RhythmView extends View {
             this.code = code;
         }
 
-        public byte getAdditionalSpotType() {
-            return additionalSpotType;
-        }
 
+/*
         public void setAdditionalSpotType(byte additionalSpotType) {
             if(additionalSpotType>4||additionalSpotType<-4){
                 Toast.makeText(mContext, "上下加点异常，请检查输入是否错误。", Toast.LENGTH_SHORT).show();
@@ -188,6 +200,7 @@ public class RhythmView extends View {
                 }
             }
         }
+*/
 
         public float getCodeCenterX() {
             return codeCenterX;
@@ -205,63 +218,32 @@ public class RhythmView extends View {
             this.codeBaseY = codeBaseY;
         }
 
-        public float getFirstBottomLineFromX() {
-            return firstBottomLineFromX;
+
+        public boolean isLastCodeInSection() {
+            return isLastCodeInSection;
         }
 
-        public void setFirstBottomLineFromX(float firstBottomLineFromX) {
-            this.firstBottomLineFromX = firstBottomLineFromX;
+        public void setLastCodeInSection(boolean lastCodeInSection) {
+            isLastCodeInSection = lastCodeInSection;
         }
 
-        public float getFirstBottomLineFromY() {
-            return firstBottomLineFromY;
+        public BottomLine[] getBottomLines() {
+            return bottomLines;
         }
 
-        public void setFirstBottomLineFromY(float firstBottomLineFromY) {
-            this.firstBottomLineFromY = firstBottomLineFromY;
+        public void setBottomLines(BottomLine[] bottomLines) {
+            this.bottomLines = bottomLines;
         }
 
-        public float getFirstBottomLineToX() {
-            return firstBottomLineToX;
+        public RectF[] getAdditionalPoints() {
+            return additionalPoints;
         }
 
-        public void setFirstBottomLineToX(float firstBottomLineToX) {
-            this.firstBottomLineToX = firstBottomLineToX;
-        }
-
-        public float getFirstBottomLineToY() {
-            return firstBottomLineToY;
-        }
-
-        public void setFirstBottomLineToY(float firstBottomLineToY) {
-            this.firstBottomLineToY = firstBottomLineToY;
+        public void setAdditionalPoints(RectF[] additionalPoints) {
+            this.additionalPoints = additionalPoints;
         }
     }
 
-    //用于装载字符数据的栈
-    /*public class LimitedStack<T> extends Stack<T> {
-
-        private int topLimitSize = 0;
-
-        @Override
-        public T push(T object) {
-            if (topLimitSize > size()) {
-                return super.push(object);
-            }
-
-            return object;
-        }
-
-        public int getTopLimitSize() {
-            return topLimitSize;
-        }
-
-        public void setTopLimitSize(int topLimitSize) {
-            this.topLimitSize = topLimitSize;
-        }
-    }*/
-
-//    private OnValidatingEditorInputListener listener;
 
     public RhythmView(Context context) {
         super(context);
@@ -285,9 +267,6 @@ public class RhythmView extends View {
 //        this.listener = null;
     }
 
- /*   public void setCodeReadyListener(OnValidatingEditorInputListener listener) {
-        this.listener = listener;
-    }*/
 
     private void init(AttributeSet attributeset) {
         initSize();
@@ -296,18 +275,6 @@ public class RhythmView extends View {
         initViewOptions();
     }
 
-    //调用方（activity）实现本接口。VE中获取对调用方Activity的引用，然后调用这两个方法进行通信
- /*   public interface OnValidatingEditorInputListener {
-        // These methods are the different events and
-        // need to pass relevant arguments related to the event triggered
-
-        *//* 所有字符输入完毕且正确时触发 *//*
-        void onCodeCorrectAndReady();
-
-        *//* 当输入一个（有效）字符，使VE的显示发生变化时触发 *//*
-        void onCodeChanged(String newStr);
-
-    }*/
 
     private void initSize() {
         padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
@@ -315,33 +282,23 @@ public class RhythmView extends View {
         unitSizeMedium = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
         unitSizeLarge = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, getResources().getDisplayMetrics());
 
-        heightAddition_singleSide = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
+        beatGap = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getResources().getDisplayMetrics());
+        lineGap = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getResources().getDisplayMetrics());
+        additionalHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, getResources().getDisplayMetrics());
+        curveOrLinesHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
+
+//        heightAddition_singleSide = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
         textBaseLineBottomGap = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
 
-//        maxSectionWidth =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
-//        maxSectionWidth = getContext().getResources().getDimension(R.dimen.bottomLine_stroke_width);//【旧方法？】查API知此方法自动处理单位转换。
-//        sectionGapLarge = getContext().getResources().getDimension(R.dimen.bottomLine_horizontal_margin);
-//        sectionGapLarge = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, getResources().getDisplayMetrics());
-//        sectionGapSmall = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
-//        bottomLineHeightLarge = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
-//        bottomLineHeightSmall = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
 
         textSizeSmall =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 12, getResources().getDisplayMetrics());
         textSizeMedium =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 16, getResources().getDisplayMetrics());
         textSizeLarge =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 22, getResources().getDisplayMetrics());
-//        viewHeight = getContext().getResources().getDimension(R.dimen.view_height);
     }
 
     private void initColor(){
         generalColor_Gray = ContextCompat.getColor(mContext, R.color.rhythmView_generalGray);
-
-//        bottomErrColor = ContextCompat.getColor(mContext,R.color.ve_bottomLine_nonCorrect_color);
-//        textColor = ContextCompat.getColor(mContext,R.color.ve_textColor);
-//        textErrColor = ContextCompat.getColor(mContext,R.color.ve_text_err_color);
-//        backgroundColor = ContextCompat.getColor(mContext,R.color.ve_background);
-//        backgroundErrColor = ContextCompat.getColor(mContext,R.color.ve_background_not_correct);
     }
-
 
 
     private void initPaint() {
@@ -349,7 +306,6 @@ public class RhythmView extends View {
         bottomLinePaint.setColor(generalColor_Gray);
         bottomLinePaint.setStrokeWidth(2);//
         bottomLinePaint.setStyle(android.graphics.Paint.Style.STROKE);
-
 
 
         codePaint = new Paint();
@@ -364,31 +320,6 @@ public class RhythmView extends View {
         grayEmptyPaint.setStrokeWidth(4);
         grayEmptyPaint.setAntiAlias(true);
         grayEmptyPaint.setColor(generalColor_Gray);
-
-        //        bottomLineErrPaint = new Paint();
-//        bottomLineErrPaint.setColor(bottomErrColor);
-//        bottomLineErrPaint.setStrokeWidth(bottomLineHeightLarge);
-//        bottomLineErrPaint.setStyle(android.graphics.Paint.Style.STROKE);
-
-//        textErrPaint = new Paint();
-//        textErrPaint.setTextSize(textSize);
-//        textErrPaint.setStrokeWidth(4);
-//        textErrPaint.setColor(textErrColor);
-//        textErrPaint.setAntiAlias(true);
-//        textErrPaint.setTextAlign(Paint.Align.CENTER);//如果开启了这个，x坐标就不再是左端起点而是横向上的中点。
-
-//        textWaitingPaint = new Paint();
-//        textWaitingPaint.setTextSize(textSize);
-//        textWaitingPaint.setStrokeWidth(4);
-//        textWaitingPaint.setColor(textErrColor);
-//        textWaitingPaint.setAntiAlias(true);
-//        textWaitingPaint.setTextAlign(Paint.Align.CENTER);//如果开启了这个，x坐标就不再是左端起点而是横向上的中点。
-
-//        backgroundErrPaint = new Paint();
-//        backgroundErrPaint.setStyle(Paint.Style.FILL);
-//        backgroundErrPaint.setStrokeWidth(4);
-//        backgroundErrPaint.setAntiAlias(true);
-//        backgroundErrPaint.setColor(backgroundErrColor);
 
     }
 
@@ -413,7 +344,6 @@ public class RhythmView extends View {
         // 那样的话取消传入“禁止刷新”的标记即可。（倒是应该不会下标越界，毕竟是for是有判断的）】
 
 
-
         //万一程序对targetCode的设置（数据初始化）早于控件尺寸的确定（则是无法初始化下划线数据的），
         // 则需要在此重新对下划线数据进行设置
         /*if(isDataInitBeInterruptedBecauseOfNoSize){
@@ -432,133 +362,6 @@ public class RhythmView extends View {
 
     }
 
-   /* @Override
-    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-
-        return new VeInputConnection(this,false);
-    }
-
-    //    此方法是参照网帖学习而来，暂时不太懂其设置的必要性。
-    private class VeInputConnection extends BaseInputConnection {
-        public VeInputConnection(View targetView, boolean fullEditor) {
-            super(targetView, fullEditor);
-        }
-
-        @Override
-        public boolean sendKeyEvent(KeyEvent event) {
-            return super.sendKeyEvent(event);
-        }
-
-        @Override
-        public boolean commitText(CharSequence text, int newCursorPosition) {
-            CharSequence firstCharText = String.valueOf(text.charAt(0));
-            //只传出其第一个字符
-            return super.commitText(firstCharText, newCursorPosition);
-        }
-    }*/
-
-   /* @Override
-    public boolean onCheckIsTextEditor() {
-        return true;
-    }*/
-
-
-
-    /**
-     * Detects the del key and delete characters
-     */
-    /*@Override
-    public boolean onKeyDown(int keyCode, KeyEvent keyevent) {
-        if (keyCode == KeyEvent.KEYCODE_DEL && characters.size() != 0) {
-            characters.pop();
-            currentPosition--;
-            if(currentPosition<leastWrongPosition){
-                leastWrongPosition = 0;
-            }
-//            Log.i(TAG, "onKeyDown: currentPos="+currentPosition);
-            invalidate();//字符改变，重绘
-
-            if(!hasCorrectOnce) {
-                //尚未完整正确输入过一次，改变字符的监听仍然在
-                listener.onCodeChanged(getCurrentString());
-            }
-        }
-        return super.onKeyDown(keyCode, keyevent);
-    }*/
-
-    /**
-     * Capture the keyboard events, for inputs
-     */
-    /*@Override
-    public boolean onKeyUp(int keyCode, KeyEvent keyevent) {
-
-        String text = KeyEvent.keyCodeToString(keyCode);//返回的一定是KEYCODE_开头（已知字符）或数字1001（未知字符）
-
-        if(!keyevent.isCapsLockOn()) {
-            return inputText(text,false);
-        }
-        return inputText(text,true);
-    }*/
-
-    /**
-     * String text
-     * Pass empty string to remove text
-     */
-    /*private boolean inputText(String text, boolean capsOn) {
-        Matcher matcher = KEYCODE_PATTERN.matcher(text);
-        if (matcher.matches()) {
-            String matched = matcher.group(1);
-            char character;
-            if(!capsOn){
-                character = matched.toLowerCase().charAt(0);
-            }else {
-                character = matched.charAt(0);
-            }
-            characters.push(character);
-
-            if (characters.size() >= rhythmCodes.length() ) {//满了【重绘必须在回调之前，且两分支都要有！（排错小结）】
-                currentPosition = rhythmCodes.length();//【这里既不能继续++，也不能保持数字不变，所以Z直接设置为最大值】
-                invalidate();//字符改变，重绘
-//                Log.i(TAG, "inputText: currentPos inside VE ="+currentPosition);
-
-                if(getCurrentString().compareTo(rhythmCodes) == 0 && !hasCorrectOnce) {
-                    //必须是尚未正确输入过的状态才能触发两个监听方法
-                    hasCorrectOnce = true;//修改标记为已经（有过一次）完整正确输入。
-
-                    if(listener != null) {
-                        listener.onCodeChanged(getCurrentString());//需要在onCCA方法前调用，
-                        // 实测如果放在下一方法后，则最后一个字符无法传出。可能原因如下，
-                        listener.onCodeCorrectAndReady();//【本方法之后卡片自动滑动，相应组件可能已销毁，后续方法无效？】
-                        //【目前的设计逻辑下，满了以后，再继续键入，VE显示上仍然是原词，characters也不变，
-                        // 但由于本块代码仍然满足触发条件，因而可能会产生“滑动到某已满卡片后，任意敲入一字符则卡片向后滑动”效果】
-                    }
-                }
-
-            }else {//还没满（但显然也必须是输入开始后，每次输入（且已成功输入到了characters中后）才会触发）
-                currentPosition++;
-//                Log.i(TAG, "inputText: currentPos inside VE ="+currentPosition);
-                //记录输入的字符之出错的各字符中，索引值最小的一个。
-                if(Character.compare(character,rhythmCodes.charAt(currentPosition-1))!=0){//此位置上字符输入不正确
-
-                    if(leastWrongPosition==0){
-                        leastWrongPosition = currentPosition;//只需记录一次（最小索引位置）即可
-                    }
-
-                }
-                invalidate();//字符改变，重绘
-                if(!hasCorrectOnce) {
-                    //有这个监听的地方必须先判断当前的状态是“初次（正确之前）的填写”还是“已正确后的无记录加练”
-                    listener.onCodeChanged(getCurrentString());
-                }
-            }
-
-            return true;
-        } else {
-            return false;
-        }
-    }*/
-
-
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -574,30 +377,26 @@ public class RhythmView extends View {
             canvas.drawRect(fromX,fromY,toX,toY, grayEmptyPaint);
             return;
         }
+        //注意，小节线绘制规则：起端没有小节线，小节线只存在于末尾
 
-/*        if(leastWrongPosition!=0) {
-            //存在错误的字符
-            grayEmptyPaint.setColor(backgroundErrColor);
-        }else {
-            grayEmptyPaint.setColor(backgroundColor);
-        }*/
-
-        //绘制背景
-      /*  float fromX = padding-8;
-        float fromY = padding;
-        float toX = sizeChangedWidth - padding+8;
-        float toY = sizeChangedHeight - padding;*/
-//        canvas.drawRect(0,0,600,600,grayEmptyPaint);
-//        canvas.drawRect(fromX,fromY,toX,toY, grayEmptyPaint);
-//        Log.i(TAG, "onDraw: background done");
-
-        //起端没有小节线，小节线只存在于末尾
-
-        //绘制下划线和符号
+        //逐音符绘制
         for (int i = 0; i < drawingUnits.length; i++) {
             DrawingUnit drawingUnit = drawingUnits[i];
 
+            //字符
+            canvas.drawText(drawingUnit.getCode(),drawingUnit.getCodeCenterX(),drawingUnit.getCodeBaseY(), codePaint);
+
             //下划线绘制
+            for (DrawingUnit.BottomLine bottomLine : drawingUnit.bottomLines) {
+                canvas.drawLine(bottomLine.startX, bottomLine.startY,bottomLine.toX,bottomLine.toY,bottomLinePaint);
+            }
+
+            //绘制上下加点（旋律模式下）
+            for (RectF point : drawingUnit.additionalPoints){
+                canvas.drawOval(point,bottomLinePaint);
+            }
+
+/*
             int bottomLineAmount = drawingUnit.getBottomLineAmount();
             if(bottomLineAmount>0){
                 //>0时先绘制第一条
@@ -613,19 +412,23 @@ public class RhythmView extends View {
                 canvas.drawLine(drawingUnit.getFirstBottomLineFromX(), drawingUnit.getFirstBottomLineFromY()+8, drawingUnit.getFirstBottomLineToX(), drawingUnit.getFirstBottomLineToY()+8, bottomLinePaint);
             }//最多绘制三条；如果==0则不绘制下划线
 
-            //字符
-            canvas.drawText(drawingUnit.getCode(),drawingUnit.getCodeCenterX(),drawingUnit.getCodeBaseY(), codePaint);
-
+*/
 
             //如果是小节末尾，要绘制尾端小节竖线
             if(drawingUnit.isLastCodeInSection){
-                float fromX = drawingUnit.firstBottomLineToX+beatGap/2;
-                float fromY = drawingUnit.codeBaseY-textSize;//【目标是与字符同高，但不知是否如此实现】
-                float toX = drawingUnit.firstBottomLineToX+beatGap/2;//竖线，x不变。
-                float toY = drawingUnit.firstBottomLineToY+8;//与下方第三条线高度约同。
+                float fromX = drawingUnit.right+beatGap/2;
+                float fromY = drawingUnit.top+additionalHeight+curveOrLinesHeight;//【目标是与字符同高，但不知是否如此实现】
+                float toX = drawingUnit.right+beatGap/2;//竖线，x不变。
+                float toY = drawingUnit.bottom+curveOrLinesHeight;//应与第三条线高度约同【暂定画到底线区最下】）。
                 canvas.drawLine(fromX, fromY, toX, toY, bottomLinePaint);
             }
+
         }
+
+        //在有词模式下绘制上方连音线【待】
+
+
+
 //            invalidate();
 
     }
@@ -705,6 +508,7 @@ public class RhythmView extends View {
         switch (rhythmType){
             case RHYTHM_TYPE_24:
                 valueOfSection = 32;
+                //此时beat值==16无需修改
             break;
             case RHYTHM_TYPE_34:
                 valueOfSection = 48;
@@ -714,25 +518,53 @@ public class RhythmView extends View {
                 break;
             case RHYTHM_TYPE_38:
                 valueOfSection = 24;
+                valueOfBeat = 8;
                 break;
             case RHYTHM_TYPE_68:
                 valueOfSection = 48;
+                valueOfBeat = 8;
                 break;
 
         }
         float currentTotalWidth = 0;//累加长度；
-        int currentSectionValue = 0;//从本小节首开始计算的时值长度；跨节后重置。
+        int totalValueInThisSection = 0;//从本小节首开始计算的时值长度；跨节后重置。
         //计算能否按指定尺寸在一行内容纳所有内容，否则计算出所要占据的行数和何处换行
         for(int i =0; i<unitAmount;i++){
             byte currentCode = rhythmCodes.get(i);
             if(currentCode>0&&currentCode<=24){
                 //这个范围内的编码，代表正常音符，可以正常计算时值
-                currentSectionValue += currentCode;
+                totalValueInThisSection += currentCode;
+
+                //【还要考虑换行影响啊】待
+
+                if(i==0){
+                    //第一个特别处理
+                    drawingUnits[0].left = padding;
+                    drawingUnits[0].right = padding+unitSize; //即使是大附点音符也绘制在正常宽度内【暂定，后期可以做修改】
+                    drawingUnits[0].top = padding;
+                    drawingUnits[0].bottom = padding+additionalHeight*2+curveOrLinesHeight*2+unitSize;
+                    //字符绘制区域在纵向上是包括上下额外附加的共计4个附加高度区的。
+
+                }else {
+                    //不是第一个，那就在上一个的基础上，根据本字符的宽度向后累加（以及根据是否有横向额外间隔）
+                    待，到此。
+                    可能要将下方代码移入此处、
+
+                }
+
+
+
             }else {
-                //其他情形处理
-                【待】
+                //其他情形处理【如均分多连音、带时值空拍等】
+
             }
-            if()
+
+            //判断是否到达本拍末尾（是则将派间隔直接写入本字符的右侧空间内【即由间隔前的字符负责拍间的间隔】）
+            //判断是否到达本节结尾，若是，相应变量置true。
+            if(totalValueInThisSection%valueOfBeat==0&&totalValueInThisSection!=valueOfSection){
+                //拍结尾，不是小节结尾
+                drawingUnits
+            }
 
 
         }
