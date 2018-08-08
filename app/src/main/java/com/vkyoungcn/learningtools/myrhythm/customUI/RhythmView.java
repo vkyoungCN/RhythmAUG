@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 
+import com.sun.istack.internal.NotNull;
 import com.vkyoungcn.learningtools.myrhythm.R;
 
 import java.util.ArrayList;
@@ -42,6 +43,10 @@ public class RhythmView extends View {
 
     private ArrayList<Byte> rhythmCodes; //数据源，节奏序列的编码。根据该数据生成各字符单元上的绘制信息。
     private int rhythmType;//节拍类型（如4/4），会影响分节的绘制。【不能直接传递在本程序所用的节奏编码方案下的时值总长，因为3/4和6/8等长但绘制不同】
+    private int unitAmount;
+    private int valueOfBeat = 16;
+    private int valueOfSection = 64;
+
     private DrawingUnit drawingUnits[];
 
     private ArrayList<ArrayList<Byte>> codesInSections;//对数据源进行分析处理之后，按小节归纳起来。便于进行按节分行的判断。
@@ -484,40 +489,14 @@ public class RhythmView extends View {
 
 
     private void initData() {
-        //根据初始化了的数据源初始化绘制信息数组
-        //本方法在设置数据源的方法内调用，因而必然非空不需判断
-        drawingUnits = new DrawingUnit[rhythmCodes.size()];
 
-        //如果这个时候还没有获取到尺寸信息则终止操作
-        // 在onSizeChanged()中会对isDataInitBeInterruptedBecauseOfNoSize变量进行判断；
-        // 发现终止记录时将再次恢复（直接进入下一级方法）。
-        if(sizeChangedWidth == 0){
-//            isDataInitBeInterruptedBecauseOfNoSize = true;
-            return;
-        }
-        initDrawingUnits(false);
+        unitAmount = rhythmCodes.size();
 
-    }
-
-    private void initDrawingUnits(boolean isTriggerByOnSC) {
-
-        int unitAmount = rhythmCodes.size();
-
-        drawingUnits = new DrawingUnit[unitAmount];
-        for(int i=0;i<rhythmCodes.size();i++){//必须得这样彻底初始化，如果只有上一句而不进行for循环初始则崩溃。
-            drawingUnits[i] = new DrawingUnit();
-        }
-
-        //可用总长（控件宽扣除两侧缩进）
-        float availableTotalWidth = sizeChangedWidth - padding*2;
-
-        int valueOfSection = 64;//默认64，4/4。
-        int valueOfBeat = 16;//默认一拍16值。
         switch (rhythmType){
             case RHYTHM_TYPE_24:
                 valueOfSection = 32;
                 //此时beat值==16无需修改
-            break;
+                break;
             case RHYTHM_TYPE_34:
                 valueOfSection = 48;
                 break;
@@ -532,16 +511,136 @@ public class RhythmView extends View {
                 valueOfSection = 48;
                 valueOfBeat = 8;
                 break;
-
         }
 
-        //判断总长，以便推断是需要居中绘制还是靠左上绘制（并且得出起绘点的Y坐标。）
-        int totalValue = 0;
-        float requiredTotalLength = 0;
-        boolean isFirstSectionInThisLine = true;//是该行首节（首节则当宽度不足以显示时需要压缩，非首节则简单移到下一节（然后同样置真，情况前面累加后再判断））
+        //根据初始化了的数据源初始化绘制信息数组
+        //本方法在设置数据源的方法内调用，因而必然非空不需判断
+        drawingUnits = new DrawingUnit[unitAmount];
+
+        //如果这个时候还没有获取到尺寸信息则终止操作
+        // 在onSizeChanged()中会对isDataInitBeInterruptedBecauseOfNoSize变量进行判断；
+        // 发现终止记录时将再次恢复（直接进入下一级方法）。
+        if(sizeChangedWidth == 0){
+//            isDataInitBeInterruptedBecauseOfNoSize = true;
+            return;
+        }
+
+        codeParseIntoSections();
+        initDrawingUnits(false);
+
+    }
+
+
+    private void codeParseIntoSections(){
+        //先将节奏编码序列按小节组织起来
+
+        int totalValue=0;
         codesInSections = new ArrayList<>();//初步初始化
-        ArrayList<Byte> codeInSingleSection = new ArrayList<>();//单节内的音符【由于引用的规则，本变量仅能供首节使用，以后需额外再次初始。】
-        int sectionsBeforeThisLine = 0;//在本行之前一共出现了多少小节。
+        int startIndex = 0;//用于记录上次添加的末尾索引+1，即本节应添加的音符序列的索引起始值。
+
+        for (int i=0; i<rhythmCodes.size();i++){
+            byte b = rhythmCodes.get(i);
+            if(b>77 || b==0){
+                //时值计算
+                totalValue += valueOfBeat;
+            }else if(b>0) {
+                //时值计算
+                totalValue+=b;
+            }else {//b<0
+                //时值计算：空拍带时值，时值绝对值与普通音符相同
+                totalValue-=b;
+            }
+            if(totalValue!=0 && totalValue%valueOfSection==0){
+                ArrayList<Byte> codeInSingleSection = new ArrayList<>(rhythmCodes.subList(startIndex,i));//装载单节内的音符
+                codesInSections.add(codeInSingleSection);//添加到按节管理的总编码表
+                startIndex = i+1;
+            }//这样只有满节的小节（包括最后是0、-等特殊情况）才能被添加，最后如果出现不满暂定属于编码错误的情形。
+        }
+    }
+
+    private void initDrawingUnits(boolean isTriggerByOnSC) {
+
+        int unitAmount = rhythmCodes.size();
+
+        drawingUnits = new DrawingUnit[unitAmount];
+        for(int i=0;i<rhythmCodes.size();i++){//必须得这样彻底初始化，如果只有上一句而不进行for循环初始则崩溃。
+            drawingUnits[i] = new DrawingUnit();
+        }
+
+        //可用总长（控件宽扣除两侧缩进）
+        float availableTotalWidth = sizeChangedWidth - padding*2;
+
+        //判断总长，以推断需要绘制几行；
+        // 如果在控件高度内能够绘制完成所有行，则居中绘制（计算起绘点Y坐标）；
+        // 否则，从左上开始绘制，控件要可以滑动【具体实现待定】
+//        int totalValue = 0;
+//        float requiredTotalLength = 0;
+//        boolean isFirstSectionInThisLine = true;//是该行首节（首节则当宽度不足以显示时需要压缩，非首节则简单移到下一节（然后同样置真，情况前面累加后再判断））
+        int sectionsInThisLine = 0;//在本行一共有多少小节（最后一节已经移到下一行，不算）。
+        float requiredLengthInThisLine = 0;
+        ArrayList<Integer> indexOfThisLine = new ArrayList<>();
+
+        for (int i=0; i<codesInSections.size();i++) {
+            float sectionRequiredLength = standardLengthOfSection(codesInSections.get(i));
+            requiredLengthInThisLine +=sectionRequiredLength;
+            indexOfThisLine.add(i);//本小节在总小节编码列表中的索引位置加入。
+
+            if(sectionRequiredLength>availableTotalWidth){
+                //单节宽度大于屏幕宽度
+                // 如果本行已有其他节则需要压缩本节、扩展其他节；且本节下移
+                // 否则（如果本行只有本节自己），则压缩本节，下一节新起一行（行需要宽度重置）
+                if(indexOfThisLine.size()==1){
+                    //①对本节的基础宽度压缩（不需下移）
+                    float unitWidth = (availableTotalWidth/sectionRequiredLength)*unitStandardWidth;//与外部使用的uW变量同名
+                    //【在此计算本行本节的绘制数据】
+                    //【待】
+
+                    //②行需求宽度计数器重置，③本行节索引重置
+                    requiredLengthInThisLine=0;
+                    indexOfThisLine.clear();
+                }else {
+                    //其他节扩展
+                    float unitWidth_extracted = (availableTotalWidth/(requiredLengthInThisLine-sectionRequiredLength))*unitStandardWidth;
+                    //本节下移,独占一行，压缩本节
+                    //【在此计算本行绘制数据】
+
+                    float unitWidth_zipped = (availableTotalWidth/sectionRequiredLength)*unitStandardWidth;
+                    //【在此计算本节绘制数据】
+                    //【待】
+
+                    //行需求宽度计数器重置(以备下行使用)，本行节索引重置（以备下行使用）
+                    requiredLengthInThisLine=0;
+                    indexOfThisLine.clear();
+
+
+                }
+            }else if(requiredLengthInThisLine>availableTotalWidth){
+                //单节宽度不大于控件可用宽度，但是行累加宽度超过了；
+                // 本节下移，本行其他节要放大。
+                float unitWidth_extracted = (availableTotalWidth/(requiredLengthInThisLine-sectionRequiredLength))*unitStandardWidth;
+                //【在此计算本行绘制数据】
+
+                //本行下移后，尺寸上暂不做特别处理，但需要将本节加入下一节的宽和索引记录。
+                //②行需求宽度计数器重置，③本行节索引重置
+                requiredLengthInThisLine=sectionRequiredLength;//将下一行的宽度重置为本节宽度，以便后续累加。
+                indexOfThisLine.clear();
+                indexOfThisLine.add(i);//将本节的索引加入到供下一行使用的索引列表
+                // 【因为开头的add只能负责将后续元素的索引添加进列表，而本项是无法（以该方式）被加入到列表的；
+                // 只有在此手动添加一次】
+
+                //移动到下一行后，不必再判断本节的单节宽度是否超控件最大宽度（已由之前分支完成）。
+                【但是要判断此节是否是最后一节，如果是，则应扩展本节占据全行宽度】
+                //且在此计算本节绘制数据。
+
+            }else {
+                //单节宽度不超控件允许宽度、本行总宽也未超总宽。
+                // 本节索引已在开头自动加入行索引列表，因而不需在此再次操作。
+                【在此，需判断本节是否是最后一节，如果是，则将本行现有所有节进行整体扩展，以占满全行宽度】
+
+                //【在此计算本行绘制数据】
+            }
+
+        }
 
         for (byte b:rhythmCodes){
             if(b>77){
@@ -782,6 +881,54 @@ public class RhythmView extends View {
             }
         }
 */
+
+    }
+
+    private float standardLengthOfSection(@NotNull ArrayList<Byte> codesInSingleSection) {
+        float requiredSectionLength = 0;
+        int totalValue = 0;//还是需要计算时值的，因为需要在节拍后面增加节拍间隔。
+
+        for (byte b : codesInSingleSection) {
+            if(b>77){
+                //均分多连音
+                requiredSectionLength += (unitWidth /2)*(b%10);
+                //时值计算
+                totalValue += valueOfBeat;
+            }else if(b==16||b==8||b==4||b==2) {
+                //是不带附点的音符,占据标准宽度
+                requiredSectionLength+= unitWidth;
+                //时值计算
+                totalValue+=b;
+            }else if (b==0){
+                //延长音，且不是均分多连音；即
+                requiredSectionLength+= unitWidth;
+                //时值计算，独占节拍的延长音
+                totalValue+=valueOfBeat;
+            }else if (b==-2||b==-4||b==-8||b==-16){
+                //空拍（不带附点时）也占标准宽
+                requiredSectionLength+= unitWidth;
+                //时值计算：空拍带时值，时值绝对值与普通音符相同
+                totalValue-=b;
+            }else if(b==24||b==12||b==6||b==3){
+                //带附点，标准宽*1.5
+                requiredSectionLength += unitAmount*1.5;
+                //时值计算
+                totalValue+=b;
+            }else if(b==-3||b==-6||b==-12||b==-24){
+                //带附点，标准宽*1.5
+                requiredSectionLength += unitAmount*1.5;
+                //时值计算
+                totalValue-=b;
+            }
+
+            //拍间隔
+            if(totalValue%valueOfBeat==0){
+                //到达一拍末尾
+                //另：大附点（基本音符附加附点）的宽度不再额外加入拍间隔（因为很难计算、逻辑不好处理；而且附点本身有一个间隔，绘制效果应该也还可以）
+                requiredSectionLength+=beatGap;
+            }
+        }
+        return requiredSectionLength;
     }
 
     /*
