@@ -9,7 +9,6 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 
-import com.sun.istack.internal.NotNull;
 import com.vkyoungcn.learningtools.myrhythm.R;
 
 import java.util.ArrayList;
@@ -110,23 +109,6 @@ public class RhythmView extends View {
         //（另外，小节之间的小节线的绘制信息不记录在DU中，而是由onD方法现场计算绘制。但位于小节末尾
         // 的DU中会持有一个节末标记变量）
 
-
-        //用于描述各音符下划线绘制信息的类，用在DrawingUnit中
-        private class BottomLine {
-            float startX;
-            float startY;
-            float toX;
-            float toY;
-
-            public BottomLine(float startX, float startY, float toX, float toY) {
-                this.startX = startX;
-                this.startY = startY;
-                this.toX = toX;
-                this.toY = toY;
-            }
-        }
-
-
         private String code = "X";//默认是X，当作为旋律绘制时绘制具体音高的数值。
         private boolean isLastCodeInSection = false;//如果是小节内最后一个音符，需要记录一下，以便在遍历绘制时在后面绘制一条竖线（小节线）
         //拍子之间、小节之间有额外间隔，由设置方法计算出位置后直接存储给相应字段，本类不需持有相应位置信息。
@@ -139,7 +121,7 @@ public class RhythmView extends View {
         private float codeCenterX;//用于字符绘制（字符底边中点）
         private float codeBaseY;//字符底边【待？基线还是底边？】
 
-        private ArrayList<BottomLine> bottomLines = new ArrayList<>();
+        private ArrayList<BottomLine> bottomLines = new ArrayList<>();//已实例化，直接add即可。
         private RectF[] additionalPoints = new RectF[]{};//上下加点
 
         /* 作为一个绘制单位，其整体的左端起始位置
@@ -257,6 +239,20 @@ public class RhythmView extends View {
         }
     }
 
+    //用于描述各音符下划线绘制信息的类，用在DrawingUnit中
+    private class BottomLine {
+        float startX;
+        float startY;
+        float toX;
+        float toY;
+
+        public BottomLine(float startX, float startY, float toX, float toY) {
+            this.startX = startX;
+            this.startY = startY;
+            this.toX = toX;
+            this.toY = toY;
+        }
+    }
 
     public RhythmView(Context context) {
         super(context);
@@ -327,7 +323,7 @@ public class RhythmView extends View {
 //        codePaint.setStrokeWidth(4);
         codePaint.setColor(generalColor_Gray);
         codePaint.setAntiAlias(true);
-        codePaint.setTextAlign(Paint.Align.CENTER);
+//        codePaint.setTextAlign(Paint.Align.CENTER);【改为指定起始点方式】
 
         grayEmptyPaint = new Paint();
         grayEmptyPaint.setStyle(Paint.Style.FILL);
@@ -611,22 +607,116 @@ public class RhythmView extends View {
                         //if()【这里注意需要判断本音符是否是整行第一个。由于本行只有一个小节，因而位于小节首位的音符自然是第一个】
                         if(j==0) {
                             drawingUnit.left = padding;//首个音符
-                        }else {
-                            //不是首个音符，则紧靠上一音符的尾端。（如果上一音符是拍子尾则要加入间隔）
+                        }else  {
+                            //不是首个音符,则紧靠(或有拍间隔)上一音符的尾端。（如果上一音符是拍子尾则要加入间隔）
                             if(totalValueBeforeThisCodeInsideSection%valueOfBeat == 0) {
                                 drawingUnit.left = drawingUnits.get(i).get(j - 1).right+beatGap;//要加入拍间隔
+                                //【注意间隔是不能计算在du之内的，要在外面。因为下划线是布满du内的宽度的】
                             }else {
                                 drawingUnit.left = drawingUnits.get(i).get(j - 1).right;//紧靠即可
                             }
                         }
 
-                            //不论是否独占一拍时，宽度仍然不计入拍间隔（毕竟不能在间隔上绘制下划线）
-                        drawingUnit.right = drawingUnit.left+unitWidthSingleZipped;
+                        //单元的右侧在后面分条件确定。独占一拍时，拍间隔也不计入宽度（毕竟不能在间隔上绘制下划线）【但是附点、均分多连音的宽度有所变化】
+
+                        //绘制下划线、音符和附点；或延音线；或均分多连音（由于valueOfBeat不是常量，不能用sw判断。case分支要求使用常量条件）
+                        //字符处理（后面还有对均分多连音字符的处理）
+                        String charForCode = "X";
+                        if(code<0){
+                            charForCode = "0";
+                        }else if(code ==0){
+                            charForCode = "-";
+                        }//如果是旋律绘制，这里改成相应数字即可
+
+                        //字符的绘制位置（字符按照给定左下起点方式绘制）
+                        //【为了保证①字符基本位于水平中央、②字符带不带附点时的起始位置基本不变，因而采用：左+三分之一单位宽度折半值 方式，后期据情况调整】
+                        drawingUnit.codeCenterX = drawingUnit.left+unitWidthSingleZipped/3;//。
+                        drawingUnit.codeBaseY = drawingUnit.bottom-additionalHeight-curveOrLinesHeight -8;//暂定减8像素。
+                        //这样所有长度的字串都指定同一起始点即可。
+
+                        if(code == valueOfBeat+valueOfBeat/2 ||code == -valueOfBeat-valueOfBeat/2){
+                            //大附点，无下划线
+                            //单位右边缘
+                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped*1.5f;
+                            drawingUnit.code =charForCode+"·";
+
+                        }else if(code == valueOfBeat ||code==-valueOfBeat){
+                            //独立音符
+                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped;
+                            drawingUnit.code = charForCode;
+                        }else if(code == valueOfBeat/2 || code == -valueOfBeat/2){
+                            //仅有一条下划线
+                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped;
+                            drawingUnit.code = charForCode;
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
+                        }else if(code == valueOfBeat/2+valueOfBeat/4||code == -valueOfBeat/2-valueOfBeat/4){
+                            //一线、一附点的画法
+                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped*1.5f;
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
+                            drawingUnit.code =charForCode+"·";
+                        }else if(code == valueOfBeat/4||code == -valueOfBeat/4){
+                            //两线画法
+                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped;
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10));
+                            drawingUnit.code =charForCode;
+
+                        }else if(code == valueOfBeat/4+valueOfBeat/8||code == -valueOfBeat/4-valueOfBeat/8){
+                            //两线、一附点
+                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped*1.5f;
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10));
+                            drawingUnit.code =charForCode+"·";
+                        }else if(code == valueOfBeat/8 || code == -valueOfBeat/8){
+                            //三线画法
+                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped;
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10));
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+20,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+20));
+                            drawingUnit.code =charForCode;
+                        }else if(code == 0){
+                            //独立占拍延音线画法
+                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped;
+                            drawingUnit.code =charForCode;
+                        }
+
+                        //均分多连音画法（仅数字部分，顶部圆弧另外处理）
+                        //音符数量处理
+                        if(code>73&&code<99){
+                            //有几个音符
+                            StringBuilder codeBuilder = new StringBuilder();
+                            for(int k=1;k<code%10;k++){
+                                codeBuilder.append(X);
+                            }
+                            drawingUnit.right = drawingUnit.left+(unitWidthSingleZipped/2)*(code%10);
+                            drawingUnit.code = codeBuilder.toString();
+
+                            //下划线处理
+                            if(valueOfBeat == 16) {
+                                //73~79之间无下划线不处理。
+                                if(code>83&&code<89){
+                                    //一条下划线
+                                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
+                                }else if(code>93&&code<99){
+                                    //两条下划线
+                                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
+                                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10));
+                                }//不支持三条的
+                            }else if(valueOfBeat == 8){
+                                if(code>93&&code<99){
+                                    //一条下划线
+                                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
+                                }//无下划线的不处理；八分音符下不可能有四分时值的均分多连音，不处理。
+                            }
+                        }
+
+                        【还有：弧线画法；如果是旋律的话，上下加点画法；就可以了】
+                        【其他方法的调整；然后是自定义音符与节奏输入法；】
 
 
 
                         //在这一层循环的末尾，进行（对本小节）时值的累积记录
-                        if(code>77 || code==0){
+                        if(code>73 || code==0){
                             //时值计算
                             totalValueBeforeThisCodeInsideSection += valueOfBeat;
                         }else if(code>0) {
@@ -704,7 +794,7 @@ public class RhythmView extends View {
         }
 
         for (byte b:rhythmCodes){
-            if(b>77){
+            if(b>73){
                 //均分多连音
                 requiredTotalLength += (unitStandardWidth /2)*(b%10);
                 //时值计算
@@ -950,7 +1040,7 @@ public class RhythmView extends View {
         int totalValue = 0;//还是需要计算时值的，因为需要在节拍后面增加节拍间隔。
 
         for (byte b : codesInSingleSection) {
-            if(b>77){
+            if(b>73){
                 //均分多连音
                 requiredSectionLength += (unitStandardWidth /2)*(b%10);
                 //时值计算
@@ -972,12 +1062,12 @@ public class RhythmView extends View {
                 totalValue-=b;
             }else if(b==24||b==12||b==6||b==3){
                 //带附点，标准宽*1.5
-                requiredSectionLength += unitAmount*1.5;
+                requiredSectionLength += unitStandardWidth*1.5;
                 //时值计算
                 totalValue+=b;
             }else if(b==-3||b==-6||b==-12||b==-24){
                 //带附点，标准宽*1.5
-                requiredSectionLength += unitAmount*1.5;
+                requiredSectionLength += unitStandardWidth*1.5;
                 //时值计算
                 totalValue-=b;
             }
