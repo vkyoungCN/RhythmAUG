@@ -47,9 +47,8 @@ public class RhythmView extends View {
     private int valueOfBeat = 16;
     private int valueOfSection = 64;
 
-    private DrawingUnit drawingUnits[];
-
     private ArrayList<ArrayList<Byte>> codesInSections;//对数据源进行分析处理之后，按小节归纳起来。便于进行按节分行的判断。
+    private ArrayList<ArrayList<DrawingUnit>> drawingUnits;//绘制数据也需要按小节组织，以便与按小节组织的代码一并处理。
 
     /* 设置参数*/
     //设置参数与数据源一并设置
@@ -70,18 +69,19 @@ public class RhythmView extends View {
     private float padding;
     private float unitStandardWidth;//24dp。单个普通音符的基准宽度。【按此标准宽度计算各节需占宽度；如果单节占宽超屏幕宽度，则需压缩单节内音符的占宽；
     // 如果下节因为超长而移到下一行，且本行剩余了更多空间，则需要对各音符占宽予以增加（但是字符大小不变）】
+    private float unitStandardHeight;//24dp。单个普通音符的基准高度。
 //    private float unitSizeMedium;//30
 //    private float unitSizeLarge;//36
 
-    private float unitWidth = unitStandardWidth;//最终选定的单位尺寸【默认最小】
     private float beatGap;//节拍之间、小节之间需要有额外间隔（但似乎没有统一规范），暂定12dp。
     //注意，一个节拍内的音符之间没有额外间隔。
-    private float dotExtra = unitWidth /2;//当绘制附点时（按照字串“X·”绘制，字宽要增大，额外安排一些空间）
+    private float dotExtra = unitStandardWidth /2;//当绘制附点时（按照字串“X·”绘制，字宽要增大，额外安排一些空间）
     //但是好像无法手动控制X和点之间的间距，因而本参数仅用于让后续字符自然。//暂定半宽
 
     private float lineGap;//不同行之间的间隔。暂定12dp；如果有文字行则需额外安排文字空间。
     private float additionalHeight;//用于上下加点绘制的保留区域，暂定6dp
     private float curveOrLinesHeight;//用于绘制上方连音线或下方下划线的空间（上下各一份），暂定8dp
+
 
     //下划线绘制为2dp(或1dp)每条
     private float textSizeSmall;//14sp
@@ -292,6 +292,7 @@ public class RhythmView extends View {
     private void initSize() {
         padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
         unitStandardWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+        unitStandardHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
 //        unitSizeMedium = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
 //        unitSizeLarge = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, getResources().getDisplayMetrics());
 
@@ -515,7 +516,6 @@ public class RhythmView extends View {
 
         //根据初始化了的数据源初始化绘制信息数组
         //本方法在设置数据源的方法内调用，因而必然非空不需判断
-        drawingUnits = new DrawingUnit[unitAmount];
 
         //如果这个时候还没有获取到尺寸信息则终止操作
         // 在onSizeChanged()中会对isDataInitBeInterruptedBecauseOfNoSize变量进行判断；
@@ -554,7 +554,7 @@ public class RhythmView extends View {
                 ArrayList<Byte> codeInSingleSection = new ArrayList<>(rhythmCodes.subList(startIndex,i));//装载单节内的音符
                 codesInSections.add(codeInSingleSection);//添加到按节管理的总编码表
                 startIndex = i+1;
-            }//这样只有满节的小节（包括最后是0、-等特殊情况）才能被添加，最后如果出现不满暂定属于编码错误的情形。
+            }//这样只有满节的小节（包括最后是0、-等特殊情况）才能处理，最后如果出现不满暂定属于编码错误的情形。
         }
     }
 
@@ -562,9 +562,9 @@ public class RhythmView extends View {
 
         int unitAmount = rhythmCodes.size();
 
-        drawingUnits = new DrawingUnit[unitAmount];
-        for(int i=0;i<rhythmCodes.size();i++){//必须得这样彻底初始化，如果只有上一句而不进行for循环初始则崩溃。
-            drawingUnits[i] = new DrawingUnit();
+        drawingUnits = new ArrayList<ArrayList<DrawingUnit>>();
+        for(int i=0;i<codesInSections.size();i++){//有多少小节，就初始化几个元素。
+            drawingUnits.add(new ArrayList<DrawingUnit>());
         }
 
         //可用总长（控件宽扣除两侧缩进）
@@ -573,35 +573,84 @@ public class RhythmView extends View {
         //判断总长，以推断需要绘制几行；
         // 如果在控件高度内能够绘制完成所有行，则居中绘制（计算起绘点Y坐标）；
         // 否则，从左上开始绘制，控件要可以滑动【具体实现待定】
+
+
+
 //        int totalValue = 0;
 //        float requiredTotalLength = 0;
 //        boolean isFirstSectionInThisLine = true;//是该行首节（首节则当宽度不足以显示时需要压缩，非首节则简单移到下一节（然后同样置真，情况前面累加后再判断））
         int sectionsInThisLine = 0;//在本行一共有多少小节（最后一节已经移到下一行，不算）。
-        float requiredLengthInThisLine = 0;
-        ArrayList<Integer> indexOfThisLine = new ArrayList<>();
+        float lineRequiredLength = 0;
+        ArrayList<Integer> sectionIndexesOfThisLine = new ArrayList<>();
+
+        int lineCursor = 0;//当前位于第几行，从0起。
+        //【注意】由于计算时暂时不知道总行数，无法确定真正的顶部Y位置，因而先按top对齐方式（padding之下）计算；
+        // 且引入topDrawing_Y作为临时的垂直方向绘制上限起点，待整体行数计算完毕后，再依具体设计而整体移动.
+        float topDrawing_Y = padding;
 
         for (int i=0; i<codesInSections.size();i++) {
             float sectionRequiredLength = standardLengthOfSection(codesInSections.get(i));
-            requiredLengthInThisLine +=sectionRequiredLength;
-            indexOfThisLine.add(i);//本小节在总小节编码列表中的索引位置加入。
+            lineRequiredLength  +=sectionRequiredLength;
+            sectionIndexesOfThisLine.add(i);//本小节在总小节编码列表中的索引,加入到“本行记录”列表中。
 
             if(sectionRequiredLength>availableTotalWidth){
                 //单节宽度大于屏幕宽度
                 // 如果本行已有其他节则需要压缩本节、扩展其他节；且本节下移
                 // 否则（如果本行只有本节自己），则压缩本节，下一节新起一行（行需要宽度重置）
-                if(indexOfThisLine.size()==1){
+                if(sectionIndexesOfThisLine.size()==1){
                     //①对本节的基础宽度压缩（不需下移）
-                    float unitWidth = (availableTotalWidth/sectionRequiredLength)*unitStandardWidth;//与外部使用的uW变量同名
+                    float unitWidthSingleZipped = (availableTotalWidth/sectionRequiredLength)*unitStandardWidth;//与外部使用的uW变量同名
                     //【在此计算本行本节的绘制数据】
-                    //【待】
+                    for (int j=0;j<codesInSections.get(i).size();j++) {
+                        byte code = codesInSections.get(i).get(j);
+                        int totalValueBeforeThisCodeInsideSection = 0;//用于计算拍子【要在循环的末尾添加，因为要使用的是“本音符之前”的总和】
+
+                        DrawingUnit drawingUnit = new DrawingUnit();
+                        drawingUnit.top = topDrawing_Y+lineCursor*(unitStandardHeight+additionalHeight*2+curveOrLinesHeight*2+lineGap);
+                        drawingUnit.bottom = drawingUnit.top+(unitStandardHeight+additionalHeight*2+curveOrLinesHeight*2);
+                        //if()【这里注意需要判断本音符是否是整行第一个。由于本行只有一个小节，因而位于小节首位的音符自然是第一个】
+                        if(j==0) {
+                            drawingUnit.left = padding;//首个音符
+                        }else {
+                            //不是首个音符，则紧靠上一音符的尾端。（如果上一音符是拍子尾则要加入间隔）
+                            if(totalValueBeforeThisCodeInsideSection%valueOfBeat == 0) {
+                                drawingUnit.left = drawingUnits.get(i).get(j - 1).right+beatGap;//要加入拍间隔
+                            }else {
+                                drawingUnit.left = drawingUnits.get(i).get(j - 1).right;//紧靠即可
+                            }
+                        }
+
+                            //不论是否独占一拍时，宽度仍然不计入拍间隔（毕竟不能在间隔上绘制下划线）
+                        drawingUnit.right = drawingUnit.left+unitWidthSingleZipped;
+
+
+
+                        //在这一层循环的末尾，进行（对本小节）时值的累积记录
+                        if(code>77 || code==0){
+                            //时值计算
+                            totalValueBeforeThisCodeInsideSection += valueOfBeat;
+                        }else if(code>0) {
+                            //时值计算
+                            totalValueBeforeThisCodeInsideSection+=code;
+                        }else {//b<0
+                            //时值计算：空拍带时值，时值绝对值与普通音符相同
+                            totalValueBeforeThisCodeInsideSection-=code;
+                        }
+
+                    }
+                    drawingUnits.get(i)
+
+
+
 
                     //②行需求宽度计数器重置，③本行节索引重置
-                    requiredLengthInThisLine=0;
-                    indexOfThisLine.clear();
+                    lineRequiredLength =0;
+                    sectionIndexesOfThisLine.clear();
                 }else {
                     //其他节扩展
-                    float unitWidth_extracted = (availableTotalWidth/(requiredLengthInThisLine-sectionRequiredLength))*unitStandardWidth;
+                    float unitWidth_extracted = (availableTotalWidth/(lineRequiredLength -sectionRequiredLength))*unitStandardWidth;
                     //本节下移,独占一行，压缩本节
+                    lineCursor++;
                     //【在此计算本行绘制数据】
 
                     float unitWidth_zipped = (availableTotalWidth/sectionRequiredLength)*unitStandardWidth;
@@ -609,58 +658,70 @@ public class RhythmView extends View {
                     //【待】
 
                     //行需求宽度计数器重置(以备下行使用)，本行节索引重置（以备下行使用）
-                    requiredLengthInThisLine=0;
-                    indexOfThisLine.clear();
+                    lineRequiredLength =0;
+                    sectionIndexesOfThisLine.clear();
 
 
                 }
-            }else if(requiredLengthInThisLine>availableTotalWidth){
+            }else if(lineRequiredLength >availableTotalWidth){
                 //单节宽度不大于控件可用宽度，但是行累加宽度超过了；
                 // 本节下移，本行其他节要放大。
-                float unitWidth_extracted = (availableTotalWidth/(requiredLengthInThisLine-sectionRequiredLength))*unitStandardWidth;
+                lineCursor++;
+                float unitWidth_extracted = (availableTotalWidth/(lineRequiredLength -sectionRequiredLength))*unitStandardWidth;
                 //【在此计算本行绘制数据】
 
                 //本行下移后，尺寸上暂不做特别处理，但需要将本节加入下一节的宽和索引记录。
                 //②行需求宽度计数器重置，③本行节索引重置
-                requiredLengthInThisLine=sectionRequiredLength;//将下一行的宽度重置为本节宽度，以便后续累加。
-                indexOfThisLine.clear();
-                indexOfThisLine.add(i);//将本节的索引加入到供下一行使用的索引列表
+                lineRequiredLength =sectionRequiredLength;//将下一行的宽度重置为本节宽度，以便后续累加。
+                sectionIndexesOfThisLine.clear();
+                sectionIndexesOfThisLine.add(i);//将本节的索引加入到供下一行使用的索引列表
                 // 【因为开头的add只能负责将后续元素的索引添加进列表，而本项是无法（以该方式）被加入到列表的；
                 // 只有在此手动添加一次】
 
                 //移动到下一行后，不必再判断本节的单节宽度是否超控件最大宽度（已由之前分支完成）。
-                【但是要判断此节是否是最后一节，如果是，则应扩展本节占据全行宽度】
+                //但是要判断此节是否是最后一节，如果是，则应扩展本节占据全行宽度（另一种思路是在后方填充空拍小节，
+                // 但是考虑到另一种需要扩展的情形即本节超宽下移，而剩余节只有一短短小节，则同样是被扩展；若在此填充则该情形同样需要填充的逻辑
+                // 目前不予修改，暂时按简单规则进行。后期完善时再修改。）
+                if(i==codesInSections.size()-1){
+                    float unitWidth_singleExtracted = (availableTotalWidth/sectionRequiredLength)*unitStandardWidth;
+
+                }
                 //且在此计算本节绘制数据。
 
             }else {
                 //单节宽度不超控件允许宽度、本行总宽也未超总宽。
                 // 本节索引已在开头自动加入行索引列表，因而不需在此再次操作。
-                【在此，需判断本节是否是最后一节，如果是，则将本行现有所有节进行整体扩展，以占满全行宽度】
+                //在此，需判断本节是否是最后一节，如果是，则将本行现有所有节进行整体扩展，以占满全行宽度
+                if(i==codesInSections.size()-1){
+                    float unitWidth_singleExtracted = (availableTotalWidth/lineRequiredLength )*unitStandardWidth;
 
+                }
                 //【在此计算本行绘制数据】
             }
+
+
 
         }
 
         for (byte b:rhythmCodes){
             if(b>77){
                 //均分多连音
-                requiredTotalLength += (unitWidth /2)*(b%10);
+                requiredTotalLength += (unitStandardWidth /2)*(b%10);
                 //时值计算
                 totalValue += valueOfBeat;
             }else if(b==16||b==8||b==4||b==2) {
                 //是不带附点的音符,占据标准宽度
-                requiredTotalLength+= unitWidth;
+                requiredTotalLength+= unitStandardWidth;
                 //时值计算
                 totalValue+=b;
             }else if (b==0){
                 //延长音，且不是均分多连音；即
-                requiredTotalLength+= unitWidth;
+                requiredTotalLength+= unitStandardWidth;
                 //时值计算，独占节拍的延长音
                 totalValue+=valueOfBeat;
             }else if (b==-2||b==-4||b==-8||b==-16){
                 //空拍（不带附点时）也占标准宽
-                requiredTotalLength+= unitWidth;
+                requiredTotalLength+= unitStandardWidth;
                 //时值计算：空拍带时值，时值绝对值与普通音符相同
                 totalValue-=b;
             }else if(b==24||b==12||b==6||b==3){
@@ -729,7 +790,7 @@ public class RhythmView extends View {
             //超出一行
             requiredLines = (int)(requiredTotalLength/availableTotalWidth)+1;
         }
-        float requiredHeight = requiredLines*(unitWidth +additionalHeight*2+curveOrLinesHeight*2);
+        float requiredHeight = requiredLines*(unitStandardWidth +additionalHeight*2+curveOrLinesHeight*2);
 
         float topLineTopY = padding;//起绘位置（最高行顶部的Y坐标）
         if(requiredHeight<sizeChangedHeight){
@@ -748,13 +809,13 @@ public class RhythmView extends View {
         //不论有无上下加点，都需要保留上下额外空间
         //字符绘制区域在纵向上包括上下额外附加的共计4个附加高度区。
 
-        drawingUnits[0].bottom = padding+additionalHeight*2+curveOrLinesHeight*2+ unitWidth;
+        drawingUnits[0].bottom = padding+additionalHeight*2+curveOrLinesHeight*2+ unitStandardWidth;
         //字符的横向空间要根据音符是否有附点（占宽1.5）、是否是均分多连音判定(占宽：连音数量*半宽)。
         //时值小于基本音符的音符，占宽始终是标准宽度
         int currentCode = rhythmCodes.get(0);
         if(currentCode>0&&currentCode<=valueOfBeat){
             //正常宽度的音符
-            drawingUnits[0].right = padding+ unitWidth;
+            drawingUnits[0].right = padding+ unitStandardWidth;
 
             //根据时值绘制下划线
             switch (currentCode){
@@ -768,14 +829,14 @@ public class RhythmView extends View {
 
         }else if(currentCode== valueOfBeat+valueOfBeat/2){
             //首位就是大附点
-            drawingUnits[0].right = padding+ unitWidth + unitWidth /2;
+            drawingUnits[0].right = padding+ unitStandardWidth + unitStandardWidth /2;
         }else if(currentCode>=73 && currentCode<= 99 ){
             //均分多连音
-            drawingUnits[0].right = padding+(unitWidth /2)*(currentCode%10);
+            drawingUnits[0].right = padding+(unitStandardWidth /2)*(currentCode%10);
         }else if(currentCode<0){
             //空拍子【空拍子应该没见过基本音符+大附点形式的。暂不处理，如果遇到再修改】
             //那么宽度是基本宽度，符号改成0
-            drawingUnits[0].right = padding+ unitWidth;
+            drawingUnits[0].right = padding+ unitStandardWidth;
             drawingUnits[0].code ="0";
 
         }//首音符不可能是延长音符号“-”
@@ -884,29 +945,29 @@ public class RhythmView extends View {
 
     }
 
-    private float standardLengthOfSection(@NotNull ArrayList<Byte> codesInSingleSection) {
+    private float standardLengthOfSection( ArrayList<Byte> codesInSingleSection) {
         float requiredSectionLength = 0;
         int totalValue = 0;//还是需要计算时值的，因为需要在节拍后面增加节拍间隔。
 
         for (byte b : codesInSingleSection) {
             if(b>77){
                 //均分多连音
-                requiredSectionLength += (unitWidth /2)*(b%10);
+                requiredSectionLength += (unitStandardWidth /2)*(b%10);
                 //时值计算
                 totalValue += valueOfBeat;
             }else if(b==16||b==8||b==4||b==2) {
                 //是不带附点的音符,占据标准宽度
-                requiredSectionLength+= unitWidth;
+                requiredSectionLength+= unitStandardWidth;
                 //时值计算
                 totalValue+=b;
             }else if (b==0){
                 //延长音，且不是均分多连音；即
-                requiredSectionLength+= unitWidth;
+                requiredSectionLength+= unitStandardWidth;
                 //时值计算，独占节拍的延长音
                 totalValue+=valueOfBeat;
             }else if (b==-2||b==-4||b==-8||b==-16){
                 //空拍（不带附点时）也占标准宽
-                requiredSectionLength+= unitWidth;
+                requiredSectionLength+= unitStandardWidth;
                 //时值计算：空拍带时值，时值绝对值与普通音符相同
                 totalValue-=b;
             }else if(b==24||b==12||b==6||b==3){
