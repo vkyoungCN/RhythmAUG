@@ -60,6 +60,7 @@ public class RhythmView extends View {
     /* 画笔组*/
     private Paint bottomLinePaint;
     private Paint codePaint;
+    private Paint curveNumPaint;//用于绘制均分多连音弧线中间的小数字，其字符尺寸较小
     private Paint grayEmptyPaint;//在无数据时，在字符行绘制背景替代。
     private Paint codeUnitOutLinePaint;//在编辑模式下，修改的位置上绘制浅蓝色方框
 //    private Paint textWaitingPaint;
@@ -89,6 +90,7 @@ public class RhythmView extends View {
 
 
     private float textSize;//【考虑让文字尺寸后期改用和section宽度一致或稍小的直接数据.已尝试不可用】
+    private float curveNumSize;
     private float textBaseLineBottomGap;
 
     int lines = 1;//控件需要按几行显示，根据当前屏幕下控件最大允许宽度和控件字符数（需要的宽度）计算得到。
@@ -108,28 +110,34 @@ public class RhythmView extends View {
         // 这些额外的空间会影响后续字符的横向位置，因而必须记录到所有受影响的字符中；
         //（另外，小节之间的小节线的绘制信息不记录在DU中，而是由onD方法现场计算绘制。但位于小节末尾
         // 的DU中会持有一个节末标记变量）
-
-        private String code = "X";//默认是X，当作为旋律绘制时绘制具体音高的数值。
-        private boolean isLastCodeInSection = false;//如果是小节内最后一个音符，需要记录一下，以便在遍历绘制时在后面绘制一条竖线（小节线）
+        //如果是小节内最后一个音符，需要记录一下，以便在遍历绘制时在后面绘制一条竖线（小节线）
         //拍子之间、小节之间有额外间隔，由设置方法计算出位置后直接存储给相应字段，本类不需持有相应位置信息。
         //最前端的一条小节线由绘制方法默认绘制，不需记录。
-
 //        private byte additionalSpotType = 0;//上下加点类型，默认0（无加点）；下加负值、上加正值。原则上不超正负3。
 //        private byte bottomLineAmount = 0;//并不是所有音符都有下划线。
 
-
-        private float codeCenterX;//用于字符绘制（字符底边中点）
-        private float codeBaseY;//字符底边【待？基线还是底边？】
-
-        private ArrayList<BottomLine> bottomLines = new ArrayList<>();//已实例化，直接add即可。
-        private RectF[] additionalPoints = new RectF[]{};//上下加点
-
         /* 作为一个绘制单位，其整体的左端起始位置
-        * 用于使后续单位建立自己的位置*/
+         * 用于使后续单位建立自己的位置*/
         float left;
         float right;
         float top;
         float bottom;
+
+        private String code = "X";//默认是X，当作为旋律绘制时绘制具体音高的数值。
+        private float codeStartX;//用于字符绘制（字符底边中点）
+        private float codeBaseY;//字符底边【待？基线还是底边？】
+
+        private ArrayList<BottomLine> bottomLines = new ArrayList<>();//已实例化，直接add即可。
+
+        private RectF[] additionalPoints = new RectF[]{};//上下加点
+
+        private int curveNumber = 0;//在均分多连音情况下，顶弧中间有一个小数字；
+        private float cNumCenterX;
+        private float cNumBaseY;
+
+        private boolean isLastCodeInSection = false;
+
+
         //一个字符的空间方案暂定如下：标志尺寸ss,字符区域占宽=ss（字体尺寸本身不足的留空即可），
         // 字符占高=展宽；字符上方预留半ss的顶弧线高度，其中保留一小层的高度作为上加点区域；
         //字符下方半ss空间是下划线区域，下划线下方保留一小层高度作为下加点区域。（小层高度待定，暂定5~8dp）
@@ -146,10 +154,10 @@ public class RhythmView extends View {
         public DrawingUnit() {
         }
 
-        public DrawingUnit(String code, boolean isLastCodeInSection, float codeCenterX, float codeBaseY, ArrayList<BottomLine> bottomLines, RectF[] additionalPoints, float left, float right, float top, float bottom) {
+        public DrawingUnit(String code, boolean isLastCodeInSection, float codeStartX, float codeBaseY, ArrayList<BottomLine> bottomLines, RectF[] additionalPoints, float left, float right, float top, float bottom) {
             this.code = code;
             this.isLastCodeInSection = isLastCodeInSection;
-            this.codeCenterX = codeCenterX;
+            this.codeStartX = codeStartX;
             this.codeBaseY = codeBaseY;
             this.bottomLines = bottomLines;
             this.additionalPoints = additionalPoints;
@@ -197,12 +205,12 @@ public class RhythmView extends View {
         }
 */
 
-        public float getCodeCenterX() {
-            return codeCenterX;
+        public float getCodeStartX() {
+            return codeStartX;
         }
 
-        public void setCodeCenterX(float codeCenterX) {
-            this.codeCenterX = codeCenterX;
+        public void setCodeStartX(float codeStartX) {
+            this.codeStartX = codeStartX;
         }
 
         public float getCodeBaseY() {
@@ -304,6 +312,8 @@ public class RhythmView extends View {
         textSizeSmall =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 12, getResources().getDisplayMetrics());
         textSizeMedium =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 16, getResources().getDisplayMetrics());
         textSizeLarge =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 22, getResources().getDisplayMetrics());
+
+        curveNumSize =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 10, getResources().getDisplayMetrics());
     }
 
     private void initColor(){
@@ -324,6 +334,14 @@ public class RhythmView extends View {
         codePaint.setColor(generalColor_Gray);
         codePaint.setAntiAlias(true);
 //        codePaint.setTextAlign(Paint.Align.CENTER);【改为指定起始点方式】
+
+        curveNumPaint = new Paint();
+        curveNumPaint.setTextSize(curveNumSize);
+        curveNumPaint.setStrokeWidth(2);
+        curveNumPaint.setColor(generalColor_Gray);
+        curveNumPaint.setAntiAlias(true);
+        curveNumPaint.setTextAlign(Paint.Align.CENTER);
+
 
         grayEmptyPaint = new Paint();
         grayEmptyPaint.setStyle(Paint.Style.FILL);
@@ -394,7 +412,7 @@ public class RhythmView extends View {
             DrawingUnit drawingUnit = drawingUnits[i];
 
             //字符
-            canvas.drawText(drawingUnit.getCode(),drawingUnit.getCodeCenterX(),drawingUnit.getCodeBaseY(), codePaint);
+            canvas.drawText(drawingUnit.getCode(),drawingUnit.getCodeStartX(),drawingUnit.getCodeBaseY(), codePaint);
 
             //下划线绘制
             for (DrawingUnit.BottomLine bottomLine : drawingUnit.bottomLines) {
@@ -555,487 +573,318 @@ public class RhythmView extends View {
     }
 
     private void initDrawingUnits(boolean isTriggerByOnSC) {
+        //本方法计算了大部分所需的绘制坐标，但是还有如下未处理：
+        // 未处理：①如果是旋律：上下加点画法；②如果是带词旋律，则加入弧线画法；
+        // (注意，均分多连音的顶部弧线直接按drawingU的宽度绘制即可，且均分多连音弧线中的数字坐标已经进行了计算)
+        //【其他方法的调整；然后是自定义音符与节奏输入法；】
 
-        int unitAmount = rhythmCodes.size();
-
-        drawingUnits = new ArrayList<ArrayList<DrawingUnit>>();
-        for(int i=0;i<codesInSections.size();i++){//有多少小节，就初始化几个元素。
-            drawingUnits.add(new ArrayList<DrawingUnit>());
-        }
-
-        //可用总长（控件宽扣除两侧缩进）
-        float availableTotalWidth = sizeChangedWidth - padding*2;
-
-        //判断总长，以推断需要绘制几行；
         // 如果在控件高度内能够绘制完成所有行，则居中绘制（计算起绘点Y坐标）；
         // 否则，从左上开始绘制，控件要可以滑动【具体实现待定】
 
+        //可用总长（控件宽扣除两侧缩进）
+        float availableTotalWidth = sizeChangedWidth - padding * 2;
 
+        //装载绘制信息的总列表（按小节区分子列表管理）
+        drawingUnits = new ArrayList<ArrayList<DrawingUnit>>();//初步初始（后面采用add方式，因而不需彻底初始）
 
-//        int totalValue = 0;
-//        float requiredTotalLength = 0;
-//        boolean isFirstSectionInThisLine = true;//是该行首节（首节则当宽度不足以显示时需要压缩，非首节则简单移到下一节（然后同样置真，情况前面累加后再判断））
-        int sectionsInThisLine = 0;//在本行一共有多少小节（最后一节已经移到下一行，不算）。
         float lineRequiredLength = 0;
-        ArrayList<Integer> sectionIndexesOfThisLine = new ArrayList<>();
-
-        int lineCursor = 0;//当前位于第几行，从0起。
+        int sectionAmountInLine = 0;//在本行一共有多少小节（最后一节已经移到下一行，不算）。（使用这个代替索引列表）
+        int lineCursor = 0;//当前位于第几行，从0起。（用于该行Y值的计算）
+        float topDrawing_Y = padding;
         //【注意】由于计算时暂时不知道总行数，无法确定真正的顶部Y位置，因而先按top对齐方式（padding之下）计算；
         // 且引入topDrawing_Y作为临时的垂直方向绘制上限起点，待整体行数计算完毕后，再依具体设计而整体移动.
-        float topDrawing_Y = padding;
+//        ArrayList<Integer> sectionIndexesOfThisLine = new ArrayList<>();【没必要使用list，因为前后各节的索引必然是连续的数字】
 
-        for (int i=0; i<codesInSections.size();i++) {
+        //开始执行绘制。以小节为单位进行计算。
+        for (int i = 0; i < codesInSections.size(); i++) {
+            //先获取当前小节的长度
             float sectionRequiredLength = standardLengthOfSection(codesInSections.get(i));
-            lineRequiredLength  +=sectionRequiredLength;
-            sectionIndexesOfThisLine.add(i);//本小节在总小节编码列表中的索引,加入到“本行记录”列表中。
 
-            if(sectionRequiredLength>availableTotalWidth){
+            //记录到本行所需总长度
+            lineRequiredLength += sectionRequiredLength;
+
+            //本行既有小节数量+1
+            sectionAmountInLine++;
+//            sectionIndexesOfThisLine.add(i);//本小节在总小节编码列表中的索引,加入到“本行记录”列表中。
+
+            //针对本小节的宽度/本行既有小节总宽度 与 本行的屏幕宽度进行比较判断。
+            if (sectionRequiredLength > availableTotalWidth) {
                 //单节宽度大于屏幕宽度
                 // 如果本行已有其他节则需要压缩本节、扩展其他节；且本节下移
                 // 否则（如果本行只有本节自己），则压缩本节，下一节新起一行（行需要宽度重置）
-                if(sectionIndexesOfThisLine.size()==1){
-                    //①对本节的基础宽度压缩（不需下移）
-                    float unitWidthSingleZipped = (availableTotalWidth/sectionRequiredLength)*unitStandardWidth;//与外部使用的uW变量同名
+                if (sectionAmountInLine == 1) {
+                    //①本行只有本节自己，对本节的基础宽度压缩（不需下移）
+                    float unitWidthSingleZipped = (availableTotalWidth / sectionRequiredLength) * unitStandardWidth;//与外部使用的uW变量同名
                     //【在此计算本行本节的绘制数据】
-                    for (int j=0;j<codesInSections.get(i).size();j++) {
-                        byte code = codesInSections.get(i).get(j);
-                        int totalValueBeforeThisCodeInsideSection = 0;//用于计算拍子【要在循环的末尾添加，因为要使用的是“本音符之前”的总和】
-
-                        DrawingUnit drawingUnit = new DrawingUnit();
-                        drawingUnit.top = topDrawing_Y+lineCursor*(unitStandardHeight+additionalHeight*2+curveOrLinesHeight*2+lineGap);
-                        drawingUnit.bottom = drawingUnit.top+(unitStandardHeight+additionalHeight*2+curveOrLinesHeight*2);
-                        //if()【这里注意需要判断本音符是否是整行第一个。由于本行只有一个小节，因而位于小节首位的音符自然是第一个】
-                        if(j==0) {
-                            drawingUnit.left = padding;//首个音符
-                        }else  {
-                            //不是首个音符,则紧靠(或有拍间隔)上一音符的尾端。（如果上一音符是拍子尾则要加入间隔）
-                            if(totalValueBeforeThisCodeInsideSection%valueOfBeat == 0) {
-                                drawingUnit.left = drawingUnits.get(i).get(j - 1).right+beatGap;//要加入拍间隔
-                                //【注意间隔是不能计算在du之内的，要在外面。因为下划线是布满du内的宽度的】
-                            }else {
-                                drawingUnit.left = drawingUnits.get(i).get(j - 1).right;//紧靠即可
-                            }
-                        }
-
-                        //单元的右侧在后面分条件确定。独占一拍时，拍间隔也不计入宽度（毕竟不能在间隔上绘制下划线）【但是附点、均分多连音的宽度有所变化】
-
-                        //绘制下划线、音符和附点；或延音线；或均分多连音（由于valueOfBeat不是常量，不能用sw判断。case分支要求使用常量条件）
-                        //字符处理（后面还有对均分多连音字符的处理）
-                        String charForCode = "X";
-                        if(code<0){
-                            charForCode = "0";
-                        }else if(code ==0){
-                            charForCode = "-";
-                        }//如果是旋律绘制，这里改成相应数字即可
-
-                        //字符的绘制位置（字符按照给定左下起点方式绘制）
-                        //【为了保证①字符基本位于水平中央、②字符带不带附点时的起始位置基本不变，因而采用：左+三分之一单位宽度折半值 方式，后期据情况调整】
-                        drawingUnit.codeCenterX = drawingUnit.left+unitWidthSingleZipped/3;//。
-                        drawingUnit.codeBaseY = drawingUnit.bottom-additionalHeight-curveOrLinesHeight -8;//暂定减8像素。
-                        //这样所有长度的字串都指定同一起始点即可。
-
-                        if(code == valueOfBeat+valueOfBeat/2 ||code == -valueOfBeat-valueOfBeat/2){
-                            //大附点，无下划线
-                            //单位右边缘
-                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped*1.5f;
-                            drawingUnit.code =charForCode+"·";
-
-                        }else if(code == valueOfBeat ||code==-valueOfBeat){
-                            //独立音符
-                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped;
-                            drawingUnit.code = charForCode;
-                        }else if(code == valueOfBeat/2 || code == -valueOfBeat/2){
-                            //仅有一条下划线
-                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped;
-                            drawingUnit.code = charForCode;
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
-                        }else if(code == valueOfBeat/2+valueOfBeat/4||code == -valueOfBeat/2-valueOfBeat/4){
-                            //一线、一附点的画法
-                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped*1.5f;
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
-                            drawingUnit.code =charForCode+"·";
-                        }else if(code == valueOfBeat/4||code == -valueOfBeat/4){
-                            //两线画法
-                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped;
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10));
-                            drawingUnit.code =charForCode;
-
-                        }else if(code == valueOfBeat/4+valueOfBeat/8||code == -valueOfBeat/4-valueOfBeat/8){
-                            //两线、一附点
-                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped*1.5f;
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10));
-                            drawingUnit.code =charForCode+"·";
-                        }else if(code == valueOfBeat/8 || code == -valueOfBeat/8){
-                            //三线画法
-                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped;
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10));
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+20,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+20));
-                            drawingUnit.code =charForCode;
-                        }else if(code == 0){
-                            //独立占拍延音线画法
-                            drawingUnit.right = drawingUnit.left+unitWidthSingleZipped;
-                            drawingUnit.code =charForCode;
-                        }
-
-                        //均分多连音画法（仅数字部分，顶部圆弧另外处理）
-                        //音符数量处理
-                        if(code>73&&code<99){
-                            //有几个音符
-                            StringBuilder codeBuilder = new StringBuilder();
-                            for(int k=1;k<code%10;k++){
-                                codeBuilder.append(X);
-                            }
-                            drawingUnit.right = drawingUnit.left+(unitWidthSingleZipped/2)*(code%10);
-                            drawingUnit.code = codeBuilder.toString();
-
-                            //下划线处理
-                            if(valueOfBeat == 16) {
-                                //73~79之间无下划线不处理。
-                                if(code>83&&code<89){
-                                    //一条下划线
-                                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
-                                }else if(code>93&&code<99){
-                                    //两条下划线
-                                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
-                                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight+10));
-                                }//不支持三条的
-                            }else if(valueOfBeat == 8){
-                                if(code>93&&code<99){
-                                    //一条下划线
-                                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left,drawingUnit.bottom-additionalHeight-curveOrLinesHeight,drawingUnit.right,drawingUnit.bottom-additionalHeight-curveOrLinesHeight));
-                                }//无下划线的不处理；八分音符下不可能有四分时值的均分多连音，不处理。
-                            }
-                        }
-
-                        【还有：弧线画法；如果是旋律的话，上下加点画法；就可以了】
-                        【其他方法的调整；然后是自定义音符与节奏输入法；】
-
-
-
-                        //在这一层循环的末尾，进行（对本小节）时值的累积记录
-                        if(code>73 || code==0){
-                            //时值计算
-                            totalValueBeforeThisCodeInsideSection += valueOfBeat;
-                        }else if(code>0) {
-                            //时值计算
-                            totalValueBeforeThisCodeInsideSection+=code;
-                        }else {//b<0
-                            //时值计算：空拍带时值，时值绝对值与普通音符相同
-                            totalValueBeforeThisCodeInsideSection-=code;
-                        }
-
-                    }
-                    drawingUnits.get(i)
-
-
-
+                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidthSingleZipped);
+                    drawingUnits.add(sectionDrawingUnit);
 
                     //②行需求宽度计数器重置，③本行节索引重置
-                    lineRequiredLength =0;
-                    sectionIndexesOfThisLine.clear();
-                }else {
-                    //其他节扩展
-                    float unitWidth_extracted = (availableTotalWidth/(lineRequiredLength -sectionRequiredLength))*unitStandardWidth;
-                    //本节下移,独占一行，压缩本节
-                    lineCursor++;
-                    //【在此计算本行绘制数据】
+                    lineRequiredLength = 0;
+                    sectionAmountInLine=0;
+                } else {
+                    //本行超过1节。其他节扩展
+                    float unitWidth_extracted = (availableTotalWidth / (lineRequiredLength - sectionRequiredLength)) * unitStandardWidth;
+                    //计算其他行的绘制数据
+                    float sectionStartX = padding;
 
-                    float unitWidth_zipped = (availableTotalWidth/sectionRequiredLength)*unitStandardWidth;
+                    //先对行内首节进行计算
+                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
+                    //并添加到总记录
+                    drawingUnits.add(sectionDrawingUnit);
+
+                    //其余各节需要依靠前一节的末尾坐标进行自身坐标的计算【仅当本行内（算上下移的那个）的小节数量≥3时才进入循环】
+                    //（否则，如果==2，则是一个下移，剩余一个独占整行在之前的“首节处理”逻辑中已完成计算，不需进循环。）
+                    for (int k=2;k<sectionAmountInLine;k++) {
+                        //计算（剩余在本行的）后续各节。
+                        int indexBeingCalculate = i-sectionAmountInLine+k;
+                        int indexBeforeCalculate = i-sectionAmountInLine+k-1;
+                        //先计算起始X，需要依赖同line中前一节最末音符的右边缘坐标。
+                        sectionStartX = drawingUnits.get(indexBeforeCalculate).get(drawingUnits.get(indexBeforeCalculate).size()-1).right+beatGap;
+                        ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
+                        drawingUnits.add(sectionDrawingUnit_2);
+
+                    }
+//                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(sectionIndex), topDrawing_Y, lineCursor, padding, unitWidthSingleZipped);
+
+
+                    //本节下移,独占一行，且压缩本节
+                    lineCursor++;
+                    float unitWidth_zipped = (availableTotalWidth / sectionRequiredLength) * unitStandardWidth;
                     //【在此计算本节绘制数据】
-                    //【待】
+                    ArrayList<DrawingUnit> sectionDrawingUnit_3 = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidth_zipped);
+                    drawingUnits.add(sectionDrawingUnit_3);
 
                     //行需求宽度计数器重置(以备下行使用)，本行节索引重置（以备下行使用）
-                    lineRequiredLength =0;
-                    sectionIndexesOfThisLine.clear();
-
+                    lineRequiredLength = 0;
+                    sectionAmountInLine=0;
 
                 }
-            }else if(lineRequiredLength >availableTotalWidth){
+            } else if (lineRequiredLength > availableTotalWidth) {
                 //单节宽度不大于控件可用宽度，但是行累加宽度超过了；
                 // 本节下移，本行其他节要放大。
                 lineCursor++;
-                float unitWidth_extracted = (availableTotalWidth/(lineRequiredLength -sectionRequiredLength))*unitStandardWidth;
+                float unitWidth_extracted = (availableTotalWidth / (lineRequiredLength - sectionRequiredLength)) * unitStandardWidth;
                 //【在此计算本行绘制数据】
+                //计算其他行的绘制数据
+                float sectionStartX = padding;
+                //先对行内首节进行计算
+                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
+                //并添加到总记录
+                drawingUnits.add(sectionDrawingUnit);
 
-                //本行下移后，尺寸上暂不做特别处理，但需要将本节加入下一节的宽和索引记录。
-                //②行需求宽度计数器重置，③本行节索引重置
-                lineRequiredLength =sectionRequiredLength;//将下一行的宽度重置为本节宽度，以便后续累加。
-                sectionIndexesOfThisLine.clear();
-                sectionIndexesOfThisLine.add(i);//将本节的索引加入到供下一行使用的索引列表
-                // 【因为开头的add只能负责将后续元素的索引添加进列表，而本项是无法（以该方式）被加入到列表的；
-                // 只有在此手动添加一次】
-
-                //移动到下一行后，不必再判断本节的单节宽度是否超控件最大宽度（已由之前分支完成）。
-                //但是要判断此节是否是最后一节，如果是，则应扩展本节占据全行宽度（另一种思路是在后方填充空拍小节，
-                // 但是考虑到另一种需要扩展的情形即本节超宽下移，而剩余节只有一短短小节，则同样是被扩展；若在此填充则该情形同样需要填充的逻辑
-                // 目前不予修改，暂时按简单规则进行。后期完善时再修改。）
-                if(i==codesInSections.size()-1){
-                    float unitWidth_singleExtracted = (availableTotalWidth/sectionRequiredLength)*unitStandardWidth;
-
+                //其余各节需要依靠前一节的末尾坐标进行自身坐标的计算【仅当本行内（算上下移的那个）的小节数量≥3时才进入循环】
+                //（否则，如果==2，则是一个下移，剩余一个独占整行在之前的“首节处理”逻辑中已完成计算，不需进循环。）
+                for (int k=2;k<sectionAmountInLine;k++) {
+                    //计算（剩余在本行的）后续各节。
+                    int indexBeingCalculate = i-sectionAmountInLine+k;
+                    int indexBeforeCalculate = i-sectionAmountInLine+k-1;
+                    //先计算起始X，需要依赖同line中前一节最末音符的右边缘坐标。
+                    sectionStartX = drawingUnits.get(indexBeforeCalculate).get(drawingUnits.get(indexBeforeCalculate).size()-1).right+beatGap;
+                    ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
+                    drawingUnits.add(sectionDrawingUnit_2);
                 }
-                //且在此计算本节绘制数据。
 
-            }else {
+                //本行下移后，尺寸上暂不做特别处理，但需要将本节加入下一行的宽和索引记录。
+                //②行需求宽度计数器重置，③本行节索引重置
+                lineRequiredLength = sectionRequiredLength;//将下一行的宽度重置为本节宽度，以便后续累加。
+                sectionAmountInLine =1;//将本节仍然要位于计数内（因为本节单节不超屏宽，移到下行后，后面可能会有多节）
+                // 【因为开头的add只能负责将后续小节的计数进行添加，而本项是无法（以该方式）计入；只有在此手动添加一次】
+
+                //但是要判断此节是否是最后一节，如果是，则应扩展本节占据全行宽度
+                // （另一种思路是在后方填充空拍小节，但在“本节超宽下移，剩余节只有一节”分支下，剩余节即使很短，也同样会被扩展；
+                // 若在此填充则该情形同样需要填充的逻辑，故目前不予修改，暂时按简单规则进行。）
+                //且在此计算本节绘制数据。
+                if (i == codesInSections.size() - 1) {
+                    float unitWidth_singleExtracted = (availableTotalWidth / sectionRequiredLength) * unitStandardWidth;
+                    ArrayList<DrawingUnit> sectionDrawingUnit_3 = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidth_singleExtracted);
+                    drawingUnits.add(sectionDrawingUnit_3);
+                }
+            } else {
                 //单节宽度不超控件允许宽度、本行总宽也未超总宽。
                 // 本节索引已在开头自动加入行索引列表，因而不需在此再次操作。
                 //在此，需判断本节是否是最后一节，如果是，则将本行现有所有节进行整体扩展，以占满全行宽度
-                if(i==codesInSections.size()-1){
-                    float unitWidth_singleExtracted = (availableTotalWidth/lineRequiredLength )*unitStandardWidth;
+                if (i == codesInSections.size() - 1) {
+                    float unitWidth_extracted = (availableTotalWidth / lineRequiredLength) * unitStandardWidth;
 
-                }
-                //【在此计算本行绘制数据】
-            }
+                    //计算其他行的绘制数据
+                    float sectionStartX = padding;
+                    //先对行内首节进行计算
+                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
+                    //并添加到总记录
+                    drawingUnits.add(sectionDrawingUnit);
 
-
-
-        }
-
-        for (byte b:rhythmCodes){
-            if(b>73){
-                //均分多连音
-                requiredTotalLength += (unitStandardWidth /2)*(b%10);
-                //时值计算
-                totalValue += valueOfBeat;
-            }else if(b==16||b==8||b==4||b==2) {
-                //是不带附点的音符,占据标准宽度
-                requiredTotalLength+= unitStandardWidth;
-                //时值计算
-                totalValue+=b;
-            }else if (b==0){
-                //延长音，且不是均分多连音；即
-                requiredTotalLength+= unitStandardWidth;
-                //时值计算，独占节拍的延长音
-                totalValue+=valueOfBeat;
-            }else if (b==-2||b==-4||b==-8||b==-16){
-                //空拍（不带附点时）也占标准宽
-                requiredTotalLength+= unitStandardWidth;
-                //时值计算：空拍带时值，时值绝对值与普通音符相同
-                totalValue-=b;
-            }else if(b==24||b==12||b==6||b==3){
-                //带附点，标准宽*1.5
-                requiredTotalLength += unitAmount*1.5;
-                //时值计算
-                totalValue+=b;
-            }else if(b==-3||b==-6||b==-12||b==-24){
-                //带附点，标准宽*1.5
-                requiredTotalLength += unitAmount*1.5;
-                //时值计算
-                totalValue-=b;
-            }
-            codeInSingleSection.add(b);//先把这个音节加入（按音阶组织的列表之）本小节。
-
-            //给拍间添加拍间隔
-            if(totalValue%valueOfBeat==0){
-                //到达一拍末尾
-                //另：大附点（基本音符附加附点）的宽度不再额外加入拍间隔（因为很难计算、逻辑不好处理；而且附点本身有一个间隔，绘制效果应该也还可以）
-                requiredTotalLength+=beatGap;
-            }
-
-            //本节末尾时判断能否在屏幕宽度内一行显示
-            if (totalValue%valueOfSection==0){
-                //到达小节末尾，将本小节提交到按节组织的编码列表总表
-                codesInSections.add(codeInSingleSection);
-                codeInSingleSection = new ArrayList<>();//再次初始化，用于下一小节装载。
-
-                if(requiredTotalLength>availableTotalWidth){
-                    //无法在一行内绘制完成。如果只有一节则压缩，否则将本节下移
-                    int sectionsInsideThisLine = codesInSections.size()-sectionsBeforeThisLine;
-                    if(sectionsInsideThisLine==1){
-                        //本行只有一节，需要压缩本节内字符的基础宽度
-                        float unitWidth = (availableTotalWidth/requiredTotalLength)*unitStandardWidth;//与外部使用的uW变量同名
-
-                    }else {
-                        //本行超过一节，本节下移；“本”行之前的所有保留节需要扩展宽度
-
-                        //①从codesInSections.get(codesInSections.size()-2)
-                        //到codesInSections.get(codesInSections.size()-sectionsInsideThisLine)
-                        //需要扩展宽度【待】
-
-                        //②codesInSections.get(codesInSections.size()-1)本节下移【待】
-                        if(再次判断本节在新的一行内能否显示完全)
-                        需要将长度判断封装成“按小节判断”；至少要提供一个能够按小节进行判断的方法（否则这里就得再写一遍上方的多分支）
-                        或许考虑先对编码进行两遍处理，第一遍先处理成按节组织的嵌套列表形式。
-                        //重置
-
-
-
+                    //其余各节需要依靠前一节的末尾坐标进行自身坐标的计算【仅当本行内（算上下移的那个）的小节数量≥3时才进入循环】
+                    //（否则，如果==2，则是一个下移，剩余一个独占整行在之前的“首节处理”逻辑中已完成计算，不需进循环。）
+                    for (int k=2;k<=sectionAmountInLine;k++) {
+                        //计算（剩余在本行的）后续各节。【此情景下是包含最后一节即索引为i的节的，与前面若干分支的循环不同】
+                        int indexBeingCalculate = i-sectionAmountInLine+k;
+                        int indexBeforeCalculate = i-sectionAmountInLine+k-1;
+                        //先计算起始X，需要依赖同line中前一节最末音符的右边缘坐标。
+                        sectionStartX = drawingUnits.get(indexBeforeCalculate).get(drawingUnits.get(indexBeforeCalculate).size()-1).right+beatGap;
+                        ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
+                        drawingUnits.add(sectionDrawingUnit_2);
                     }
+                }//【注意！】此分支下仅当到达尾节时才进行计算（本行绘制数据的计算）【否则在后面的节超屏宽时会再次触发对本节的计算，重复负荷】
 
-
-                }else {
-
-                }
-
-            }
-
-        }
-        int beatAmount = totalValue/valueOfBeat;
-        requiredTotalLength += beatAmount*beatGap;//节拍间的间隔（包括小节间的间隔）也要加上
-        int requiredLines = 1;//默认行数1。
-
-        if(requiredTotalLength - availableTotalWidth >0){
-            //超出一行
-            requiredLines = (int)(requiredTotalLength/availableTotalWidth)+1;
-        }
-        float requiredHeight = requiredLines*(unitStandardWidth +additionalHeight*2+curveOrLinesHeight*2);
-
-        float topLineTopY = padding;//起绘位置（最高行顶部的Y坐标）
-        if(requiredHeight<sizeChangedHeight){
-            //所需高度未超控件可绘制高度，就不能从顶部起绘
-            topLineTopY = sizeChangedHeight/2 - requiredHeight/2;
-
-        }
-
-
-
-        //根据音符时值及乐谱绘制规则，生成各音符的绘制坐标
-        //第一个音符特别处理
-        //第一个音符的起始位置必然是靠左端、靠上端，边距之后。
-        drawingUnits[0].left = padding;
-        drawingUnits[0].top = padding;
-        //不论有无上下加点，都需要保留上下额外空间
-        //字符绘制区域在纵向上包括上下额外附加的共计4个附加高度区。
-
-        drawingUnits[0].bottom = padding+additionalHeight*2+curveOrLinesHeight*2+ unitStandardWidth;
-        //字符的横向空间要根据音符是否有附点（占宽1.5）、是否是均分多连音判定(占宽：连音数量*半宽)。
-        //时值小于基本音符的音符，占宽始终是标准宽度
-        int currentCode = rhythmCodes.get(0);
-        if(currentCode>0&&currentCode<=valueOfBeat){
-            //正常宽度的音符
-            drawingUnits[0].right = padding+ unitStandardWidth;
-
-            //根据时值绘制下划线
-            switch (currentCode){
-                case valueOfBeat/2:
-                case valueOfBeat/2+valueOfBeat/4:
-                    //一条下划线
-                    drawingUnits[0].bottomLines.add(new DrawingUnit.BottomLine(drawingUnits[0].left,,drawingUnits[0].right,))
-            }
-
-
-
-        }else if(currentCode== valueOfBeat+valueOfBeat/2){
-            //首位就是大附点
-            drawingUnits[0].right = padding+ unitStandardWidth + unitStandardWidth /2;
-        }else if(currentCode>=73 && currentCode<= 99 ){
-            //均分多连音
-            drawingUnits[0].right = padding+(unitStandardWidth /2)*(currentCode%10);
-        }else if(currentCode<0){
-            //空拍子【空拍子应该没见过基本音符+大附点形式的。暂不处理，如果遇到再修改】
-            //那么宽度是基本宽度，符号改成0
-            drawingUnits[0].right = padding+ unitStandardWidth;
-            drawingUnits[0].code ="0";
-
-        }//首音符不可能是延长音符号“-”
-
-
-
-
-        float currentTotalWidth = 0;//累加长度；
-        int totalValueInThisSection = 0;//从本小节首开始计算的时值长度；跨节后重置。
-        //计算能否按指定尺寸在一行内容纳所有内容，否则计算出所要占据的行数和何处换行
-        for(int i =0; i<unitAmount;i++){
-            byte currentCode = rhythmCodes.get(i);
-
-
-
-            if(currentCode>0&&currentCode<=valueOfBeat){
-                //这个范围内的编码，代表正常普通音符或附点的不足1/4时值的音符，可以正常计算时值
-                totalValueInThisSection += currentCode;
-
-                //【还要考虑换行影响啊】待
-
-
-
-
-
-            }else if(currentCode== valueOfBeat+valueOfBeat/2){
-                //大附点
-
-                //其他情形处理【如均分多连音、带时值空拍等】
-
-            }else if(currentCode>=97 && currentCode<=109 ){
-                //均分多连音
-
-
-            }else if(currentCode == 0){
-                //延长音符号“-”
-
-
-            }else if(currentCode<0){
-                //空拍子【且有具体时值要计算】
-
-
-            }
-
-            //判断是否到达本拍末尾（是则将派间隔直接写入本字符的右侧空间内【即由间隔前的字符负责拍间的间隔】）
-            //判断是否到达本节结尾，若是，相应变量置true。
-            if(totalValueInThisSection%valueOfBeat==0&&totalValueInThisSection!=valueOfSection){
-                //拍结尾，不是小节结尾
-                drawingUnits
-            }
-
-
-        }
-        if((unitAmount*maxSectionWidth+(unitAmount-1)*sectionGapLarge<=availableTotalWidth)){
-            //可以容纳，使用大尺寸间隔和既定的大尺寸每节长度、大尺寸字符
-            for (int i = 0; i < unitAmount; i++) {
-                drawingUnits[i].firstBottomLineFromX =padding +(maxSectionWidth+sectionGapLarge)*i;
-                //注意，先确定下方位置再确定上方位置。说明控件是靠下的gravity。
-                drawingUnits[i].firstBottomLineFromY = sizeChangedHeight-padding;
-                drawingUnits[i].firstBottomLineToY = sizeChangedHeight-padding;
-                drawingUnits[i].firstBottomLineToX = drawingUnits[i].firstBottomLineFromX +maxSectionWidth;
-//                Log.i(TAG, "initDrawingUnits: fx="+drawingUnits[i].firstBottomLineFromX);
-//                Log.i(TAG, "initDrawingUnits: fy="+drawingUnits[i].firstBottomLineFromY);
-
-            }
-        }else {
-            //使用小尺寸间隔以及动态确定的每节长度【字符大小还需另行确定】
-            float totalWidthPureForLines =  availableTotalWidth-((unitAmount-1)*sectionGapSmall);
-            finalLineWidth = totalWidthPureForLines/unitAmount;
-
-            for (int i = 0; i < unitAmount; i++) {
-                drawingUnits[i].firstBottomLineFromX =padding +(finalLineWidth+sectionGapSmall)*i;
-                //注意，先确定下方位置再确定上方位置。说明控件是靠下的gravity。
-                drawingUnits[i].firstBottomLineToY = sizeChangedHeight-padding;
-                drawingUnits[i].firstBottomLineFromY =sizeChangedHeight-padding;
-                drawingUnits[i].firstBottomLineToX = drawingUnits[i].firstBottomLineFromX +finalLineWidth;
-            }
-
-            //改文字画笔的字号大小
-            float smallerTextSize = (textSize/maxSectionWidth)*finalLineWidth;
-            codePaint.setTextSize(smallerTextSize);
-            textWaitingPaint.setTextSize(smallerTextSize);
-            textErrPaint.setTextSize(smallerTextSize);
-
-        }
-//        Log.i(TAG, "initDrawingUnits: invalidate, init="+initText);
-
-        if(!isTriggerByOnSC) {
-            //如果是在onSizeChanged方法内被触发，则不应调用刷新方法（因为会自动继续调用onDraw()）
-            invalidate();//完成了目标数据、下划线的初始化后刷新控件。
-        }
-/*
-        if(lines ==1) {
-            for (int i = 0; i < bottomLinesAmount; i++) {
-                drawingUnits[i] = createPath(i, 1,1, finalSectionWidth);
-            }
-        }else {
-            int sectionsMaxAmountPerLine = (int)(viewMaxWidth/ finalSectionWidth);
-            for (int i = 0; i < bottomLinesAmount; i++) {
-                int currentLine = (i/sectionsMaxAmountPerLine)+1;
-                int positionInLine = i%sectionsMaxAmountPerLine;
-                drawingUnits[i] = createPath(positionInLine, lines,currentLine, finalSectionWidth);
+                //其余情况下只是增加本行的小节数量记录即可，不必有其他处理。
             }
         }
-*/
-
     }
 
+
+    private ArrayList<DrawingUnit> initSectionDrawingUnit(ArrayList<Byte> codesInThisSection, float topDrawing_Y,int lineCursor, float sectionStartX, float unitWidthChanged) {
+        // *注意，sectionStartX要传入“上一小节末尾+节间隔”（非首节时）或者传入padding（是首节时）
+
+        int totalValueBeforeThisCodeInsideSection = 0;//用于计算拍子【要在循环的末尾添加，因为要使用的是“本音符之前”的总和】
+        ArrayList<DrawingUnit> drawingUnitsInSection = new ArrayList<>();
+
+        for (int j = 0; j < codesInThisSection.size(); j++) {
+            byte code = codesInThisSection.get(j);
+
+            DrawingUnit drawingUnit = new DrawingUnit();
+            drawingUnit.top = topDrawing_Y + lineCursor * (unitStandardHeight + additionalHeight * 2 + curveOrLinesHeight * 2 + lineGap);
+            drawingUnit.bottom = drawingUnit.top + (unitStandardHeight + additionalHeight * 2 + curveOrLinesHeight * 2);
+
+
+            if (j == 0) {
+                drawingUnit.left = sectionStartX;//首个音符
+            } else {
+                //非首位音符,根据前一音符是否是拍尾，而紧靠或有拍间隔。
+                if (totalValueBeforeThisCodeInsideSection % valueOfBeat == 0) {
+                    //前一音符为拍尾
+                    //如果不是首音符，则前面必然是有音符的，所以下句可行
+                    drawingUnit.left = drawingUnitsInSection.get(j-1).right + beatGap;//要加入拍间隔
+                    //【注意间隔是不能计算在du之内的，要在外面。因为下划线布满du内的宽度】
+                } else {
+                    drawingUnit.left = drawingUnitsInSection.get(j-1).right;//紧靠即可
+                }
+            }
+
+            //单元的右侧在后面分条件（按不同类型的code）确定。独占一拍时，拍间隔也不计入宽度（毕竟不能在间隔上绘制下划线）【但是附点、均分多连音的宽度有所变化】
+
+            //绘制下划线、音符和附点；或延音线；或均分多连音（由于valueOfBeat不是常量，不能用sw判断。case分支要求使用常量条件）
+            //字符处理（后面还有对均分多连音字符的处理）
+            String charForCode = "X";
+            if (code < 0) {
+                charForCode = "0";
+            } else if (code == 0) {
+                charForCode = "-";
+            }//如果是旋律绘制，这里改成相应数字即可
+
+            //字符的绘制位置（字符按照给定左下起点方式绘制）
+            //【为了保证①字符基本位于水平中央、②字符带不带附点时的起始位置基本不变，因而采用：左+三分之一单位宽度折半值 方式，后期据情况调整】
+            drawingUnit.codeStartX = drawingUnit.left + unitWidthChanged / 3;//。
+            drawingUnit.codeBaseY = drawingUnit.bottom - additionalHeight - curveOrLinesHeight - 8;//暂定减8像素。
+            //这样所有长度的字串都指定同一起始点即可。
+
+            if (code == valueOfBeat + valueOfBeat / 2 || code == -valueOfBeat - valueOfBeat / 2) {
+                //大附点，无下划线
+                //单位右边缘
+                drawingUnit.right = drawingUnit.left + unitWidthChanged * 1.5f;
+                drawingUnit.code = charForCode + "·";
+
+            } else if (code == valueOfBeat || code == -valueOfBeat) {
+                //独立音符
+                drawingUnit.right = drawingUnit.left + unitWidthChanged;
+                drawingUnit.code = charForCode;
+            } else if (code == valueOfBeat / 2 || code == -valueOfBeat / 2) {
+                //仅有一条下划线
+                drawingUnit.right = drawingUnit.left + unitWidthChanged;
+                drawingUnit.code = charForCode;
+                drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
+            } else if (code == valueOfBeat / 2 + valueOfBeat / 4 || code == -valueOfBeat / 2 - valueOfBeat / 4) {
+                //一线、一附点的画法
+                drawingUnit.right = drawingUnit.left + unitWidthChanged * 1.5f;
+                drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
+                drawingUnit.code = charForCode + "·";
+            } else if (code == valueOfBeat / 4 || code == -valueOfBeat / 4) {
+                //两线画法
+                drawingUnit.right = drawingUnit.left + unitWidthChanged;
+                drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
+                drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10));
+                drawingUnit.code = charForCode;
+
+            } else if (code == valueOfBeat / 4 + valueOfBeat / 8 || code == -valueOfBeat / 4 - valueOfBeat / 8) {
+                //两线、一附点
+                drawingUnit.right = drawingUnit.left + unitWidthChanged * 1.5f;
+                drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
+                drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10));
+                drawingUnit.code = charForCode + "·";
+            } else if (code == valueOfBeat / 8 || code == -valueOfBeat / 8) {
+                //三线画法
+                drawingUnit.right = drawingUnit.left + unitWidthChanged;
+                drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
+                drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10));
+                drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 20, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 20));
+                drawingUnit.code = charForCode;
+            } else if (code == 0) {
+                //独立占拍延音线画法
+                drawingUnit.right = drawingUnit.left + unitWidthChanged;
+                drawingUnit.code = charForCode;
+            }
+
+            //均分多连音画法（仅数字部分，顶部圆弧另外处理）
+            //音符数量处理
+            if (code > 73 && code < 99) {
+                //有几个音符
+                StringBuilder codeBuilder = new StringBuilder();
+                int codeNum = code % 10;
+                for (int k = 1; k < codeNum; k++) {
+                    codeBuilder.append(X);
+                }
+                drawingUnit.right = drawingUnit.left + (unitWidthChanged / 2) * (codeNum);
+                drawingUnit.code = codeBuilder.toString();
+                drawingUnit.curveNumber = codeNum;
+                drawingUnit.cNumCenterX = (drawingUnit.right - drawingUnit.left) / 2 + drawingUnit.left;
+                drawingUnit.cNumBaseY = drawingUnit.top + additionalHeight + curveOrLinesHeight / 3;//【注意，稍后画弧线时，顶部也应留出1/3距离】
+
+                //下划线处理
+                if (valueOfBeat == 16) {
+                    //73~79之间无下划线不处理。
+                    if (code > 83 && code < 89) {
+                        //一条下划线
+                        drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
+                    } else if (code > 93) {//外层if有<99判断
+                        //两条下划线
+                        drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
+                        drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10));
+                    }//不支持三条的
+                } else if (valueOfBeat == 8) {//外层if有<99判断
+                    if (code > 93) {
+                        //一条下划线
+                        drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
+                    }//无下划线的不处理；八分音符下不可能有四分时值的均分多连音，不处理。
+                }
+            }
+
+            //在这一层循环的末尾，将本音符的时值累加到本小节的记录上；然后更新“tVBTCIS”记录以备下一音符的使用。
+            totalValueBeforeThisCodeInsideSection = addValueToSectionValue(code, valueOfBeat, totalValueBeforeThisCodeInsideSection);
+            drawingUnitsInSection.add(drawingUnit);//添加本音符对应的绘制信息。
+        }
+
+        return drawingUnitsInSection;//返回本小节对应的绘制信息列表
+    }
+
+        private int addValueToSectionValue(int thisCode,int valueOfBeat,int lastTotal){
+            if(thisCode>73 || thisCode==0){
+                //时值计算
+                lastTotal += valueOfBeat;
+            }else if(thisCode>0) {
+                //时值计算
+                lastTotal+=thisCode;
+            }else {//b<0
+                //时值计算：空拍带时值，时值绝对值与普通音符相同
+                lastTotal-=thisCode;
+            }
+            return lastTotal;
+    }
+
+
+
     private float standardLengthOfSection( ArrayList<Byte> codesInSingleSection) {
+        //是按标准单位宽度计算的本节所需宽度，在与控件宽度比较之后，(可能)会进行压缩或扩展
+
         float requiredSectionLength = 0;
         int totalValue = 0;//还是需要计算时值的，因为需要在节拍后面增加节拍间隔。
 
@@ -1082,25 +931,4 @@ public class RhythmView extends View {
         return requiredSectionLength;
     }
 
-    /*
-     * 有时候VE带有初始数据（比如卡片再次滑回时）
-     * */
-    public void setInitText(String initText) {
-        this.initText = initText;
-//        Log.i(TAG, "setInitText: String Received in Ve = "+initText);
-
-        //存入数据数组
-        if(initText!=null){
-            //先对旧数据清空
-            characters.clear();
-
-            //存入数据数组
-            char[] chars = initText.toCharArray();
-            for (char c: chars){
-                characters.push(c);
-            }
-        }
-
-        invalidate();//刷新显示。
-    }
 }
