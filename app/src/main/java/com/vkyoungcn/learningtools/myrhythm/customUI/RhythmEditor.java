@@ -7,6 +7,7 @@ import android.graphics.RectF;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
+import android.view.MotionEvent;
 import android.view.View;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
@@ -20,17 +21,12 @@ import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
 
+public class RhythmEditor extends View {
+//* 如果数据源为空，自动显示一个空的小节；如果有数据显示数据，并将第一音符标蓝框；
+//* 在所有小节之后标示一个+号。
+//* 单行模式，绘制中的小节位于屏幕中。
 
-public class RhythmView extends View {
-//* 显示节奏序列
-//* 有“折行、单行”两种模式；字符及字宽有“大中小三种模式”
-//* 无数据时先将字符区绘制rect形式；填充数据后再根据数据生成绘制信息重新绘制。
-//*
-//* 三种工作模式：“节奏/旋律/有词”
-//* 其中有词模式下需要绘制上方连音弧线；旋律模式下需要绘制上下方的加点。
-//*
-
-    private static final String TAG = "RhythmView";
+    private static final String TAG = "RhythmEditor";
 
     private Context mContext;
 
@@ -46,7 +42,7 @@ public class RhythmView extends View {
     /* 设置参数*/
     //设置参数与数据源一并设置
     private boolean useMelodyMode = false;//如果使用旋律模式，则需要数字替代X且在onD中处理上下加点的绘制。
-    private boolean useMultiLine = true;//在某些特殊模式下，需使用单行模式（如在显示某节奏所对应的单条旋律时，计划以可横向滑动的单行模式进行显示，以节省纵向空间。）
+    private boolean useMultiLine = false;//在某些特殊模式下，需使用单行模式（如在显示某节奏所对应的单条旋律时，计划以可横向滑动的单行模式进行显示，以节省纵向空间。）
 
 
     //    private boolean isDataInitBeInterruptedBecauseOfNoSize = false;
@@ -58,44 +54,53 @@ public class RhythmView extends View {
     private Paint grayEmptyPaint;//在无数据时，在字符行绘制背景替代。
     private Paint codeUnitOutLinePaint;//在编辑模式下，修改的位置上绘制浅蓝色方框
 //    private Paint textWaitingPaint;
+    private Paint maskPaint;
+    private Paint slidingBallPaint;
+    private Paint slidingVerticalBarPaint;
+
+
 
     /* 尺寸组 */
     private float padding;
     private float unitStandardWidth;//24dp。单个普通音符的基准宽度。【按此标准宽度计算各节需占宽度；如果单节占宽超屏幕宽度，则需压缩单节内音符的占宽；
     // 如果下节因为超长而移到下一行，且本行剩余了更多空间，则需要对各音符占宽予以增加（但是字符大小不变）】
     private float unitStandardHeight;//24dp。单个普通音符的基准高度。
-//    private float unitSizeMedium;//30
-//    private float unitSizeLarge;//36
 
     private float beatGap;//节拍之间、小节之间需要有额外间隔（但似乎没有统一规范），暂定12dp。
     //注意，一个节拍内的音符之间没有额外间隔。
-//    private float dotExtra = unitStandardWidth /2;//当绘制附点时（按照字串“X·”绘制，字宽要增大，额外安排一些空间）
-//    但是好像无法手动控制X和点之间的间距，因而本参数仅用于让后续字符自然。//暂定半宽
 
-    private float lineGap;//不同行之间的间隔。暂定12dp；如果有文字行则需额外安排文字空间。
+//    private float lineGap;//不同行之间的间隔。暂定12dp；如果有文字行则需额外安排文字空间。
     private float additionalHeight;//用于上下加点绘制的保留区域，暂定6dp
     private float curveOrLinesHeight;//用于绘制上方连音线或下方下划线的空间（上下各一份），暂定8dp
 
-
-    //下划线绘制为2dp(或1dp)每条
-    private float textSizeSmall;//14sp
-    private float textSizeMedium;//16sp
-    private float textSizeLarge;//24sp
-
-
     private float textSize;//【考虑让文字尺寸后期改用和section宽度一致或稍小的直接数据.已尝试不可用】
     private float curveNumSize;
-    private float textBaseLineBottomGap;
-
-    int lines = 1;//控件需要按几行显示，根据当前屏幕下控件最大允许宽度和控件字符数（需要的宽度）计算得到。
 
     private int sizeChangedHeight = 0;//是控件onSizeChanged后获得的尺寸之高度，也是传给onDraw进行线段绘制的canvas-Y坐标(单行时)
     private int sizeChangedWidth = 0;//未获取数据前设置为0
 
+    private float slidingVerticalBarShort;
+    private float slidingVerticalBarMedium;
+    private float slidingVerticalBarLong;
+    private float slidingVerticalBarGap;
+    private float slidingBallDiameter;
+
 
     /* 色彩组 */
     private int generalColor_Gray;
+    private int editBox_blue;
+    private int slidingMask_white;
+    private int slidingBall_pink;
+    private int slidingVerticalBar_black;
 
+
+    /* 滑动交互所需变量*/
+    private boolean isSlidingModeOn =false;
+    private float totalRequiredLength = 0;
+    private boolean noNeedToSliding = false;
+
+    private ArrayList<VerticalBar> verticalBars;//滑动时的刻度
+    private RectF clickingBallRectF;
 
     //用于描述各字符对应绘制信息的一个内部类
     public class DrawingUnit {
@@ -122,7 +127,6 @@ public class RhythmView extends View {
         private float codeBaseY;//字符底边【待？基线还是底边？】
 
         private ArrayList<BottomLine> bottomLines = new ArrayList<>();//已实例化，直接add即可。
-
         private RectF[] additionalPoints = new RectF[]{};//上下加点
 
         private int curveNumber = 0;//在均分多连音情况下，顶弧中间有一个小数字；
@@ -136,11 +140,6 @@ public class RhythmView extends View {
         // 字符占高=展宽；字符上方预留半ss的顶弧线高度，其中保留一小层的高度作为上加点区域；
         //字符下方半ss空间是下划线区域，下划线下方保留一小层高度作为下加点区域。（小层高度待定，暂定5~8dp）
         //非首尾拍字符之间是没有间隔的，以便令下划线相接。
-
-//        private float firstBottomLineFromX;//其实所有下划线的X一致
-//        private float firstBottomLineFromY;//第2、3线手动加上间隔像素值（暂定间隔4像素）
-//        private float firstBottomLineToX;
-//        private float firstBottomLineToY;
 
         //连音线的绘制，将由RhV直接提供方法。程序根据词序缺少位置，指定Rhv在哪些（起止）位置上绘制连音线
 
@@ -256,14 +255,29 @@ public class RhythmView extends View {
         }
     }
 
-    public RhythmView(Context context) {
+
+    //用于进入滑动模式时的刻度短线绘制
+    private class VerticalBar{
+        float x;
+        float top;
+        float bottom;
+
+        public VerticalBar(float x, float top, float bottom) {
+            this.x = x;
+            this.top = top;
+            this.bottom = bottom;
+        }
+    }
+
+
+    public RhythmEditor(Context context) {
         super(context);
         mContext = context;
         init(null);
 //        this.listener = null;
     }
 
-    public RhythmView(Context context, AttributeSet attributeset) {
+    public RhythmEditor(Context context, AttributeSet attributeset) {
         super(context, attributeset);
         mContext = context;
         init(attributeset);
@@ -271,7 +285,7 @@ public class RhythmView extends View {
     }
 
 
-    public RhythmView(Context context, AttributeSet attributeset, int defStyledAttrs) {
+    public RhythmEditor(Context context, AttributeSet attributeset, int defStyledAttrs) {
         super(context, attributeset, defStyledAttrs);
         mContext = context;
         init(attributeset);
@@ -280,46 +294,44 @@ public class RhythmView extends View {
 
 
     private void init(AttributeSet attributeset) {
-        initSize();
-        initColor();
+        initSizeAndColor();
         initPaint();
         initViewOptions();
     }
 
 
-    private void initSize() {
+    private void initSizeAndColor() {
         padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
         unitStandardWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
         unitStandardHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
-//        unitSizeMedium = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
-//        unitSizeLarge = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, getResources().getDisplayMetrics());
 
         beatGap = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getResources().getDisplayMetrics());
-        lineGap = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getResources().getDisplayMetrics());
+//        lineGap = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getResources().getDisplayMetrics());
         additionalHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, getResources().getDisplayMetrics());
         curveOrLinesHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
 
-//        heightAddition_singleSide = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
-        textBaseLineBottomGap = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
-
-
-        textSizeSmall =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 12, getResources().getDisplayMetrics());
-        textSizeMedium =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 16, getResources().getDisplayMetrics());
-        textSizeLarge =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 22, getResources().getDisplayMetrics());
-
         curveNumSize =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 10, getResources().getDisplayMetrics());
-    }
 
-    private void initColor(){
         generalColor_Gray = ContextCompat.getColor(mContext, R.color.rhythmView_generalGray);
-    }
+        editBox_blue = ContextCompat.getColor(mContext, R.color.rhythmView_edBoxBlue);
 
+        //与滑动有关的
+        slidingVerticalBarShort = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getResources().getDisplayMetrics());
+        slidingVerticalBarMedium = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, getResources().getDisplayMetrics());
+        slidingVerticalBarLong = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+        slidingVerticalBarGap = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, getResources().getDisplayMetrics());
+        slidingBallDiameter = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 22, getResources().getDisplayMetrics());
+
+        slidingMask_white = ContextCompat.getColor(mContext, R.color.rhythmView_sdMaskWhite);
+        slidingBall_pink = ContextCompat.getColor(mContext, R.color.rhythmView_sdBallPink);
+        slidingVerticalBar_black =  ContextCompat.getColor(mContext, R.color.rhythmView_sdVBarBlack);
+    }
 
     private void initPaint() {
         bottomLinePaint = new Paint();
         bottomLinePaint.setColor(generalColor_Gray);
         bottomLinePaint.setStrokeWidth(2);//
-        bottomLinePaint.setStyle(android.graphics.Paint.Style.STROKE);
+        bottomLinePaint.setStyle(Paint.Style.STROKE);
 
 
         codePaint = new Paint();
@@ -343,6 +355,24 @@ public class RhythmView extends View {
         grayEmptyPaint.setAntiAlias(true);
         grayEmptyPaint.setColor(generalColor_Gray);
 
+        maskPaint = new Paint();
+        maskPaint.setStyle(Paint.Style.FILL);
+        maskPaint.setStrokeWidth(4);
+        maskPaint.setAlpha(70);
+        maskPaint.setColor(slidingMask_white);
+
+        slidingBallPaint = new Paint();
+        slidingBallPaint.setStyle(Paint.Style.FILL);
+        slidingBallPaint.setStrokeWidth(2);
+        slidingBallPaint.setAntiAlias(true);
+        slidingBallPaint.setColor(slidingBall_pink);
+
+        slidingVerticalBarPaint = new Paint();
+        slidingVerticalBarPaint.setStyle(Paint.Style.FILL);
+        slidingVerticalBarPaint.setStrokeWidth(2);
+        slidingVerticalBarPaint.setAntiAlias(true);
+        slidingVerticalBarPaint.setColor(slidingVerticalBar_black);
+
     }
 
 
@@ -351,7 +381,7 @@ public class RhythmView extends View {
         setFocusableInTouchMode(true);
     }
 
-    //【学：据说是系统计算好控件的实际尺寸后以本方法通知用户】
+    //【据说是系统计算好控件的实际尺寸后以本方法通知用户】
     // 【调用顺序：M(多次)-S(单次)-D】。
     @Override
     protected void onSizeChanged(int w, int h, int old_w, int old_h) {
@@ -380,7 +410,7 @@ public class RhythmView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         //合理的尺寸由外部代码及布局文件实现，这里不设计复杂的尺寸交互申请逻辑，而是直接使用结果。
-        setMeasuredDimension(View.MeasureSpec.getSize(widthMeasureSpec), View.MeasureSpec.getSize(heightMeasureSpec));
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.getSize(heightMeasureSpec));
 
     }
 
@@ -389,6 +419,7 @@ public class RhythmView extends View {
     protected void onDraw(Canvas canvas) {
 //        Log.i(TAG, "onDraw: characters="+characters.toString());
         if(rhythmCodes.isEmpty()) {
+            //【待修改】在编辑、新增模式下，数据源为空时应当绘制一个标准空小节
             //此时节奏数据还未设置，只在中间高度绘制一条背景
             float fromX = padding;
             float fromY = sizeChangedHeight/2-20;
@@ -401,6 +432,8 @@ public class RhythmView extends View {
         }
         //注意，小节线绘制规则：起端没有小节线，小节线只存在于末尾
 
+
+        //【注意】即使是进入了滑动模式，下层的内容仍然要绘制，显示。
         //逐小节逐音符绘制
         for (ArrayList<DrawingUnit> sectionDrawingUnits :drawingUnits) {
             int unitCursor = 0;//用于判断是否到达小节末尾。
@@ -442,6 +475,18 @@ public class RhythmView extends View {
                 //在旋律模式下，可能需要绘制上下加点。【待】
             }
         }
+
+        if(isSlidingModeOn){
+            //滑动模式下，额外复制一层遮罩；以及遮罩上方的小球、刻度
+            //【当滑动开始后（滑动了一定程度），设置新的滑动中绘制参数即可；（而且下方各小节的绘制位置信息也产生了改变）】
+            canvas.drawRect(0,0,sizeChangedWidth,sizeChangedHeight,maskPaint);
+            canvas.drawArc(clickingBallRectF,0,360,true,slidingBallPaint);
+            for (VerticalBar vb: verticalBars) {
+                canvas.drawLine(vb.x, vb.top, vb.x, vb.bottom, slidingVerticalBarPaint);
+            }
+        }
+
+
 //            invalidate();
     }
 
@@ -455,7 +500,7 @@ public class RhythmView extends View {
      * 设置节拍类型（4/4等）
      * 设置字符大小
      * */
-    public void setRhythmViewInfo(Rhythm rcs, int codeSize, int unitWidth){
+    public void setRhythm(Rhythm rcs, int codeSize, int unitWidth){
         this.rhythmCodes = rcs.getRhythmCodeSerial();
         this.rhythmType = rcs.getRhythmType();
 
@@ -498,29 +543,11 @@ public class RhythmView extends View {
         //由于要根据目标字串的字符数量来绘制控件，所以所有需要用到该数量的初始化动作都只能在此后进行
         initData();
     }
-   /* public void setRhythmViewInfo(ArrayList<Byte> rhythmCodes,byte rhythmType, int codeSize){
-        this.rhythmCodes = rhythmCodes;
-        this.rhythmType = rhythmType;
-        switch (codeSize){
-            case CODE_SMALL:
-                this.textSize = textSizeSmall;
-                break;
-            case CODE_MEDIUM:
-                this.textSize = textSizeMedium;
-                break;
-            case CODE_LARGE:
-                this.textSize = textSizeLarge;
-                break;
-        }
 
-        //由于要根据目标字串的字符数量来绘制控件，所以所有需要用到该数量的初始化动作都只能在此后进行
-        initData();
-    }*/
 
     //onSizeC方法中会调用initData，该时点可能尚未设置必要的数据，所以需要判断。??
     //事实上，onS和setRC谁先谁后可能没有定数。两种错误都遇到过。??
     private void initData() {
-//        unitAmount = rhythmCodes.size();
         //根据节拍形式确定一拍的时值、一节的时值总量。
         switch (rhythmType){
             case RHYTHM_TYPE_24:
@@ -589,13 +616,14 @@ public class RhythmView extends View {
     }
 
     private void initDrawingUnits(boolean isTriggerFromOnSC) {
+        totalRequiredLength = 0;//每次重新计算绘制信息前要清空。
+
         //本方法计算了大部分所需的绘制坐标，但是还有如下未处理：
         // 未处理：①如果是旋律：上下加点画法；②如果是带词旋律，则加入弧线画法；
         // (注意，均分多连音的顶部弧线直接按drawingU的宽度绘制即可，且均分多连音弧线中的数字坐标已经进行了计算)
         //【其他方法的调整；然后是自定义音符与节奏输入法；】
 
-        // 如果在控件高度内能够绘制完成所有行，则居中绘制（计算起绘点Y坐标）；
-        // 否则，从左上开始绘制，控件要可以滑动【具体实现待定】
+        // 新增编辑采用单行滑动模式，这样就暂时不必处理复杂的编辑中小节换行+扩展、压缩逻辑。
 
         //【注意】如果是由onSc中触发，则最后不调用invalid。
 
@@ -605,153 +633,29 @@ public class RhythmView extends View {
         //装载绘制信息的总列表（按小节区分子列表管理）
         drawingUnits = new ArrayList<ArrayList<DrawingUnit>>();//初步初始（后面采用add方式，因而不需彻底初始）
 
-        float lineRequiredLength = 0;
-        int sectionAmountInLine = 0;//在本行一共有多少小节（最后一节已经移到下一行，不算）。（使用这个代替索引列表）
+//        int sectionAmount = 0;//在本行一共有多少小节（最后一节已经移到下一行，不算）。（使用这个代替索引列表）
         int lineCursor = 0;//当前位于第几行，从0起。（用于该行Y值的计算）
-        float topDrawing_Y = padding;
-        //【注意】由于计算时暂时不知道总行数，无法确定真正的顶部Y位置，因而先按top对齐方式（padding之下）计算；
-        // 且引入topDrawing_Y作为临时的垂直方向绘制上限起点，待整体行数计算完毕后，再依具体设计而整体移动.
-//        ArrayList<Integer> sectionIndexesOfThisLine = new ArrayList<>();【没必要使用list，因为前后各节的索引必然是连续的数字】
+        float bottomDrawing_Y = sizeChangedHeight/2;
 
         //开始执行绘制。以小节为单位进行计算。
         for (int i = 0; i < codesInSections.size(); i++) {
             //先获取当前小节的长度
             float sectionRequiredLength = standardLengthOfSection(codesInSections.get(i));
 
-            //记录到本行所需总长度
-            lineRequiredLength += sectionRequiredLength;
-
-            //本行既有小节数量+1
-            sectionAmountInLine++;
-//            sectionIndexesOfThisLine.add(i);//本小节在总小节编码列表中的索引,加入到“本行记录”列表中。
-
-            //针对本小节的宽度/本行既有小节总宽度 与 本行的屏幕宽度进行比较判断。
-            if (sectionRequiredLength > availableTotalWidth) {
-                //单节宽度大于屏幕宽度
-                // 如果本行已有其他节则需要压缩本节、扩展其他节；且本节下移
-                // 否则（如果本行只有本节自己），则压缩本节，下一节新起一行（行需要宽度重置）
-                if (sectionAmountInLine == 1) {
-                    //①本行只有本节自己，对本节的基础宽度压缩（不需下移）
-                    float unitWidthSingleZipped = (availableTotalWidth / sectionRequiredLength) * unitStandardWidth;//与外部使用的uW变量同名
-                    //【在此计算本行本节的绘制数据】
-                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidthSingleZipped);
-                    drawingUnits.add(sectionDrawingUnit);
-
-                    //②行需求宽度计数器重置，③本行节索引重置
-                    lineRequiredLength = 0;
-                    sectionAmountInLine=0;
-                } else {
-                    //本行超过1节。其他节扩展
-                    float unitWidth_extracted = (availableTotalWidth / (lineRequiredLength - sectionRequiredLength)) * unitStandardWidth;
-                    //计算其他行的绘制数据
-                    float sectionStartX = padding;
-
-                    //先对行内首节进行计算
-                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
-                    //并添加到总记录
-                    drawingUnits.add(sectionDrawingUnit);
-
-                    //其余各节需要依靠前一节的末尾坐标进行自身坐标的计算【仅当本行内（算上下移的那个）的小节数量≥3时才进入循环】
-                    //（否则，如果==2，则是一个下移，剩余一个独占整行在之前的“首节处理”逻辑中已完成计算，不需进循环。）
-                    for (int k=2;k<sectionAmountInLine;k++) {
-                        //计算（剩余在本行的）后续各节。
-                        int indexBeingCalculate = i-sectionAmountInLine+k;
-                        int indexBeforeCalculate = i-sectionAmountInLine+k-1;
-                        //先计算起始X，需要依赖同line中前一节最末音符的右边缘坐标。
-                        sectionStartX = drawingUnits.get(indexBeforeCalculate).get(drawingUnits.get(indexBeforeCalculate).size()-1).right+beatGap;
-                        ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
-                        drawingUnits.add(sectionDrawingUnit_2);
-
-                    }
-//                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(sectionIndex), topDrawing_Y, lineCursor, padding, unitWidthSingleZipped);
-
-
-                    //本节下移,独占一行，且压缩本节
-                    lineCursor++;
-                    float unitWidth_zipped = (availableTotalWidth / sectionRequiredLength) * unitStandardWidth;
-                    //【在此计算本节绘制数据】
-                    ArrayList<DrawingUnit> sectionDrawingUnit_3 = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidth_zipped);
-                    drawingUnits.add(sectionDrawingUnit_3);
-
-                    //行需求宽度计数器重置(以备下行使用)，本行节索引重置（以备下行使用）
-                    lineRequiredLength = 0;
-                    sectionAmountInLine=0;
-
-                }
-            } else if (lineRequiredLength > availableTotalWidth) {
-                //单节宽度不大于控件可用宽度，但是行累加宽度超过了；
-                // 本节下移，本行其他节要放大。
-                lineCursor++;
-                float unitWidth_extracted = (availableTotalWidth / (lineRequiredLength - sectionRequiredLength)) * unitStandardWidth;
-                //【在此计算本行绘制数据】
-                //计算其他行的绘制数据
-                float sectionStartX = padding;
-                //先对行内首节进行计算
-                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
-                //并添加到总记录
+            //如果不换行，则不需复杂的计算逻辑，直接向后扩展即可
+            if(i == 0){
+                //第一小节
+                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit_singleLineMode(codesInSections.get(i), bottomDrawing_Y, 0, padding, unitStandardWidth);
                 drawingUnits.add(sectionDrawingUnit);
+            }else {
+                float startX = drawingUnits.get(i-1).get(drawingUnits.get(i-1).size()-1).right+beatGap;
+                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit_singleLineMode(codesInSections.get(i), bottomDrawing_Y, 0, startX, unitStandardWidth);
 
-                //其余各节需要依靠前一节的末尾坐标进行自身坐标的计算【仅当本行内（算上下移的那个）的小节数量≥3时才进入循环】
-                //（否则，如果==2，则是一个下移，剩余一个独占整行在之前的“首节处理”逻辑中已完成计算，不需进循环。）
-                for (int k=2;k<sectionAmountInLine;k++) {
-                    //计算（剩余在本行的）后续各节。
-                    int indexBeingCalculate = i-sectionAmountInLine+k;
-                    int indexBeforeCalculate = i-sectionAmountInLine+k-1;
-                    //先计算起始X，需要依赖同line中前一节最末音符的右边缘坐标。
-                    sectionStartX = drawingUnits.get(indexBeforeCalculate).get(drawingUnits.get(indexBeforeCalculate).size()-1).right+beatGap;
-                    ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
-                    drawingUnits.add(sectionDrawingUnit_2);
-                }
-
-                //本行下移后，尺寸上暂不做特别处理，但需要将本节加入下一行的宽和索引记录。
-                //②行需求宽度计数器重置，③本行节索引重置
-                lineRequiredLength = sectionRequiredLength;//将下一行的宽度重置为本节宽度，以便后续累加。
-                sectionAmountInLine =1;//将本节仍然要位于计数内（因为本节单节不超屏宽，移到下行后，后面可能会有多节）
-                // 【因为开头的add只能负责将后续小节的计数进行添加，而本项是无法（以该方式）计入；只有在此手动添加一次】
-
-                //但是要判断此节是否是最后一节，如果是，则应扩展本节占据全行宽度
-                // （另一种思路是在后方填充空拍小节，但在“本节超宽下移，剩余节只有一节”分支下，剩余节即使很短，也同样会被扩展；
-                // 若在此填充则该情形同样需要填充的逻辑，故目前不予修改，暂时按简单规则进行。）
-                //且在此计算本节绘制数据。
-                if (i == codesInSections.size() - 1) {
-                    float unitWidth_singleExtracted = (availableTotalWidth / sectionRequiredLength) * unitStandardWidth;
-                    ArrayList<DrawingUnit> sectionDrawingUnit_3 = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidth_singleExtracted);
-                    drawingUnits.add(sectionDrawingUnit_3);
-                }
-            } else {
-                //单节宽度不超控件允许宽度、本行总宽也未超总宽。
-                // 本节索引已在开头自动加入行索引列表，因而不需在此再次操作。
-                //在此，需判断本节是否是最后一节，如果是，则将本行现有所有节进行整体扩展，以占满全行宽度
-                if (i == codesInSections.size() - 1) {
-                    float unitWidth_extracted = (availableTotalWidth / lineRequiredLength) * unitStandardWidth;
-
-                    //计算其他行的绘制数据
-                    float sectionStartX = padding;
-                    //先对行内首节进行计算
-                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
-                    //并添加到总记录
-                    drawingUnits.add(sectionDrawingUnit);
-
-                    //其余各节需要依靠前一节的末尾坐标进行自身坐标的计算【仅当本行内（算上下移的那个）的小节数量≥3时才进入循环】
-                    //（否则，如果==2，则是一个下移，剩余一个独占整行在之前的“首节处理”逻辑中已完成计算，不需进循环。）
-                    for (int k=2;k<=sectionAmountInLine;k++) {
-                        //计算（剩余在本行的）后续各节。【此情景下是包含最后一节即索引为i的节的，与前面若干分支的循环不同】
-                        int indexBeingCalculate = i-sectionAmountInLine+k;
-                        int indexBeforeCalculate = i-sectionAmountInLine+k-1;
-                        //先计算起始X，需要依赖同line中前一节最末音符的右边缘坐标。
-                        sectionStartX = drawingUnits.get(indexBeforeCalculate).get(drawingUnits.get(indexBeforeCalculate).size()-1).right+beatGap;
-                        ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
-                        drawingUnits.add(sectionDrawingUnit_2);
-                    }
-                }//【注意！】此分支下仅当到达尾节时才进行计算（本行绘制数据的计算）【否则在后面的节超屏宽时会再次触发对本节的计算，重复负荷】
-
-                //其余情况下只是增加本行的小节数量记录即可，不必有其他处理。
             }
-        }
 
-        //【这里应根据所需总高对各行进行平移】
-        //【如果不处理则默认是顶部对齐的绘制方式】
-        //【如果处理就需要再一次的遍历。待】
+            //记录到所需总长度
+            totalRequiredLength += sectionRequiredLength;//【仍然需要，最终滑动时需要】
+        }
 
         if(!isTriggerFromOnSC){
             invalidate();
@@ -759,7 +663,7 @@ public class RhythmView extends View {
     }
 
     //按小节计算（小节内各音符的）绘制数据
-    private ArrayList<DrawingUnit> initSectionDrawingUnit(ArrayList<Byte> codesInThisSection, float topDrawing_Y,int lineCursor, float sectionStartX, float unitWidthChanged) {
+    private ArrayList<DrawingUnit> initSectionDrawingUnit_singleLineMode(ArrayList<Byte> codesInThisSection, float bottomDrawing_Y, int lineCursor, float sectionStartX, float unitWidthChanged) {
         // *注意，sectionStartX要传入“上一小节末尾+节间隔”（非首节时）或者传入padding（是首节时）
 
         int totalValueBeforeThisCodeInsideSection = 0;//用于计算拍子【要在循环的末尾添加，因为要使用的是“本音符之前”的总和】
@@ -769,8 +673,9 @@ public class RhythmView extends View {
             byte code = codesInThisSection.get(j);
 
             DrawingUnit drawingUnit = new DrawingUnit();
-            drawingUnit.top = topDrawing_Y + lineCursor * (unitStandardHeight + additionalHeight * 2 + curveOrLinesHeight * 2 + lineGap);
-            drawingUnit.bottom = drawingUnit.top + (unitStandardHeight + additionalHeight * 2 + curveOrLinesHeight * 2);
+            //绘制在同一行内
+            drawingUnit.bottom = bottomDrawing_Y;
+            drawingUnit.top = drawingUnit.bottom- (unitStandardHeight + additionalHeight * 2 + curveOrLinesHeight * 2);
 
 
             if (j == 0) {
@@ -956,5 +861,73 @@ public class RhythmView extends View {
         }
         return requiredSectionLength;
     }
+
+    //与调用方的交互
+    //在刚刚按下时调用本方法，绘制出①半透明白色遮罩；②按压位置处的粉红小圆；③上方刻度；（下方节奏照样绘制）
+    public void slidingStart(float x, float y){
+        if(totalRequiredLength < (sizeChangedWidth-2*padding)){
+            //没有滑动的必要，不再执行后续动作
+            noNeedToSliding = true;
+        }else {
+            noNeedToSliding = false;
+            //要绘制出相应的状态
+            //在此计算各数据
+
+            clickingBallRectF = new RectF(x-slidingBallDiameter/2,y-slidingBallDiameter/2,x+slidingBallDiameter/2,y+slidingBallDiameter/2);
+
+            verticalBars = new ArrayList<>(19);
+            //计划绘制①中央长线*1；②两侧中长线*2；③两侧短线共四组*16
+            //从左向右添加
+            float middleX = sizeChangedWidth/2;
+            verticalBars.set(9,new VerticalBar(middleX,padding,padding+slidingVerticalBarLong));
+            for(int i=0;i<19;i++){
+                if(i!=9) {
+                    if(i==4||i==14) {
+                        //中长线
+                        new VerticalBar(middleX + (i - 9) * slidingVerticalBarGap, padding, padding+slidingVerticalBarMedium);
+                    } else {
+                        //短线
+                        new VerticalBar(middleX + (i - 9) * slidingVerticalBarGap, padding, padding+slidingVerticalBarShort);
+                    }
+                }//==9的中间竖线已计算
+            }
+        }
+    }
+
+
+    //滑动到达一定程度后，更新绘制（相当于滑动到了一个新刻度）
+    public void slidingChange(boolean toLeft){
+        //暂定只传递向左or向右滑动【每次滑动一个标准drawingUnit宽度】（暂不设计得太精确，毕竟自己用且急用）
+
+        if(noNeedToSliding) {
+            return;
+        }
+
+        //滑动后，更新：①底层的节奏数据各X坐标；②上方刻度（每touch一次重置一回中心线，否则（如多次调用本方法）只是改变其余各线的状态，模拟滑动刻度）
+
+        【到此，下方暂未修改】
+            //如果还是不需滑动则直接无反应
+            //设置新的绘制参数
+            clickingBallRectF = new RectF(x-slidingBallDiameter/2,y-slidingBallDiameter/2,x+slidingBallDiameter/2,y+slidingBallDiameter/2);
+
+            verticalBars = new ArrayList<>(19);
+            //计划绘制①中央长线*1；②两侧中长线*2；③两侧短线共四组*16
+            //从左向右添加
+            float middleX = sizeChangedWidth/2;
+            verticalBars.set(9,new VerticalBar(middleX,padding,padding+slidingVerticalBarLong));
+            for(int i=0;i<19;i++){
+                if(i!=9) {
+                    if(i==4||i==14) {
+                        //中长线
+                        new VerticalBar(middleX + (i - 9) * slidingVerticalBarGap, padding, padding+slidingVerticalBarMedium);
+                    } else {
+                        //短线
+                        new VerticalBar(middleX + (i - 9) * slidingVerticalBarGap, padding, padding+slidingVerticalBarShort);
+                    }
+                }//==9的中间竖线已计算
+            }
+    }
+
+
 
 }

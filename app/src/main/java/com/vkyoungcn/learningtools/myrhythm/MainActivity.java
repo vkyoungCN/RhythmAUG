@@ -1,5 +1,9 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.DialogFragment;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +14,10 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.vkyoungcn.learningtools.myrhythm.fragments.AddRhythmDiaFragment;
+import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
 
 import java.lang.ref.WeakReference;
 
@@ -20,7 +28,7 @@ import java.lang.ref.WeakReference;
  * email: yangsheng@ouc.edu.cn
  * 2018.08.04
  * */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
 //* 功能：主页面，程序启动后经欢迎（banner页）页面后到达的第一个稳定页面；
 
     private static final String TAG = "MainActivity";
@@ -87,8 +95,18 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void addRhythm(View view){
-
 //        点击后记得把面板收回。
+
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        Fragment prev = getFragmentManager().findFragmentByTag("ADD_RHYTHM");
+
+        if (prev != null) {
+            Toast.makeText(this, "Old DialogFg still there, removing first...", Toast.LENGTH_SHORT).show();
+            transaction.remove(prev);
+        }
+        DialogFragment dfg = AddRhythmDiaFragment.newInstance();
+        dfg.show(transaction, "ADD_RHYTHM");
+
     }
 
     public void createPitchSerial(View view){
@@ -120,6 +138,24 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+
+    @Override
+    public void onButtonClickingDfgInteraction(int dfgType, Bundle data) {
+        switch (dfgType){
+            case ADD_RHYTHM:
+                //准备进入第二步（新增、编辑Rh）
+                Intent intentToRhStep_2 = new Intent(this,AddRhythmActivity.class);
+                intentToRhStep_2.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                intentToRhStep_2.putExtra("BUNDLE",data);
+                this.startActivity(intentToRhStep_2);
+                break;
+
+
+
+        }
+    }
+
     /*
      * 阻止返回到Logo页
      * back将直接退出程序
