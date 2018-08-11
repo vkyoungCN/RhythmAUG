@@ -7,7 +7,6 @@ import android.graphics.RectF;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
-import android.view.MotionEvent;
 import android.view.View;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
@@ -21,7 +20,7 @@ import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
 
-public class RhythmEditor extends View {
+public class RhythmSingleLineEditor extends View {
 //* 如果数据源为空，自动显示一个空的小节；如果有数据显示数据，并将第一音符标蓝框；
 //* 在所有小节之后标示一个+号。
 //* 单行模式，绘制中的小节位于屏幕中。
@@ -57,6 +56,7 @@ public class RhythmEditor extends View {
     private Paint maskPaint;
     private Paint slidingBallPaint;
     private Paint slidingVerticalBarPaint;
+    private Paint slidingVerticalBarCenterBoxPaint;
 
 
 
@@ -101,159 +101,9 @@ public class RhythmEditor extends View {
 
     private ArrayList<VerticalBar> verticalBars;//滑动时的刻度
     private RectF clickingBallRectF;
+    private RectF slidingBarCenterBox;
+    private int leftEndAddedAmount = 0;//判断刻度位置（以便绘制长线的移动后位置）
 
-    //用于描述各字符对应绘制信息的一个内部类
-    public class DrawingUnit {
-        //在横向上，各字符基本是等宽的；
-        // 但是当位于节拍或小节末尾时，右侧会附加上额外的空间
-        // 这些额外的空间会影响后续字符的横向位置，因而必须记录到所有受影响的字符中；
-        //（另外，小节之间的小节线的绘制信息不记录在DU中，而是由onD方法现场计算绘制。但位于小节末尾
-        // 的DU中会持有一个节末标记变量）
-        //如果是小节内最后一个音符，需要记录一下，以便在遍历绘制时在后面绘制一条竖线（小节线）
-        //拍子之间、小节之间有额外间隔，由设置方法计算出位置后直接存储给相应字段，本类不需持有相应位置信息。
-        //最前端的一条小节线由绘制方法默认绘制，不需记录。
-//        private byte additionalSpotType = 0;//上下加点类型，默认0（无加点）；下加负值、上加正值。原则上不超正负3。
-//        private byte bottomLineAmount = 0;//并不是所有音符都有下划线。
-
-        /* 作为一个绘制单位，其整体的左端起始位置
-         * 用于使后续单位建立自己的位置*/
-        float left;
-        float right;
-        float top;
-        float bottom;
-
-        private String code = "X";//默认是X，当作为旋律绘制时绘制具体音高的数值。
-        private float codeStartX;//用于字符绘制（字符底边中点）
-        private float codeBaseY;//字符底边【待？基线还是底边？】
-
-        private ArrayList<BottomLine> bottomLines = new ArrayList<>();//已实例化，直接add即可。
-        private RectF[] additionalPoints = new RectF[]{};//上下加点
-
-        private int curveNumber = 0;//在均分多连音情况下，顶弧中间有一个小数字；
-        private float cNumCenterX;
-        private float cNumBaseY;
-
-        private boolean isLastCodeInSection = false;
-
-
-        //一个字符的空间方案暂定如下：标志尺寸ss,字符区域占宽=ss（字体尺寸本身不足的留空即可），
-        // 字符占高=展宽；字符上方预留半ss的顶弧线高度，其中保留一小层的高度作为上加点区域；
-        //字符下方半ss空间是下划线区域，下划线下方保留一小层高度作为下加点区域。（小层高度待定，暂定5~8dp）
-        //非首尾拍字符之间是没有间隔的，以便令下划线相接。
-
-        //连音线的绘制，将由RhV直接提供方法。程序根据词序缺少位置，指定Rhv在哪些（起止）位置上绘制连音线
-
-
-        public DrawingUnit() {
-        }
-
-        public DrawingUnit(String code, boolean isLastCodeInSection, float codeStartX, float codeBaseY, ArrayList<BottomLine> bottomLines, RectF[] additionalPoints, float left, float right, float top, float bottom) {
-            this.code = code;
-            this.isLastCodeInSection = isLastCodeInSection;
-            this.codeStartX = codeStartX;
-            this.codeBaseY = codeBaseY;
-            this.bottomLines = bottomLines;
-            this.additionalPoints = additionalPoints;
-            this.left = left;
-            this.right = right;
-            this.top = top;
-            this.bottom = bottom;
-        }
-
-
-        /*public void setBottomLineAmount(byte bottomLineAmount) {
-            if(bottomLineAmount>3){
-                Toast.makeText(mContext, "音符下划线过多？请检查谱子是否正确。", Toast.LENGTH_SHORT).show();
-                return;
-            }else if (bottomLineAmount<0){
-                Toast.makeText(mContext, "音符下划线数值设置错误。", Toast.LENGTH_SHORT).show();
-
-            }
-            this.bottomLineAmount = bottomLineAmount;
-        }*/
-
-        public String getCode() {
-            return code;
-        }
-
-        public void setCode(String code) {
-            //从编码到code需要转换（即使是音高，也因上下加点而多种不同）
-            this.code = code;
-        }
-
-
-/*
-        public void setAdditionalSpotType(byte additionalSpotType) {
-            if(additionalSpotType>4||additionalSpotType<-4){
-                Toast.makeText(mContext, "上下加点异常，请检查输入是否错误。", Toast.LENGTH_SHORT).show();
-            }else {
-                this.additionalSpotType = additionalSpotType;
-                //在不超正负4，但超正负2时，可以设置，但要给出提示。
-                if(additionalSpotType>2){
-                    Toast.makeText(mContext, "上加点超过2，可能超出可演唱音域。", Toast.LENGTH_SHORT).show();
-                }else if(additionalSpotType<-2){
-                    Toast.makeText(mContext, "下加点超过2，可能超出可演唱音域。", Toast.LENGTH_SHORT).show();
-                }
-            }
-        }
-*/
-
-        public float getCodeStartX() {
-            return codeStartX;
-        }
-
-        public void setCodeStartX(float codeStartX) {
-            this.codeStartX = codeStartX;
-        }
-
-        public float getCodeBaseY() {
-            return codeBaseY;
-        }
-
-        public void setCodeBaseY(float codeBaseY) {
-            this.codeBaseY = codeBaseY;
-        }
-
-
-        public boolean isLastCodeInSection() {
-            return isLastCodeInSection;
-        }
-
-        public void setLastCodeInSection(boolean lastCodeInSection) {
-            isLastCodeInSection = lastCodeInSection;
-        }
-
-        public ArrayList<BottomLine> getBottomLines() {
-            return bottomLines;
-        }
-
-        public void setBottomLines(ArrayList<BottomLine> bottomLines) {
-            this.bottomLines = bottomLines;
-        }
-
-        public RectF[] getAdditionalPoints() {
-            return additionalPoints;
-        }
-
-        public void setAdditionalPoints(RectF[] additionalPoints) {
-            this.additionalPoints = additionalPoints;
-        }
-    }
-
-    //用于描述各音符下划线绘制信息的类，用在DrawingUnit中
-    private class BottomLine {
-        float startX;
-        float startY;
-        float toX;
-        float toY;
-
-        public BottomLine(float startX, float startY, float toX, float toY) {
-            this.startX = startX;
-            this.startY = startY;
-            this.toX = toX;
-            this.toY = toY;
-        }
-    }
 
 
     //用于进入滑动模式时的刻度短线绘制
@@ -270,14 +120,14 @@ public class RhythmEditor extends View {
     }
 
 
-    public RhythmEditor(Context context) {
+    public RhythmSingleLineEditor(Context context) {
         super(context);
         mContext = context;
         init(null);
 //        this.listener = null;
     }
 
-    public RhythmEditor(Context context, AttributeSet attributeset) {
+    public RhythmSingleLineEditor(Context context, AttributeSet attributeset) {
         super(context, attributeset);
         mContext = context;
         init(attributeset);
@@ -285,7 +135,7 @@ public class RhythmEditor extends View {
     }
 
 
-    public RhythmEditor(Context context, AttributeSet attributeset, int defStyledAttrs) {
+    public RhythmSingleLineEditor(Context context, AttributeSet attributeset, int defStyledAttrs) {
         super(context, attributeset, defStyledAttrs);
         mContext = context;
         init(attributeset);
@@ -372,6 +222,12 @@ public class RhythmEditor extends View {
         slidingVerticalBarPaint.setStrokeWidth(2);
         slidingVerticalBarPaint.setAntiAlias(true);
         slidingVerticalBarPaint.setColor(slidingVerticalBar_black);
+
+        slidingVerticalBarCenterBoxPaint = new Paint();
+        slidingVerticalBarCenterBoxPaint.setStyle(Paint.Style.STROKE);
+        slidingVerticalBarCenterBoxPaint.setStrokeWidth(2);
+        slidingVerticalBarCenterBoxPaint.setAntiAlias(true);
+        slidingVerticalBarCenterBoxPaint.setColor(slidingBall_pink);
 
     }
 
@@ -479,11 +335,21 @@ public class RhythmEditor extends View {
         if(isSlidingModeOn){
             //滑动模式下，额外复制一层遮罩；以及遮罩上方的小球、刻度
             //【当滑动开始后（滑动了一定程度），设置新的滑动中绘制参数即可；（而且下方各小节的绘制位置信息也产生了改变）】
+
+            //绘制半透明背景遮罩
             canvas.drawRect(0,0,sizeChangedWidth,sizeChangedHeight,maskPaint);
+
+            //绘制小圆点（小圆点停留在原地，在一次滑动中不随手指移动）
             canvas.drawArc(clickingBallRectF,0,360,true,slidingBallPaint);
+
+            //绘制上方标线
             for (VerticalBar vb: verticalBars) {
                 canvas.drawLine(vb.x, vb.top, vb.x, vb.bottom, slidingVerticalBarPaint);
             }
+
+            //绘制标线中央框
+            canvas.drawRect(slidingBarCenterBox,slidingVerticalBarCenterBoxPaint);
+
         }
 
 
@@ -868,66 +734,104 @@ public class RhythmEditor extends View {
         if(totalRequiredLength < (sizeChangedWidth-2*padding)){
             //没有滑动的必要，不再执行后续动作
             noNeedToSliding = true;
+            isSlidingModeOn = false;//onDraw中通过此变量判断是否绘制遮罩及滑动组件。
         }else {
             noNeedToSliding = false;
+            isSlidingModeOn = true;
             //要绘制出相应的状态
-            //在此计算各数据
 
+            //刻度计数器清零备用
+            leftEndAddedAmount = 0;
+
+            //在此计算各数据
             clickingBallRectF = new RectF(x-slidingBallDiameter/2,y-slidingBallDiameter/2,x+slidingBallDiameter/2,y+slidingBallDiameter/2);
 
             verticalBars = new ArrayList<>(19);
-            //计划绘制①中央长线*1；②两侧中长线*2；③两侧短线共四组*16
+            //计划绘制①中央及两侧中长线*3；③两侧短线共四组*16
             //从左向右添加
             float middleX = sizeChangedWidth/2;
-            verticalBars.set(9,new VerticalBar(middleX,padding,padding+slidingVerticalBarLong));
-            for(int i=0;i<19;i++){
-                if(i!=9) {
-                    if(i==4||i==14) {
-                        //中长线
-                        new VerticalBar(middleX + (i - 9) * slidingVerticalBarGap, padding, padding+slidingVerticalBarMedium);
-                    } else {
-                        //短线
-                        new VerticalBar(middleX + (i - 9) * slidingVerticalBarGap, padding, padding+slidingVerticalBarShort);
-                    }
-                }//==9的中间竖线已计算
+            //要先确定中央位置
+            for(int i=0;i<19;i++) {
+                if (i == 4 || i == 9 || i == 14) {
+                    //中长线
+                    new VerticalBar(middleX + (i - 9) * slidingVerticalBarGap, padding, padding + slidingVerticalBarMedium);
+                } else {
+                    //短线
+                    new VerticalBar(middleX + (i - 9) * slidingVerticalBarGap, padding, padding + slidingVerticalBarShort);
+                }
+                //滑动后，更新：①底层的节奏数据各X坐标；②上方刻度（每touch一次重置一回中心线，否则（如多次调用本方法）只是改变其余各线的状态，模拟滑动刻度）
             }
+
+            //套在中央标线上的框
+            slidingBarCenterBox = new RectF(middleX-5,padding-2,middleX+5,padding+slidingVerticalBarMedium+3);
+
         }
+
+        invalidate();//别忘了哦，这样才能绘制出去
     }
 
 
     //滑动到达一定程度后，更新绘制（相当于滑动到了一个新刻度）
-    public void slidingChange(boolean toLeft){
+    public void slidingChange(boolean isToLeft){
+        //一次按下手指到抬起手指前的所有滑动操作属于一个事件，在调用方，通过判断滑动量，离散式的调用到
+        //本方法，每次传递一个差分的量，而不是传递累积的量；因而这边可直接在前次修改的基础上再次修改。
         //暂定只传递向左or向右滑动【每次滑动一个标准drawingUnit宽度】（暂不设计得太精确，毕竟自己用且急用）
-
         if(noNeedToSliding) {
             return;
         }
 
-        //滑动后，更新：①底层的节奏数据各X坐标；②上方刻度（每touch一次重置一回中心线，否则（如多次调用本方法）只是改变其余各线的状态，模拟滑动刻度）
+        if(isToLeft){
+            leftEndAddedAmount++;
+        }else {
+            leftEndAddedAmount--;
+        }//根据该值绘制稍长刻度的位置
 
-        【到此，下方暂未修改】
-            //如果还是不需滑动则直接无反应
-            //设置新的绘制参数
-            clickingBallRectF = new RectF(x-slidingBallDiameter/2,y-slidingBallDiameter/2,x+slidingBallDiameter/2,y+slidingBallDiameter/2);
+        float middleX = sizeChangedWidth/2;
 
-            verticalBars = new ArrayList<>(19);
-            //计划绘制①中央长线*1；②两侧中长线*2；③两侧短线共四组*16
-            //从左向右添加
-            float middleX = sizeChangedWidth/2;
-            verticalBars.set(9,new VerticalBar(middleX,padding,padding+slidingVerticalBarLong));
-            for(int i=0;i<19;i++){
-                if(i!=9) {
-                    if(i==4||i==14) {
-                        //中长线
-                        new VerticalBar(middleX + (i - 9) * slidingVerticalBarGap, padding, padding+slidingVerticalBarMedium);
-                    } else {
-                        //短线
-                        new VerticalBar(middleX + (i - 9) * slidingVerticalBarGap, padding, padding+slidingVerticalBarShort);
-                    }
-                }//==9的中间竖线已计算
+        //改变刻度线序列绘制位置
+        for(int i=0;i<19;i++) {//仍然只绘制19条
+            if (i == (4+(leftEndAddedAmount%5)) || i == (9+(leftEndAddedAmount%5)) || i == (14+(leftEndAddedAmount%5))) {
+                //中长线
+                new VerticalBar(middleX + (i - 9) * slidingVerticalBarGap, padding, padding + slidingVerticalBarMedium);
+            } else {
+                //短线
+                new VerticalBar(middleX + (i - 9) * slidingVerticalBarGap, padding, padding + slidingVerticalBarShort);
             }
+            //滑动后，更新：①底层的节奏数据各X坐标；②上方刻度（每touch一次重置一回中心线，否则（如多次调用本方法）只是改变其余各线的状态，模拟滑动刻度）
+        }
+        //红色圆点+中央框的信息不变，不修改
+
+        float shiftAmount_X = leftEndAddedAmount*unitStandardWidth;//单行模式下采用标准宽度，无压缩、扩展因而移动时直接按标准宽移动即可。
+       //改变下层数据绘制位置
+        for (ArrayList<DrawingUnit> duInSections:drawingUnits) {
+            for (DrawingUnit du :duInSections) {
+                du.shiftEntirely(shiftAmount_X,0,sizeChangedWidth,sizeChangedHeight);
+            }
+        }
+
+        invalidate();
     }
 
+    //手指抬起、单次滑动结束
+    public void slidingEnd(){
+        //此时底层dus已经移动到新位置，且不需改变（若要回移，应由下次触屏触发）
+        if(noNeedToSliding) {
+            return;
+        }
+
+        //刻度计数器清零
+        leftEndAddedAmount = 0;
+
+        //释放，下次点击时重新实例化各绘制信息组件。
+        clickingBallRectF = null;
+        verticalBars = null;
+        slidingBarCenterBox = null;
+
+        //单次滑动结束，标志变量置否
+        isSlidingModeOn = false;
+
+        invalidate();//别忘了哦，这样才能绘制出去
+    }
 
 
 }
