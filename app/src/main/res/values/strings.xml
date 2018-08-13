@@ -28,5 +28,15 @@
     <string name="str_6_over8">6/8</string>
     <string name="confirm">确定</string>
     <string name="cancel">取消</string>
+    <string name="str_addRhythm_edit">新增节奏型（编辑）</string>
+    <string name="str_sharp2">##</string>
+    <string name="num_3">3</string>
+    <string name="lastSection">←上一节</string>
+    <string name="nextSection">下一节→</string>
+    <string name="lastUnit">←上一音符</string>
+    <string name="nextUnit">下一音符→</string>
+    <string name="input">输入</string>
+    <string name="num_2">2</string>
+    <string name="remove">移除</string>
 
 </resources>

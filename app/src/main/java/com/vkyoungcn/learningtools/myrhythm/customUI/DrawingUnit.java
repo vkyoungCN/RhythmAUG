@@ -36,9 +36,12 @@ public class DrawingUnit {
     public ArrayList<BottomLine> bottomLines = new ArrayList<>();//已实例化，直接add即可。
     public RectF[] additionalPoints = new RectF[]{};//上下加点
 
-    public int curveNumber = 0;//在均分多连音情况下，顶弧中间有一个小数字；
-    public float cNumCenterX;
-    public float cNumBaseY;
+    public int mCurveNumber = 0;//在均分多连音情况下，顶弧中间有一个小数字；
+    public float mCurveNumCenterX;
+    public float mCurveNumBaseY;
+
+    public boolean isEndCodeOfLongCurve = false;//当编码遇到112~127数值时，需要在将前一个音符的du中的本字段设true，且记录弧线跨度。
+    public int curveLength = 0;//如果要绘制上方连音弧线（且不是均分多连音），则需记录弧线向前跨越多少个音符。
 
     public boolean isLastCodeInSection = false;
 
@@ -186,8 +189,8 @@ public class DrawingUnit {
             rf.bottom+=v_shiftAmount;
         }
 
-        this.cNumCenterX+=h_shiftAmount;
-        this.cNumBaseY+=v_shiftAmount;
+        this.mCurveNumCenterX +=h_shiftAmount;
+        this.mCurveNumBaseY +=v_shiftAmount;
 
     }
 
