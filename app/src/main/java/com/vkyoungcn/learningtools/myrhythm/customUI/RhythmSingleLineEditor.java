@@ -116,6 +116,8 @@ public class RhythmSingleLineEditor extends RhythmView {
     public static final int MOVE_NEXT_SECTION = 2902;
     public static final int MOVE_LAST_UNIT = 2903;
     public static final int MOVE_LAST_SECTION = 2904;
+    public static final int MOVE_FINAL_SECTION = 2905;
+    public static final int DELETE_MOVE_LAST_SECTION = 2906;
 
 
 
@@ -627,6 +629,34 @@ public class RhythmSingleLineEditor extends RhythmView {
                     return  -19;
 
                 }
+            case DELETE_MOVE_LAST_SECTION:
+                if(blueBoxSectionIndex==0){
+                    //已在最前（删除的是第一小节）,小节索引不需改变，只改单元索引。
+                    blueBoxUnitIndex=0;
+                    invalidate();
+
+                    return -18;
+                }else {
+                    //跨节移到上节首
+                    blueBoxSectionIndex--;
+                    maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size() - 1;
+                    blueBoxUnitIndex = 0;
+
+                    invalidate();
+
+                    return -19;
+                }
+            case MOVE_FINAL_SECTION:
+                //移到最后一节的节首（用于添加一个新的小节后）
+                blueBoxSectionIndex = maxSectionIndex;//基于“引用数据源自动修改”的设想
+                maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
+
+                blueBoxUnitIndex = 0;
+                    invalidate();
+
+                    return 20;
+
+
         }
         return 0;
         /*解释
@@ -635,7 +665,9 @@ public class RhythmSingleLineEditor extends RhythmView {
         * 11：移动到下一节节首
         * -11：移动到上一节节末
         *  -19：移动到上一节节首。
+        *  -18：首节被删除后，移动到新首节的首位。
         *  0：未发生移动
+        *  20：最后一节的节首
         * */
 
 

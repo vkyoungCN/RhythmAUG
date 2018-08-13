@@ -82,7 +82,7 @@
                     android:padding="2dp"
                     android:layout_width="48dp"
                     android:layout_height="42dp"
-                    android:src="@drawable/X1" />
+                    android:src="@drawable/x1" />
                 <!--行内（按钮间）竖直分隔线-->
                 <TextView
                     android:layout_width="1dp"
@@ -94,7 +94,7 @@
                     android:padding="4dp"
                     android:layout_width="48dp"
                     android:layout_height="42dp"
-                    android:src="@drawable/Xb1" />
+                    android:src="@drawable/xb1" />
                 <!--行内（按钮间）竖直分隔线-->
                 <TextView
                     android:layout_width="1dp"
@@ -106,7 +106,7 @@
                     android:padding="4dp"
                     android:layout_width="48dp"
                     android:layout_height="42dp"
-                    android:src="@drawable/Xb2" />
+                    android:src="@drawable/xb2" />
                 <!--行内（按钮间）竖直分隔线-->
                 <TextView
                     android:layout_width="1dp"
@@ -118,7 +118,7 @@
                     android:padding="4dp"
                     android:layout_width="48dp"
                     android:layout_height="42dp"
-                    android:src="@drawable/Xb3" />
+                    android:src="@drawable/xb3" />
 
 
 
@@ -192,7 +192,7 @@
                     android:layout_width="48dp"
                     android:layout_height="42dp"
                     android:padding="2dp"
-                    android:src="@drawable/Xp1" />
+                    android:src="@drawable/xp1" />
                 <!--行内（按钮间）竖直分隔线-->
                 <TextView
                     android:layout_width="1dp"
@@ -204,7 +204,7 @@
                     android:padding="4dp"
                     android:layout_width="48dp"
                     android:layout_height="42dp"
-                    android:src="@drawable/Xbp1" />
+                    android:src="@drawable/xbp1" />
                 <!--行内（按钮间）竖直分隔线-->
                 <TextView
                     android:layout_width="1dp"
@@ -216,7 +216,7 @@
                     android:padding="4dp"
                     android:layout_width="48dp"
                     android:layout_height="42dp"
-                    android:src="@drawable/Xbp2" />
+                    android:src="@drawable/xbp2" />
                 <!--行内（按钮间）竖直分隔线-->
                 <TextView
                     android:layout_width="1dp"
@@ -307,7 +307,7 @@
                     android:layout_width="48dp"
                     android:layout_height="42dp"
                     android:padding="2dp"
-                    android:src="@drawable/Xbr1" />
+                    android:src="@drawable/xbr1" />
                 <!--行内（按钮间）竖直分隔线-->
                 <TextView
                     android:layout_width="1dp"
@@ -320,7 +320,7 @@
                     android:layout_width="48dp"
                     android:layout_height="42dp"
                     android:padding="4dp"
-                    android:src="@drawable/Xbr2" />
+                    android:src="@drawable/xbr2" />
                 <!--行内（按钮间）竖直分隔线-->
                 <TextView
                     android:layout_width="1dp"
@@ -333,7 +333,7 @@
                     android:layout_width="48dp"
                     android:layout_height="42dp"
                     android:padding="4dp"
-                    android:src="@drawable/Xbr3" />
+                    android:src="@drawable/xbr3" />
                 <!--行内（按钮间）竖直分隔线-->
                 <!--三级细分后再附点较为少见，取消
                 <TextView
@@ -419,7 +419,7 @@
                     android:layout_width="48dp"
                     android:layout_height="42dp"
                     android:padding="2dp"
-                    android:src="@drawable/Xm1" />
+                    android:src="@drawable/xm1" />
                 <!--行内（按钮间）竖直分隔线-->
                 <TextView
                     android:layout_width="1dp"
@@ -432,7 +432,7 @@
                     android:layout_width="48dp"
                     android:layout_height="42dp"
                     android:padding="4dp"
-                    android:src="@drawable/Xm2" />
+                    android:src="@drawable/xm2" />
                 <!--行内（按钮间）竖直分隔线-->
                 <TextView
                     android:layout_width="1dp"
@@ -445,7 +445,7 @@
                     android:layout_width="48dp"
                     android:layout_height="42dp"
                     android:padding="4dp"
-                    android:src="@drawable/Xm3" />
+                    android:src="@drawable/xm3" />
                 <!--行内（按钮间）竖直分隔线-->
                 <TextView
                     android:layout_width="1dp"
@@ -598,6 +598,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 >
+                <TextView
+                    android:id="@+id/tv_addEmptySection_ARA"
+                    android:layout_width="match_parent"
+                    android:layout_height="38dp"
+                    android:layout_margin="2dp"
+                    android:gravity="center"
+                    android:text="@string/add_emptySection"
+                    android:background="@color/myRhythm_teal"
+
+                    />
 
                 <LinearLayout
                     android:layout_width="match_parent"

@@ -17,7 +17,7 @@
     <string name="str_pitchSerial_add">创作一组\n使用默认节奏的音高序列</string>
     <string name="str_wordsSerial_add">词创作</string>
     <string name="str_rhythm_add">新增一条节奏记录</string>
-    <string name="add_rhythm_step_1">添加节奏（步骤一）</string>
+    <string name="add_rhythm_step_1">新增节奏（步骤1/3）</string>
     <string name="chooseRhythmType">选择节奏类型</string>
     <string name="add_rhythm_info_1">请选择适当的节奏类型。</string>
     <string name="rhythmType">节拍\n形式</string>
@@ -28,7 +28,7 @@
     <string name="str_6_over8">6/8</string>
     <string name="confirm">确定</string>
     <string name="cancel">取消</string>
-    <string name="str_addRhythm_edit">新增节奏型（编辑）</string>
+    <string name="str_addRhythm_edit">新增节奏（编辑,步骤2/3）</string>
     <string name="str_sharp2">##</string>
     <string name="num_3">3</string>
     <string name="lastSection">←上一节</string>
@@ -39,5 +39,14 @@
     <string name="num_2">2</string>
     <string name="remove">移除</string>
     <string name="zero">0</string>
+    <string name="add_emptySection">新增一节+</string>
+    <string name="str_addRhythm_step3">新增节奏（步骤3/3）</string>
+    <string name="beatType">节拍类型</string>
+    <string name="sharpOverSharp">#/#</string>
+    <string name="descriptionInput">输入描述</string>
+    <string name="descriptionHere">在此输入描述</string>
+    <string name="selfDesign">是否原创</string>
+    <string name="keepTop">是否置顶</string>
+    <string name="stars_rating">星级选择</string>
 
 </resources>

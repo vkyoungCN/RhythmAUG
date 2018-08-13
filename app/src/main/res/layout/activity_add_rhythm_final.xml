@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AddRhythmFinalActivity"
+    android:orientation="vertical"
+    >
+    <!--
+    rh_code（节奏编码，字串，可以模糊查询），
+    beat_type（节拍形式，即4/4等，整型），
+
+    create_time;
+
+    is_self_design（是否自行创错），
+    stars（星级，总是有一些旋律更令人心动，1~9星）；
+    keep_top（置顶）
+
+    descriotion（比如来源于哪首歌曲；表达了什么情感；可以用在什么场景；以及其他联想。有的节奏可能会多曲共用，本字段Text，可以不定记录），
+    -->
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:background="#efefef"
+        android:gravity="center"
+        android:text="@string/str_addRhythm_step3"
+        android:textSize="16sp" />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        />
+    <com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView
+        android:id="@+id/rhView_ARFA"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        />
+
+    <!--行1·节拍类型-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="72dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/beatType"
+
+            />
+        <!--竖分割线-->
+        <TextView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#efefef"/>
+        <TextView
+            android:id="@+id/tv_rhythmType_ARFA"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/myRhythm_orange"
+            android:text="@string/sharpOverSharp"
+            />
+    </LinearLayout>
+    <!--横分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#efefef"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:orientation="horizontal">
+        <CheckBox
+            android:id="@+id/ckb_selfDesign_ARFA"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/myRhythm_orange"
+            android:text="@string/selfDesign"
+            android:layout_margin="4dp"
+            />
+        <!--竖分割线-->
+        <TextView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#efefef"/>
+
+        <CheckBox
+            android:id="@+id/ckb_keepTop_ARFA"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/myRhythm_orange"
+            android:layout_margin="4dp"
+            android:text="@string/keepTop"
+            />
+        <!--竖分割线-->
+        <TextView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#efefef"
+            android:layout_marginEnd="8dp"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:layout_margin="4dp"
+            android:text="@string/stars_rating"
+            />
+        <Spinner
+            android:id="@+id/spinner_ARFA"
+            android:layout_gravity="center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:entries="@array/star_numbers"
+            />
+
+
+    </LinearLayout>
+    <!--横分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#efefef"
+        />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="20dp" />
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/description_top"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:background="#efefef"
+            android:gravity="center"
+            android:text="@string/descriptionInput"
+            />
+        <EditText
+            android:id="@+id/edt_descriptionInput_ARFA"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/description_top"
+            android:layout_above="@+id/tv_confirm_ARFA"
+            android:gravity="center"
+            android:hint="@string/descriptionHere"
+            />
+        <TextView
+            android:id="@+id/tv_confirm_ARFA"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="#e57373"
+            android:gravity="center"
+            android:layout_alignParentBottom="true"
+            android:text="@string/confirm"
+            />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_alignParentBottom="true"
+            android:background="@color/myRhythm_light_green"
+            />
+    </RelativeLayout>
+
+
+
+
+</LinearLayout>

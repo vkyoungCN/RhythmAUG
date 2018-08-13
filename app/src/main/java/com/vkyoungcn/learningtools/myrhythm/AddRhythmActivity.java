@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -13,6 +14,12 @@ import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 
 import java.util.ArrayList;
 
+import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor.DELETE_MOVE_LAST_SECTION;
+import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor.MOVE_FINAL_SECTION;
+import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor.MOVE_LAST_SECTION;
+import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor.MOVE_LAST_UNIT;
+import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor.MOVE_NEXT_SECTION;
+import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor.MOVE_NEXT_UNIT;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_24;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_34;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
@@ -82,11 +89,13 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
 
     private TextView tv_longCurve_remove;
     private TextView tv_allConfirm;
+    private TextView tv_addSection;
 
     private TextView tv_lastSection;
     private TextView tv_nextSection;
     private TextView tv_lastUnit;
     private TextView tv_nextUnit;
+
 
 
     @Override
@@ -140,6 +149,7 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
 
         tv_longCurve_remove =findViewById(R.id.tv_longCurveRemove_ARA) ;
         tv_allConfirm = findViewById(R.id.tv_confirmAddRhythm_ARA);
+        tv_addSection = findViewById(R.id.tv_addEmptySection_ARA);
 
         tv_lastSection = findViewById(R.id.tv_lastSection_ARA);
         tv_nextSection = findViewById(R.id.tv_nextSection_ARA);
@@ -172,6 +182,7 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
 
         tv_longCurve_remove.setOnClickListener(this);
         tv_allConfirm.setOnClickListener(this);
+        tv_addSection.setOnClickListener(this);
 
         tv_lastSection.setOnClickListener(this);
         tv_nextSection.setOnClickListener(this);
@@ -230,11 +241,11 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
             firstSection.add((byte)-valueOfBeat);//填入负值（显示为空拍0）
         }
         codesInSections.add(firstSection);
-        codes.addAll(firstSection);
+//        codes.addAll(firstSection);
 
         rhythm = new Rhythm();
         //暂时只对节奏数据类设置两项即可。
-        rhythm.setRhythmCodeSerial(codes);
+//        rhythm.setRhythmCodeSerial(codes);
         rhythm.setRhythmType(rhythmType);
 
         rh_editor_ARA.setRhythm(codesInSections,rhythmType,14,18);
@@ -245,7 +256,104 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
     @Override
     public void onClick(View v) {
         switch (v.getId()){
+            case R.id.imv_x0_ARA :
+                changeCode((byte)valueOfBeat);
+                break;
+            case R.id.imv_xb1_ARA :
+                changeCode((byte)(valueOfBeat/2));
+                break;
+            case R.id.imv_xb2_ARA :
+                changeCode((byte)(valueOfBeat/4));
+                break;
+            case R.id.imv_xb3_ARA:
+                changeCode((byte)(valueOfBeat/8));
+                break;
+            case R.id.imv_xp_ARA :
+                changeCode((byte)(valueOfBeat+valueOfBeat/2));
+                break;
+            case R.id.imv_xpb1_ARA :
+                changeCode((byte)(valueOfBeat/2+valueOfBeat/4));
+                break;
+            case R.id.imv_xpb2_ARA :
+                changeCode((byte)(valueOfBeat/4+valueOfBeat/8));
+                break;
+            case R.id.imv_xl1_ARA :
+                changeCode((byte)(valueOfBeat*2));
+                break;
+            case R.id.imv_xl2_ARA :
+                changeCode((byte)(valueOfBeat*3));
+                break;
+            case R.id.imv_xl3_ARA :
+                changeCode((byte)(valueOfBeat*3));
+                break;
+            case R.id.imv_xm1_ARA :
+                int fraction = Integer.parseInt(edt_xmNum.getText().toString());
+                changeCodeToMultiDivided(8,fraction);
+                break;
+            case R.id.imv_xm2_ARA :
+                int fraction_2 = Integer.parseInt(edt_xmNum.getText().toString());
+                changeCodeToMultiDivided(9,fraction_2);
+                break;
+            case R.id.imv_xm_ARA :
+                int fraction_3 = Integer.parseInt(edt_xmNum.getText().toString());
+                changeCodeToMultiDivided(7,fraction_3);
+                break;
+            case R.id.tv_empty_ARA :
+                changeToEmpty();
+                break;
+            case R.id.imv_longCurveEnd_ARA:
+                int spanNum = Integer.parseInt(edt_longCurveNum.getText().toString());
+                if(spanNum>7||spanNum<2){
+                    //不合理的跨度
+                    Toast.makeText(this, "连音跨度不合理，请检查输入", Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                insertCurveEndAfterCurrent(spanNum);
+                break;
+            case R.id.tv_longCurveRemove_ARA:
 
+                int returnNum = checkAndRemoveLongCurve();
+                if(returnNum<0){
+                    Toast.makeText(this, "不在连音弧覆盖的范围，没有删除的目标", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case R.id.tv_lastSection_ARA:
+                moveBox(MOVE_LAST_SECTION);
+                break;
+            case R.id.tv_lastUnit_ARA:
+                moveBox(MOVE_LAST_UNIT);
+
+                break;
+            case R.id.tv_nextSection_ARA:
+                moveBox(MOVE_NEXT_SECTION);
+                break;
+            case R.id.tv_nextUnit_ARA:
+                moveBox(MOVE_NEXT_UNIT);
+                break;
+
+            case R.id.tv_confirmAddRhythm_ARA:
+                //直接前往下一页
+                Intent intentToStep_3 = new Intent(this,AddRhythmFinalActivity.class);
+                //将修改完成的code编码设置给rhythm类。
+                for (ArrayList<Byte> codes_section:codesInSections) {
+                    codes.addAll(codes_section);
+                }
+                rhythm.setRhythmCodeSerial(codes);
+                intentToStep_3.putExtra("RHYTHM",rhythm);
+                this.startActivity(intentToStep_3);
+
+                break;
+            case R.id.tv_addEmptySection_ARA:
+                //在最后添加一个新的小节，编辑框移动到新小节第一位置
+                ArrayList<Byte> newSection = new ArrayList<>();
+                for (int i=0;i<sectionSize;i++) {
+                    newSection.add((byte)-valueOfBeat);//填入负值（显示为空拍0）
+                }
+                codesInSections.add(newSection);
+                moveBox(MOVE_FINAL_SECTION);
+
+                break;
 
         }
     }
@@ -254,7 +362,9 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
         //确定剩余的可用时值值
         ArrayList<Byte> currentSectionCodes = codesInSections.get(currentSectionIndex);
         int emptyValueInSection = 0;
-        for(Byte code:currentSectionCodes){
+        for(int i=currentUnitIndexInSection;i<currentSectionCodes.size();i++){
+            //只计算本位置后尚余多少时值的空拍
+            byte code =currentSectionCodes.get(i);
             if(code< 0 ){
                 emptyValueInSection-=code;
             }
@@ -268,6 +378,50 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
         if(emptyValueInSection<newValue){
             Toast.makeText(this, "小节内剩余空时值不足，请考虑删除其他已有音符", Toast.LENGTH_SHORT).show();
         }else {
+            if(newCode<=(valueOfBeat+valueOfBeat/2)) {
+                //只涉及一位编码
+                currentSectionCodes.set(currentUnitIndexInSection, newCode);
+            }else if(newCode<valueOfBeat*4) {
+                //可能涉及多位编码
+                int numbersNeeded = (newCode/valueOfBeat)-1;//影响到几个字符（通常是X---形式，第一个除去，剩余还需几个位置。结果应在1~3）
+                //先修改当前音符
+                currentSectionCodes.set(currentUnitIndexInSection,(byte)valueOfBeat);
+
+                for(int j=1;j<=numbersNeeded;j++){
+                    if(currentSectionCodes.get(currentUnitIndexInSection+j)>0){
+                        Toast.makeText(this, "空间不足以安置整个目标时值，截断处理。", Toast.LENGTH_SHORT).show();
+                        break;//后面遇到非空位置，退出，且提示。
+                    }
+                    //只有在后面是空拍或延长音时才能如是设置。
+                    currentSectionCodes.set(currentUnitIndexInSection+j,(byte)0);//后面都是-，设为code=0即可.
+
+                }
+            }
+        }
+
+        //通知到UI改变
+        rh_editor_ARA.codeChangedReDraw();
+
+
+    }
+
+    private void changeCodeToMultiDivided(int ten, int fraction){
+        //确定剩余的可用时值值
+        ArrayList<Byte> currentSectionCodes = codesInSections.get(currentSectionIndex);
+        int emptyValueInSection = 0;
+        for(int i=currentUnitIndexInSection;i<currentSectionCodes.size();i++){
+            //只计算本位置后尚余多少时值的空拍
+            byte code =currentSectionCodes.get(i);
+            if(code< 0 ){
+                emptyValueInSection-=code;
+            }
+        }
+
+        //判断新编码的时值是否符号条件
+        if(emptyValueInSection<valueOfBeat){//均分多连音占据一个标准节拍的时值
+            Toast.makeText(this, "小节内剩余空时值不足，请考虑删除其他已有音符", Toast.LENGTH_SHORT).show();
+        }else {
+            byte newCode = (byte) (ten*10+fraction);
             currentSectionCodes.set(currentUnitIndexInSection,newCode);
         }
 
@@ -279,7 +433,30 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
 
     private void changeToEmpty(){
         byte b = codesInSections.get(currentSectionIndex).get(currentUnitIndexInSection);
-        codesInSections.get(currentSectionIndex).set(currentUnitIndexInSection,(byte)-b);
+        //变更为同时值大小的
+        ArrayList<Byte> codesInThisSection = codesInSections.get(currentSectionIndex);
+        codesInThisSection.set(currentUnitIndexInSection,(byte)-b);
+
+        boolean isAllEmpty = true;
+        for (byte code:codesInThisSection) {
+            if(code>0&&code<112){
+                isAllEmpty = false;//只单向设置
+                break;
+            }
+        }
+        if(isAllEmpty){
+            //本节没有非空的拍子了,应当整节删除
+            codesInSections.remove(currentSectionIndex);
+            /*
+            对索引计数器的调整，由moveB方法负责。
+            if(currentSectionIndex>0) {
+                currentSectionIndex--;
+            }
+            currentUnitIndexInSection = 0;*/
+            moveBox(DELETE_MOVE_LAST_SECTION);
+
+
+        }
 
         //通知到UI改变
         rh_editor_ARA.codeChangedReDraw();
@@ -287,8 +464,58 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
 
     }
 
+
+    private void insertCurveEndAfterCurrent(int span){
+        byte code = (byte)(110+span);//这里的跨度从2起，最小是2。
+        if((codesInSections.get(currentSectionIndex).size()-1-currentUnitIndexInSection)>0){
+            //后面有元素，指定索引插入
+            codesInSections.get(currentSectionIndex).add(currentUnitIndexInSection+1,code);
+            //据文档：是在指定索引插入元素，该位置原有及后续元素均右移（如果有的话）。
+
+        }else {
+            //后面已经没有元素，要附加
+            codesInSections.get(currentSectionIndex).add(code);
+        }
+
+        //通知到UI改变
+        rh_editor_ARA.codeChangedReDraw();
+
+
+    }
+
+    private int checkAndRemoveLongCurve(){
+        int numForReturn = 0;
+        int distanceToCurveEnd = 0;
+        ArrayList<Byte> codesInThisSection = codesInSections.get(currentSectionIndex);
+        for(int j=currentSectionIndex;j<codesInSections.size()-1;j++) {
+            for (int i = currentUnitIndexInSection; i < codesInThisSection.size() - 1; i++) {
+                distanceToCurveEnd++;
+                byte b = codesInThisSection.get(i);
+                if (b > 111) {
+                    //是curveEnd
+                    if (distanceToCurveEnd <= (b - 110)) {
+                        //在有效跨度内，可以移除
+                        codesInThisSection.remove(i);
+                        //通知到UI改变
+                        rh_editor_ARA.codeChangedReDraw();
+                    } else {
+                        numForReturn = -1;//代表不在弧线覆盖范围内
+                    }
+                    return numForReturn;
+                }
+            }
+            currentUnitIndexInSection = 0;//本节剩余字符内没有连音弧结束标记，需要跨节寻找，重置节内索引。
+
+        }
+        //当所有剩余字符都检索完毕仍没有检索到，则
+        numForReturn = -2;
+        return numForReturn;
+
+    }
+
     private void moveBox(int moveType){
         int result = rh_editor_ARA.moveBox(moveType);
+
         switch (result){
             case 1:
                 currentUnitIndexInSection++;
@@ -308,6 +535,13 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
                 currentSectionIndex--;
                 currentUnitIndexInSection = 0;
                 break;
+            case -18:
+                currentSectionIndex = 0;
+                currentUnitIndexInSection = 0;
+                break;
+            case 20:
+                currentSectionIndex = codesInSections.size()-1;
+                currentUnitIndexInSection = 0;
         }
 
 
