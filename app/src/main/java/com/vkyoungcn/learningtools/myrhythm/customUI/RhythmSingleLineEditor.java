@@ -7,11 +7,9 @@ import android.graphics.RectF;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
-import android.view.View;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
-import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 
 import java.util.ArrayList;
 
@@ -33,11 +31,14 @@ public class RhythmSingleLineEditor extends RhythmView {
     private boolean ready = false;//由于“未设置”和“已设置但空数据”时数据源列表都是空，因而需要另设字段用于判断数据是否设置完毕。
     //当设置了数据后，置true，可以开始正式绘制。
 
-    private ArrayList<Byte> rhythmCodes; //数据源，节奏序列的编码。根据该数据生成各字符单元上的绘制信息。
+//    private ArrayList<Byte> rhythmCodes; //数据源，节奏序列的编码。根据该数据生成各字符单元上的绘制信息。
     private int rhythmType;//节拍类型（如4/4），会影响分节的绘制。【不能直接传递在本程序所用的节奏编码方案下的时值总长，因为3/4和6/8等长但绘制不同】
 //    private int unitAmount;
     private int valueOfBeat = 16;
     private int valueOfSection = 64;
+
+    private int blueBoxSectionIndex = 0;//蓝框位置，小节的索引【注意，是针对dU列表而言的索引，由于code中多一个延音弧尾端标记，所以无法对应。】
+    private int blueBoxUnitIndex = 0;//蓝框位置(小节内du的索引)
 
     private ArrayList<ArrayList<Byte>> codesInSections;//对数据源进行分析处理之后，按小节归纳起来。便于进行按节分行的判断。
     private ArrayList<ArrayList<DrawingUnit>> drawingUnits;//绘制数据也需要按小节组织，以便与按小节组织的代码一并处理。
@@ -61,6 +62,8 @@ public class RhythmSingleLineEditor extends RhythmView {
     private Paint slidingBallPaint;
     private Paint slidingVerticalBarPaint;
     private Paint slidingVerticalBarCenterBoxPaint;
+
+    private Paint blueBoxPaint;
 
 
 
@@ -107,6 +110,12 @@ public class RhythmSingleLineEditor extends RhythmView {
     private RectF clickingBallRectF;
     private RectF slidingBarCenterBox;
     private int leftEndAddedAmount = 0;//判断刻度位置（以便绘制长线的移动后位置）
+
+
+    public static final int MOVE_NEXT_UNIT = 2901;
+    public static final int MOVE_NEXT_SECTION = 2902;
+    public static final int MOVE_LAST_UNIT = 2903;
+    public static final int MOVE_LAST_SECTION = 2904;
 
 
 
@@ -233,6 +242,11 @@ public class RhythmSingleLineEditor extends RhythmView {
         slidingVerticalBarCenterBoxPaint.setAntiAlias(true);
         slidingVerticalBarCenterBoxPaint.setColor(slidingBall_pink);
 
+        blueBoxPaint = new Paint();
+        blueBoxPaint.setStyle(Paint.Style.STROKE);
+        blueBoxPaint.setStrokeWidth(2);
+        blueBoxPaint.setColor(editBox_blue);
+
     }
 
 
@@ -248,7 +262,7 @@ public class RhythmSingleLineEditor extends RhythmView {
         sizeChangedHeight = h;
         sizeChangedWidth = w;
 
-        if(!rhythmCodes.isEmpty()){
+        if(!codesInSections.isEmpty()){
             //如果数据源此时非空，则代表数据源的设置早于onSC，也即数据源设置方法中的绘制信息初始化方法被中止，
             //需要再次再次初始化绘制信息（但是传入isTBOSC标记，只初始绘制信息不进行刷新）
             initDrawingUnits(true);
@@ -292,10 +306,6 @@ public class RhythmSingleLineEditor extends RhythmView {
         }
         //注意，小节线绘制规则：起端没有小节线，小节线只存在于末尾
 
-        //经过了ready标记判断后，再次进入绘制如果列表仍空则代表是新增模式
-
-
-        
 
         //【注意】即使是进入了滑动模式，下层的内容仍然要绘制，显示。
         //逐小节逐音符绘制
@@ -304,6 +314,7 @@ public class RhythmSingleLineEditor extends RhythmView {
 
             int unitCursor = 0;//用于判断是否到达小节末尾。
             for (int k=0;k<sectionDrawingUnits.size();k++) {
+
                 DrawingUnit drawingUnit = sectionDrawingUnits.get(k);
 
                 //字符
@@ -369,8 +380,16 @@ public class RhythmSingleLineEditor extends RhythmView {
                         }
                     }
                 }
+
+                //蓝框
+                if(blueBoxSectionIndex == i && blueBoxUnitIndex==k){
+                    canvas.drawRect(drawingUnit.left,drawingUnit.top,drawingUnit.right,drawingUnit.bottom,blueBoxPaint);
+                }
+
             }
         }
+
+
 
         if(isSlidingModeOn){
             //滑动模式下，额外复制一层遮罩；以及遮罩上方的小球、刻度
@@ -406,20 +425,20 @@ public class RhythmSingleLineEditor extends RhythmView {
      * 设置节拍类型（4/4等）
      * 设置字符大小
      * */
-    public void setRhythm(Rhythm rcs, int codeSize, int unitWidth){
-        this.rhythmCodes = rcs.getRhythmCodeSerial();
-        this.rhythmType = rcs.getRhythmType();
+    public void setRhythm(ArrayList<ArrayList<Byte>> codesInSections,int rhythmType, int charSize, int unitWidth){
+        this.codesInSections =codesInSections;
+        this.rhythmType = rhythmType;
 
         int codeMinSize = 12;
         int codeMaxSize = 28;
-        if(codeSize<codeMinSize){
+        if(charSize<codeMinSize){
             //不允许小于12【暂定】
             this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeMinSize, getResources().getDisplayMetrics());
-        }else if(codeSize>codeMaxSize){
+        }else if(charSize>codeMaxSize){
             //不允许大于28【暂定】
             this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeMaxSize, getResources().getDisplayMetrics());
         }else {
-            this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeSize, getResources().getDisplayMetrics());
+            this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, charSize, getResources().getDisplayMetrics());
         }
 
         int unitMinSize = 16;
@@ -431,7 +450,7 @@ public class RhythmSingleLineEditor extends RhythmView {
             //不允许大于36【暂定】
             this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, unitMaxSize, getResources().getDisplayMetrics());
         }else {
-            this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeSize, getResources().getDisplayMetrics());
+            this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, charSize, getResources().getDisplayMetrics());
         }
 
         /*switch (codeSize){
@@ -475,8 +494,8 @@ public class RhythmSingleLineEditor extends RhythmView {
                 valueOfBeat = 8;
                 break;
         }
-        //先将所有音符的序列按小节拆组成若干个列表的集合列表
-        codeParseIntoSections();
+        //先将所有音符的序列按小节拆组成若干个列表的集合列表【编辑器模式下，暂定直接传入二维列表，以便同步索引位置】
+//        codeParseIntoSections();
 
         //根据初始化了的数据源初始化绘制信息数组
         //本方法在设置数据源的方法内调用，因而必然非空不需判断
@@ -494,7 +513,7 @@ public class RhythmSingleLineEditor extends RhythmView {
     }
 
 
-    private void codeParseIntoSections(){
+    /*private void codeParseIntoSections(){
         //将节奏编码序列按小节组织起来
 
         int totalValue=0;
@@ -524,6 +543,102 @@ public class RhythmSingleLineEditor extends RhythmView {
             //【注】乐谱的规则上，小节最后音符似乎不能大于小节剩余值，（比如仅剩一个帕子时不能安排大附点），如果这个规则存在，则本逻辑判断是正确的
             //【可在节奏新增的界面中，对输入规则做类似规定】，否则将混乱出错。
         }
+    }*/
+
+    //编码数据改变，但位置不改变
+    public void codeChangedReDraw(){
+        initDrawingUnits(false);
+    }
+
+    //只改位置，不改编码数据
+    public int moveBox(int moveType){
+        int maxSectionIndex = drawingUnits.size()-1;
+        int maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
+
+        switch (moveType){
+            case MOVE_NEXT_UNIT:
+                if(blueBoxUnitIndex==maxUnitIndexCurrentSection&&blueBoxSectionIndex==maxSectionIndex){
+                    //已在最后，不移动
+                    Toast.makeText(mContext, "已在最后", Toast.LENGTH_SHORT).show();
+                    return 0;
+                }else if (blueBoxUnitIndex ==maxUnitIndexCurrentSection) {
+                    //跨节
+                    blueBoxUnitIndex = 0;
+                    blueBoxSectionIndex++;
+                    maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
+                    invalidate();
+
+                    return 11;
+                }else {
+                    //不跨节
+                    blueBoxUnitIndex ++;
+                    invalidate();
+
+                    return 1;
+                }
+            case MOVE_NEXT_SECTION:
+                if(blueBoxSectionIndex == maxSectionIndex){
+                    //已在最后，不移动
+                    Toast.makeText(mContext, "已在最后", Toast.LENGTH_SHORT).show();
+                    return 0 ;
+                }else {
+                    //跨节移动到下节首
+                    blueBoxUnitIndex = 0;
+                    blueBoxSectionIndex++;
+                    maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
+                    invalidate();
+
+                    return 11;
+                }
+            case MOVE_LAST_UNIT:
+                if(blueBoxUnitIndex == 0&&blueBoxSectionIndex==0){
+                    //已在最前，不移动
+                    Toast.makeText(mContext, "已在最前", Toast.LENGTH_SHORT).show();
+                    return 0;
+                }else if(blueBoxUnitIndex == 0) {
+                    //跨节移到上节末尾
+                    blueBoxSectionIndex--;
+                    maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
+                    blueBoxUnitIndex = maxUnitIndexCurrentSection;
+
+                    invalidate();
+                    return -11;
+                }else {
+                    //本节内移动
+                    blueBoxUnitIndex--;
+                    invalidate();
+
+                    return -1;
+                }
+
+            case MOVE_LAST_SECTION:
+                if(blueBoxSectionIndex==0){
+                    //已在最前，不移动
+                    Toast.makeText(mContext, "已在最前", Toast.LENGTH_SHORT).show();
+                    return 0 ;
+                }else{
+                    //跨节移到上节首
+                    blueBoxSectionIndex--;
+                    maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
+                    blueBoxUnitIndex = 0;
+
+                    invalidate();
+
+                    return  -19;
+
+                }
+        }
+        return 0;
+        /*解释
+        * 1,：移动到下一个位置
+        * -1：向上，同理；
+        * 11：移动到下一节节首
+        * -11：移动到上一节节末
+        *  -19：移动到上一节节首。
+        *  0：未发生移动
+        * */
+
+
     }
 
     private void initDrawingUnits(boolean isTriggerFromOnSC) {

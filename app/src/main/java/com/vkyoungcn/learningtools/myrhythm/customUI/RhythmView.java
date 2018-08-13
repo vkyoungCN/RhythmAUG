@@ -502,6 +502,8 @@ public class RhythmView extends View {
         }
     }
 
+
+
     private void initDrawingUnits(boolean isTriggerFromOnSC) {
         //本方法计算了大部分所需的绘制坐标，但是还有如下未处理：
         // 未处理：①如果是旋律：上下加点画法；②如果是带词旋律，则加入弧线画法；

@@ -27,6 +27,9 @@ public class Rhythm implements Parcelable {
 
     private int starts;//这个字段我总觉得可能有更好的替代。暂留。
 
+    public Rhythm() {
+    }
+
     public Rhythm(int id, int rhythmType, ArrayList<Byte> rhythmCodeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int starts) {
         this.id = id;
         this.rhythmType = rhythmType;

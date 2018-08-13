@@ -1,12 +1,17 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
-import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor;
+import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
+
+import java.util.ArrayList;
 
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_24;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_34;
@@ -16,8 +21,22 @@ import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
 
 public class AddRhythmActivity extends AppCompatActivity implements View.OnClickListener {
 
+    /* 逻辑*/
     private int valueOfBeat = 16;
     private int valueOfSection = 64;
+    private int sectionSize = 4;
+
+    private ArrayList<Byte> codes = new ArrayList<>();
+    private ArrayList<ArrayList<Byte>> codesInSections = new ArrayList<>();
+
+    private int currentSectionIndex = 0;
+    private int currentUnitIndexInSection = 0;//在act中依靠这两各变量来确定编辑框位置。
+
+    Rhythm rhythm ;
+
+
+    /* 自定义控件*/
+    private RhythmSingleLineEditor rh_editor_ARA;
 
     /* 35个控件，其中33个（非edt的）有点击事件*/
     private TextView tv_x0;
@@ -36,6 +55,8 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
     private TextView tv_xm;
     private TextView tv_xm1;
     private TextView tv_xm2;
+
+    private TextView tv_empty;
 
     private ImageView imv_x0;
     private ImageView imv_xb1;
@@ -73,6 +94,8 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_rhythm);
 
+        rh_editor_ARA = findViewById(R.id.rh_editor_ARA);
+
         tv_x0 = findViewById(R.id.tv_x0_ARA);
         tv_xb1 = findViewById(R.id.tv_xb1_ARA);
         tv_xb2 = findViewById(R.id.tv_xb2_ARA) ;
@@ -90,6 +113,7 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
         tv_xm1 = findViewById(R.id.tv_xm1_ARA) ;
         tv_xm2 = findViewById(R.id.tv_xm2_ARA) ;
 
+        tv_empty = findViewById(R.id.tv_empty_ARA);
 
         imv_x0 = findViewById(R.id.imv_x0_ARA);
         imv_xb1 = findViewById(R.id.imv_xb1_ARA) ;
@@ -154,14 +178,18 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
         tv_lastUnit.setOnClickListener(this);
         tv_nextUnit.setOnClickListener(this);
 
+        tv_empty.setOnClickListener(this);
+
         int rhythmType = getIntent().getBundleExtra("BUNDLE").getInt("RHYTHM_TYPE");
         switch (rhythmType){
             case RHYTHM_TYPE_24:
                 valueOfSection = 32;
                 //此时beat值==16无需修改
+                sectionSize = 2;
                 break;
             case RHYTHM_TYPE_34:
                 valueOfSection = 48;
+                sectionSize = 3;
                 break;
             case RHYTHM_TYPE_44:
                 valueOfSection = 64;
@@ -169,13 +197,16 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
             case RHYTHM_TYPE_38:
                 valueOfSection = 24;
                 valueOfBeat = 8;
+                sectionSize = 3;
                 break;
             case RHYTHM_TYPE_68:
                 valueOfSection = 48;
                 valueOfBeat = 8;
+                sectionSize = 6;
                 break;
         }
 
+        //给下方的tv区设置值（对应时值的值的说明区域）
         tv_x0.setText(String.valueOf(valueOfBeat));
         tv_xb1.setText(String.valueOf(valueOfBeat/2));
         tv_xb2.setText(String.valueOf(valueOfBeat/4));
@@ -185,19 +216,102 @@ public class AddRhythmActivity extends AppCompatActivity implements View.OnClick
         tv_xpb1.setText(String.valueOf(valueOfBeat/2+valueOfBeat/4));
         tv_xpb2.setText(String.valueOf(valueOfBeat/4+valueOfBeat/8));
 
-        tv_xl1.setText(String.valueOf(valueOfBeat));
-        tv_xl2.setText(String.valueOf(valueOfBeat));
-        tv_xl3.setText(String.valueOf(valueOfBeat));
+        tv_xl1.setText(String.valueOf(valueOfBeat*2));
+        tv_xl2.setText(String.valueOf(valueOfBeat*3));
+        tv_xl3.setText(String.valueOf(valueOfBeat*4));
 
         tv_xm.setText(String.valueOf(valueOfBeat));
-        tv_xm1.setText(String.valueOf(valueOfBeat));
-        tv_xm2.setText(String.valueOf(valueOfBeat));
+        tv_xm1.setText(String.valueOf(valueOfBeat/2));
+        tv_xm2.setText(String.valueOf(valueOfBeat/4));
 
+        //初始化初始数据源
+        ArrayList<Byte> firstSection = new ArrayList<>();
+        for (int i=0;i<sectionSize;i++) {
+            firstSection.add((byte)-valueOfBeat);//填入负值（显示为空拍0）
+        }
+        codesInSections.add(firstSection);
+        codes.addAll(firstSection);
+
+        rhythm = new Rhythm();
+        //暂时只对节奏数据类设置两项即可。
+        rhythm.setRhythmCodeSerial(codes);
+        rhythm.setRhythmType(rhythmType);
+
+        rh_editor_ARA.setRhythm(codesInSections,rhythmType,14,18);
 
     }
 
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
 
+
+        }
+    }
+
+    private void changeCode(Byte newCode){
+        //确定剩余的可用时值值
+        ArrayList<Byte> currentSectionCodes = codesInSections.get(currentSectionIndex);
+        int emptyValueInSection = 0;
+        for(Byte code:currentSectionCodes){
+            if(code< 0 ){
+                emptyValueInSection-=code;
+            }
+        }
+
+        //判断新编码的时值是否符号条件
+        int newValue = valueOfBeat;
+        if(newCode < 73 && newCode>0){
+            newValue = newCode;
+        }
+        if(emptyValueInSection<newValue){
+            Toast.makeText(this, "小节内剩余空时值不足，请考虑删除其他已有音符", Toast.LENGTH_SHORT).show();
+        }else {
+            currentSectionCodes.set(currentUnitIndexInSection,newCode);
+        }
+
+        //通知到UI改变
+        rh_editor_ARA.codeChangedReDraw();
+
+
+    }
+
+    private void changeToEmpty(){
+        byte b = codesInSections.get(currentSectionIndex).get(currentUnitIndexInSection);
+        codesInSections.get(currentSectionIndex).set(currentUnitIndexInSection,(byte)-b);
+
+        //通知到UI改变
+        rh_editor_ARA.codeChangedReDraw();
+
+
+    }
+
+    private void moveBox(int moveType){
+        int result = rh_editor_ARA.moveBox(moveType);
+        switch (result){
+            case 1:
+                currentUnitIndexInSection++;
+                break;
+            case 11:
+                currentUnitIndexInSection =0;
+                currentSectionIndex++;
+                break;
+            case -1:
+                currentUnitIndexInSection--;
+                break;
+            case -11:
+                currentSectionIndex--;
+                currentUnitIndexInSection =(codesInSections.get(currentSectionIndex).size()-1);
+                break;
+            case -19:
+                currentSectionIndex--;
+                currentUnitIndexInSection = 0;
+                break;
+        }
+
+
+    }
 
 
 

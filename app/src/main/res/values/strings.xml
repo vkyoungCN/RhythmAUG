@@ -38,5 +38,6 @@
     <string name="input">输入</string>
     <string name="num_2">2</string>
     <string name="remove">移除</string>
+    <string name="zero">0</string>
 
 </resources>
