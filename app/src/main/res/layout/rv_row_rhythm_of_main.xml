@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    >
+   <com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView
+       android:id="@+id/rhView_singleLine_MA"
+       android:layout_width="match_parent"
+       android:layout_height="96dp"
+       />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="4dp"
+        android:background="#efefef"
+        />
+
+
+
+</LinearLayout>

@@ -3,8 +3,11 @@ package com.vkyoungcn.learningtools.myrhythm.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.util.ArrayList;
 
+/*
+* 对应于数据表直接设计的数据类
+* 相对的是“LFR”，后者携带了交叉表中的“所归属的节奏id、是否是该节奏的主要歌词”两额外字段
+* */
 public class Lyric implements Parcelable {
     private int id;
     private String lyricSerial;
@@ -16,6 +19,9 @@ public class Lyric implements Parcelable {
     private long lastModifyTime;//可能需要按最近修改排序
 
     private int starts;//这个字段我总觉得可能有更好的替代。暂留。
+
+    public Lyric() {
+    }
 
     public Lyric(int id, String lyricSerial, String description, boolean isSelfDesign, long createTime, long lastModifyTime, int starts) {
         this.id = id;

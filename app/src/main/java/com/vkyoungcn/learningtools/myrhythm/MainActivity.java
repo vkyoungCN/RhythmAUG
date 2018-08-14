@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.KeyEvent;
 import android.view.View;
@@ -16,10 +17,15 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vkyoungcn.learningtools.myrhythm.adapter.RhythmPrimaryRvAdapter;
+import com.vkyoungcn.learningtools.myrhythm.customUI.DrawingUnit;
 import com.vkyoungcn.learningtools.myrhythm.fragments.AddRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
+import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
+import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 
 /*
  * 作者：杨胜 @中国海洋大学
@@ -33,6 +39,8 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
 
     private static final String TAG = "MainActivity";
 
+    public static final int MESSAGE_PRE_DB_FETCHED = 5011;
+
     /* 控件*/
     private RelativeLayout rlt_fabPanel;
     private FrameLayout flt_mask;
@@ -42,6 +50,11 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
     /* 业务逻辑变量*/
     private boolean isFabPanelExtracted = false;//FAB面板组默认处于回缩状态。
 
+    ArrayList<Rhythm> rhythms;
+    int rhythmsAllAmount;
+    ArrayList<Lyric> primaryLyrics;
+
+    private RhythmPrimaryRvAdapter adapter;
 
     /* 多线程*/
     private Handler handler = new MainActivityHandler(this);//涉及弱引用，通过其发送消息。
@@ -68,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
             }
         });
 
+        new Thread(new PrepareCompoundRhythmsRunnable()).start();
 
 
     }
@@ -135,7 +149,24 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
     }
 
     void handleMessage(Message message) {
+        switch (message.what){
+            case MESSAGE_PRE_DB_FETCHED:
+                //上方还有一个Tv没有设置数据
+                tv_rhythmAmount.setText(String.valueOf(rhythmsAllAmount));
 
+                //取消上方遮罩
+                flt_mask.setVisibility(View.GONE);
+
+                //初始化Rv构造器，令UI加载Rv控件……
+
+                adapter = new RhythmPrimaryRvAdapter(rhythms,primaryLyrics, this) ;
+                mRv.setLayoutManager(new LinearLayoutManager(this));
+                mRv.setHasFixedSize(true);
+                mRv.setAdapter(adapter);
+
+                break;
+
+        }
 
     }
 
@@ -155,6 +186,31 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
 
         }
     }
+
+
+
+    public class PrepareCompoundRhythmsRunnable implements Runnable{
+        @Override
+        public void run() {
+            //数据库获取标记有（置顶）的，以及修改时间在一周内的Rhythms；
+            //获取这些Rhythm对应的主要歌词记录【暂定在此rv中只显示节奏+词；而旋律只在点进详情后再显示】
+            rhythms = ;
+            rhythmsAllAmount = ;//有一个控件需要使用节奏总数量
+            primaryLyrics = ;
+
+
+            Message message = new Message();
+            message.what = MESSAGE_PRE_DB_FETCHED;
+            //数据通过全局变量直接传递。
+
+            handler.sendMessage(message);
+
+
+        }
+    }
+
+
+
 
     /*
      * 阻止返回到Logo页

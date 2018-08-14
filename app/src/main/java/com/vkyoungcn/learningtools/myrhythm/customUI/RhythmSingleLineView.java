@@ -7,10 +7,10 @@ import android.graphics.RectF;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
-import android.view.View;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
+import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 
 import java.util.ArrayList;
@@ -32,8 +32,8 @@ public class RhythmSingleLineView extends RhythmView {
     private Context mContext;
 
     private ArrayList<Byte> rhythmCodes; //数据源，节奏序列的编码。根据该数据生成各字符单元上的绘制信息。
+    private Lyric lyric;
     private int rhythmType;//节拍类型（如4/4），会影响分节的绘制。【不能直接传递在本程序所用的节奏编码方案下的时值总长，因为3/4和6/8等长但绘制不同】
-//    private int unitAmount;
     private int valueOfBeat = 16;
     private int valueOfSection = 64;
 
@@ -301,7 +301,7 @@ public class RhythmSingleLineView extends RhythmView {
                 DrawingUnit drawingUnit = sectionDrawingUnits.get(k);
 
                 //字符
-                canvas.drawText(drawingUnit.getCode(),drawingUnit.getCodeStartX(),drawingUnit.getCodeBaseY(), codePaint);
+                canvas.drawText(drawingUnit.code,drawingUnit.codeStartX,drawingUnit.codeBaseY, codePaint);
 
                 //下划线
                 for (BottomLine bottomLine :drawingUnit.bottomLines) {
@@ -366,12 +366,16 @@ public class RhythmSingleLineView extends RhythmView {
                     }
                 }
 
-
+                //绘制下方汉字
+                if(lyric!=null){
+                    canvas.drawText(drawingUnit.word,drawingUnit.wordStartX,drawingUnit.wordBaseY, codePaint);
+                }
             }
 
         }
 
         if(isSlidingModeOn){
+            //【不调用slidingStart方法的话，是不会进入此模式的，点击就是无效的】
             //滑动模式下，额外复制一层遮罩；以及遮罩上方的小球、刻度
             //【当滑动开始后（滑动了一定程度），设置新的滑动中绘制参数即可；（而且下方各小节的绘制位置信息也产生了改变）】
 
@@ -396,18 +400,20 @@ public class RhythmSingleLineView extends RhythmView {
     }
 
 
-
-
-
-
     /*
      * 方法由程序调用，动态设置目标字串
      * 设置节拍类型（4/4等）
      * 设置字符大小
      * */
     public void setRhythm(Rhythm rcs, int codeSize, int unitWidth){
+        setRhythmAndLyric(rcs,null,codeSize,unitWidth);
+    }
+
+    public void setRhythmAndLyric(Rhythm rcs, Lyric lyrics, int codeSize, int unitWidth){
+
         this.rhythmCodes = rcs.getRhythmCodeSerial();
         this.rhythmType = rcs.getRhythmType();
+        this.lyric = lyrics;
 
         int codeMinSize = 12;
         int codeMaxSize = 28;
@@ -433,22 +439,9 @@ public class RhythmSingleLineView extends RhythmView {
             this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeSize, getResources().getDisplayMetrics());
         }
 
-        /*switch (codeSize){
-            case CODE_SMALL:
-                this.textSize = textSizeSmall;
-                break;
-            case CODE_MEDIUM:
-                this.textSize = textSizeMedium;
-                break;
-            case CODE_LARGE:
-                this.textSize = textSizeLarge;
-                break;
-        }*/
-
         //由于要根据目标字串的字符数量来绘制控件，所以所有需要用到该数量的初始化动作都只能在此后进行
         initData();
     }
-
 
     //onSizeC方法中会调用initData，该时点可能尚未设置必要的数据，所以需要判断。??
     //事实上，onS和setRC谁先谁后可能没有定数。两种错误都遇到过。??
@@ -528,26 +521,24 @@ public class RhythmSingleLineView extends RhythmView {
     private void initDrawingUnits(boolean isTriggerFromOnSC) {
         totalRequiredLength = 0;//每次重新计算绘制信息前要清空。
 
-        //本方法计算了大部分所需的绘制坐标，但是还有如下未处理：
-        // 未处理：①如果是旋律：上下加点画法；②如果是带词旋律，则加入弧线画法；
-        // (注意，均分多连音的顶部弧线直接按drawingU的宽度绘制即可，且均分多连音弧线中的数字坐标已经进行了计算)
-        //【其他方法的调整；然后是自定义音符与节奏输入法；】
-
-        // 新增编辑采用单行滑动模式，这样就暂时不必处理复杂的编辑中小节换行+扩展、压缩逻辑。
-
-        //【注意】如果是由onSc中触发，则最后不调用invalid。
-
-        //可用总长（控件宽扣除两侧缩进）
-        float availableTotalWidth = sizeChangedWidth - padding * 2;
+//        float availableTotalWidth = sizeChangedWidth - padding * 2;
 
         //装载绘制信息的总列表（按小节区分子列表管理）
         drawingUnits = new ArrayList<ArrayList<DrawingUnit>>();//初步初始（后面采用add方式，因而不需彻底初始）
 
 //        int sectionAmount = 0;//在本行一共有多少小节（最后一节已经移到下一行，不算）。（使用这个代替索引列表）
-        int lineCursor = 0;//当前位于第几行，从0起。（用于该行Y值的计算）
+//        int lineCursor = 0;//当前位于第几行，从0起。（用于该行Y值的计算）
         float bottomDrawing_Y = sizeChangedHeight/2;
 
-        //开始执行绘制。以小节为单位进行计算。
+
+        //开始计算绘制信息。以小节为单位进行。
+        //如果有歌词信息，则还要附加在Du中。
+        String lyricStr = "";
+        if(lyric !=null) {
+            lyricStr = lyric.getLyricSerial();
+        }
+        int accumulateSizeBeforeThisSection = 0;
+
         for (int i = 0; i < codesInSections.size(); i++) {
             //先获取当前小节的长度
             float sectionRequiredLength = standardLengthOfSection(codesInSections.get(i));
@@ -555,16 +546,24 @@ public class RhythmSingleLineView extends RhythmView {
             //如果不换行，则不需复杂的计算逻辑，直接向后扩展即可
             if(i == 0){
                 //第一小节
-                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit_singleLineMode(codesInSections.get(i), bottomDrawing_Y, padding, unitStandardWidth);
+                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit_singleLineMode(codesInSections.get(i), bottomDrawing_Y, padding, unitStandardWidth,lyricStr,0);
                 drawingUnits.add(sectionDrawingUnit);
+                accumulateSizeBeforeThisSection+=codesInSections.get(i).size();
+
             }else {
                 float startX = drawingUnits.get(i-1).get(drawingUnits.get(i-1).size()-1).right+beatGap;
-                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit_singleLineMode(codesInSections.get(i), bottomDrawing_Y, startX, unitStandardWidth);
-
+                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit_singleLineMode(codesInSections.get(i), bottomDrawing_Y, startX, unitStandardWidth,lyricStr,accumulateSizeBeforeThisSection);
+                drawingUnits.add(sectionDrawingUnit);
+                accumulateSizeBeforeThisSection+=codesInSections.get(i).size();
             }
 
             //记录到所需总长度
             totalRequiredLength += sectionRequiredLength;//【仍然需要，最终滑动时需要】
+
+
+            
+
+
         }
 
         if(!isTriggerFromOnSC){
@@ -573,7 +572,7 @@ public class RhythmSingleLineView extends RhythmView {
     }
 
     //按小节计算（小节内各音符的）绘制数据
-    private ArrayList<DrawingUnit> initSectionDrawingUnit_singleLineMode(ArrayList<Byte> codesInThisSection, float bottomDrawing_Y, float sectionStartX, float unitWidthChanged) {
+    private ArrayList<DrawingUnit> initSectionDrawingUnit_singleLineMode(ArrayList<Byte> codesInThisSection, float bottomDrawing_Y, float sectionStartX, float unitWidthChanged,String lyric,int accumulateUnitsNumBeforeThisSection) {
         // *注意，sectionStartX要传入“上一小节末尾+节间隔”（非首节时）或者传入padding（是首节时）
 
         int totalValueBeforeThisCodeInBeat = 0;//用于计算拍子【要在循环的末尾添加，因为要使用的是“本音符之前”的总和】
@@ -719,7 +718,20 @@ public class RhythmSingleLineView extends RhythmView {
                 totalValueBeforeThisCodeInBeat = addValueToBeatTotalValue(code, valueOfBeat, totalValueBeforeThisCodeInBeat);
                 drawingUnitsInSection.add(drawingUnit);//添加本音符对应的绘制信息。
 
+
+                if(!lyric.isEmpty()){
+                    drawingUnit.word = lyric.substring((accumulateUnitsNumBeforeThisSection+j),(accumulateUnitsNumBeforeThisSection+j));
+                    drawingUnit.wordBaseY = drawingUnit.bottom + unitStandardHeight;
+                    drawingUnit.wordStartX = drawingUnit.codeStartX;
+                }
+
+
             }
+
+
+
+
+
         }
         return drawingUnitsInSection;//返回本小节对应的绘制信息列表
     }

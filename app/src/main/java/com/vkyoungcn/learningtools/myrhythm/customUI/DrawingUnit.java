@@ -33,6 +33,10 @@ public class DrawingUnit {
     public float codeStartX;//用于字符绘制（字符底边中点）
     public float codeBaseY;//字符底边【待？基线还是底边？】
 
+    public String word = "";//歌词。注意顺序和位置，没有词的位置上留空【暂时只绘制一行歌词，暂时位于bottom下方一个标准单位】]
+    public float wordStartX;
+    public float wordBaseY;
+
     public ArrayList<BottomLine> bottomLines = new ArrayList<>();//已实例化，直接add即可。
     public RectF[] additionalPoints = new RectF[]{};//上下加点
 
@@ -57,21 +61,29 @@ public class DrawingUnit {
     public DrawingUnit() {
     }
 
-    public DrawingUnit(String code, boolean isLastCodeInSection, float codeStartX, float codeBaseY, ArrayList<BottomLine> bottomLines, RectF[] additionalPoints, float left, float right, float top, float bottom) {
-        this.code = code;
-        this.isLastCodeInSection = isLastCodeInSection;
-        this.codeStartX = codeStartX;
-        this.codeBaseY = codeBaseY;
-        this.bottomLines = bottomLines;
-        this.additionalPoints = additionalPoints;
+    public DrawingUnit(boolean isOutOfUi, float left, float right, float top, float bottom, String code, float codeStartX, float codeBaseY, String word, float wordStartX, float wordBaseY, ArrayList<BottomLine> bottomLines, RectF[] additionalPoints, int mCurveNumber, float mCurveNumCenterX, float mCurveNumBaseY, boolean isEndCodeOfLongCurve, int curveLength, boolean isLastCodeInSection) {
+        this.isOutOfUi = isOutOfUi;
         this.left = left;
         this.right = right;
         this.top = top;
         this.bottom = bottom;
+        this.code = code;
+        this.codeStartX = codeStartX;
+        this.codeBaseY = codeBaseY;
+        this.word = word;
+        this.wordStartX = wordStartX;
+        this.wordBaseY = wordBaseY;
+        this.bottomLines = bottomLines;
+        this.additionalPoints = additionalPoints;
+        this.mCurveNumber = mCurveNumber;
+        this.mCurveNumCenterX = mCurveNumCenterX;
+        this.mCurveNumBaseY = mCurveNumBaseY;
+        this.isEndCodeOfLongCurve = isEndCodeOfLongCurve;
+        this.curveLength = curveLength;
+        this.isLastCodeInSection = isLastCodeInSection;
     }
 
-
-        /*public void setBottomLineAmount(byte bottomLineAmount) {
+  /*public void setBottomLineAmount(byte bottomLineAmount) {
             if(bottomLineAmount>3){
                 Toast.makeText(mContext, "音符下划线过多？请检查谱子是否正确。", Toast.LENGTH_SHORT).show();
                 return;
@@ -191,6 +203,9 @@ public class DrawingUnit {
 
         this.mCurveNumCenterX +=h_shiftAmount;
         this.mCurveNumBaseY +=v_shiftAmount;
+
+        this.wordStartX +=h_shiftAmount;
+        this.wordBaseY +=v_shiftAmount;
 
     }
 

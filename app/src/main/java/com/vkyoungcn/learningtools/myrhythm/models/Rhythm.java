@@ -27,10 +27,12 @@ public class Rhythm implements Parcelable {
 
     private int starts;//这个字段我总觉得可能有更好的替代。暂留。
 
+    private int primaryLyricId;//保留一份“主要歌词”的id【暂时只在旋律下显示一行主歌词，因而可以这样操作】
+
     public Rhythm() {
     }
 
-    public Rhythm(int id, int rhythmType, ArrayList<Byte> rhythmCodeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int starts) {
+    public Rhythm(int id, int rhythmType, ArrayList<Byte> rhythmCodeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int starts, int primaryLyricId) {
         this.id = id;
         this.rhythmType = rhythmType;
         this.rhythmCodeSerial = rhythmCodeSerial;
@@ -40,6 +42,7 @@ public class Rhythm implements Parcelable {
         this.createTime = createTime;
         this.lastModifyTime = lastModifyTime;
         this.starts = starts;
+        this.primaryLyricId = primaryLyricId;
     }
 
     public int getId() {
@@ -133,6 +136,15 @@ public class Rhythm implements Parcelable {
         }
     }
 
+
+    public int getPrimaryLyricId() {
+        return primaryLyricId;
+    }
+
+    public void setPrimaryLyricId(int primaryLyricId) {
+        this.primaryLyricId = primaryLyricId;
+    }
+
     /*
      * 以下是Parcelable要求的内容
      * */
@@ -151,6 +163,7 @@ public class Rhythm implements Parcelable {
         parcel.writeLong(createTime);
         parcel.writeLong(lastModifyTime);
         parcel.writeInt(starts);
+        parcel.writeInt(primaryLyricId);
     }
 
     public static final Parcelable.Creator<Rhythm> CREATOR = new Parcelable.Creator<Rhythm>(){
@@ -175,6 +188,7 @@ public class Rhythm implements Parcelable {
         createTime = in.readLong();
         lastModifyTime = in.readLong();
         starts = in.readInt();
+        primaryLyricId = in.readInt();
     }
 
 }

@@ -45,8 +45,12 @@
     <string name="sharpOverSharp">#/#</string>
     <string name="descriptionInput">输入描述</string>
     <string name="descriptionHere">在此输入描述</string>
-    <string name="selfDesign">是否原创</string>
+    <string name="primaryLyric">是否原创</string>
     <string name="keepTop">是否置顶</string>
     <string name="stars_rating">星级选择</string>
+    <string name="finalCheck">请填入最后所需的信息，点击确定后将提交。</string>
+    <string name="add_rhythm_finish_ok">新增旋律成功</string>
+    <string name="add_rhythm_finish_false">失败</string>
+    <string name="add_rhythm_final_report">新增节奏完成</string>
 
 </resources>

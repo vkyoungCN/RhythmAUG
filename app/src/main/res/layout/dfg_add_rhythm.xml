@@ -29,7 +29,11 @@
         android:text="@string/chooseRhythmType"
         android:gravity="center"
         />
-
+    <!--横向撑开-->
+    <TextView
+        android:layout_width="300dp"
+        android:layout_height="1dp"
+        />
     <!--类型选择-->
     <LinearLayout
         android:layout_width="match_parent"

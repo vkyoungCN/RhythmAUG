@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".fragments.AddRhythmDiaFragment">
+
+    <!--撑开宽度。如果没有具体宽度，即使全用match则宽度也按wrap计算-->
+    <TextView
+        android:layout_width="300dp"
+        android:layout_height="1dp" />
+
+    <!--Title-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#efefef"
+        android:text="@string/add_rhythm_final_report"
+        android:textSize="16sp"
+        android:gravity="center"
+        />
+
+    <!--SubTitle-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:background="#f5f5f5"
+        android:text="@string/chooseRhythmType"
+        android:gravity="center"
+        />
+
+    <!--类型选择-->
+    <!--横向撑开-->
+    <TextView
+        android:layout_width="300dp"
+        android:layout_height="1dp"
+        />
+
+    <!--横分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#efefef"
+        />
+
+    <TextView
+        android:id="@+id/tv_result_FarDfg"
+        android:layout_width="match_parent"
+        android:layout_height="180dp"
+        android:gravity="center"
+        android:padding="20dp"
+        android:text="@string/add_rhythm_finish_ok"
+        android:textColor="#ef5350"
+        android:textSize="16sp"
+
+        />
+
+    <!--横分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_red"
+        />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:layout_marginTop="1dp"
+        >
+
+        <TextView
+            android:id="@+id/btn_ok_finaladdRhDfg"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_margin="1dp"
+            android:layout_weight="2"
+            android:background="#e57373"
+            android:gravity="center"
+            android:text="@string/confirm"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+
+</LinearLayout>
