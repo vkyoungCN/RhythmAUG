@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 public class PitchSequence implements Parcelable {
     private int id;
+    private String title;
     private ArrayList<Byte> pitchSequence;
 
     private boolean isSelfDesign = false;
@@ -122,6 +123,7 @@ public class PitchSequence implements Parcelable {
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeInt(id);
+        parcel.writeString(title);
         parcel.writeSerializable(pitchSequence);
         parcel.writeString(description);
         parcel.writeByte(isSelfDesign?(byte) 1:(byte) 0);
@@ -145,6 +147,7 @@ public class PitchSequence implements Parcelable {
 
     private PitchSequence(Parcel in){
         id = in.readInt();
+        title = in.readString();
         pitchSequence = (ArrayList<Byte>) in.readSerializable();
         description = in.readString();
         isSelfDesign = in.readByte()==1;

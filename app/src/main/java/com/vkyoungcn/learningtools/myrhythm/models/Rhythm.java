@@ -15,6 +15,8 @@ public class Rhythm implements Parcelable {
     public static final int RHYTHM_TYPE_68 = 68;
 
     private int id;
+    private String title;
+
     private int rhythmType;
     private ArrayList<Byte> rhythmCodeSerial;
 
@@ -155,6 +157,7 @@ public class Rhythm implements Parcelable {
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeInt(id);
+        parcel.writeString(title);
         parcel.writeInt(rhythmType);
         parcel.writeSerializable(rhythmCodeSerial);
         parcel.writeString(description);
@@ -180,6 +183,7 @@ public class Rhythm implements Parcelable {
 
     private Rhythm(Parcel in){
         id = in.readInt();
+        title = in.readString();
         rhythmType = in.readInt();
         rhythmCodeSerial = (ArrayList<Byte>) in.readSerializable();
         description = in.readString();

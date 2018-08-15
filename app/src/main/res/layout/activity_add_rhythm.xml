@@ -679,7 +679,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="42dp"
                     android:orientation="horizontal"
-                    android:layout_gravity="bottom"
+                    android:layout_gravity="bottomNoLyric"
                     android:layout_marginBottom="2dp">
                     <TextView
                         android:id="@+id/tv_confirmAddRhythm_ARA"
@@ -696,7 +696,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_gravity="bottom"
+                    android:layout_gravity="bottomNoLyric"
                     android:background="@color/myRhythm_light_green"
                     />
             </FrameLayout>

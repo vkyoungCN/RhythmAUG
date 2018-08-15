@@ -23,19 +23,26 @@ public class DrawingUnit {
     //【由于各字段采用public可直接设置、访问；因而不需要getter和setter也行】
     public boolean isOutOfUi = false;//（单行模式中）如果本单元超出了UI的绘制区域，标true，不绘制。
     // （含超出scw值、超出0（负值）两类，水平+垂直方向上共4种情况）
+    public float shiftAmountToCenterX = 0;//暂时仅在超出绘制区域后才生效，否则置0。
+    public float shiftAmountToCenterY = 0;
 
     public float left;
     public float right;
     public float top;
-    public float bottom;
+    public float bottomNoLyric;//没有歌词时的绘制底边位置。
+    public float bottomWithLyric;//有歌词时（可能一行，最多两行）
 
     public String code = "X";//默认是X，当作为旋律绘制时绘制具体音高的数值。
     public float codeStartX;//用于字符绘制（字符底边中点）
     public float codeBaseY;//字符底边【待？基线还是底边？】
 
-    public String word = "";//歌词。注意顺序和位置，没有词的位置上留空【暂时只绘制一行歌词，暂时位于bottom下方一个标准单位】]
-    public float wordStartX;
-    public float wordBaseY;
+    public String word_1 = "";//歌词。注意顺序和位置，没有词的位置上留空【暂时只绘制一行歌词，暂时位于bottom下方一个标准单位】]
+    public float word_1_StartX;
+    public float word_1_BaseY;
+
+    public String word_2 = "";//歌词。注意顺序和位置，没有词的位置上留空【暂时只绘制一行歌词，暂时位于bottom下方两个标准单位】]
+    public float word_2_StartX;
+    public float word_2_BaseY;
 
     public ArrayList<BottomLine> bottomLines = new ArrayList<>();//已实例化，直接add即可。
     public RectF[] additionalPoints = new RectF[]{};//上下加点
@@ -61,18 +68,18 @@ public class DrawingUnit {
     public DrawingUnit() {
     }
 
-    public DrawingUnit(boolean isOutOfUi, float left, float right, float top, float bottom, String code, float codeStartX, float codeBaseY, String word, float wordStartX, float wordBaseY, ArrayList<BottomLine> bottomLines, RectF[] additionalPoints, int mCurveNumber, float mCurveNumCenterX, float mCurveNumBaseY, boolean isEndCodeOfLongCurve, int curveLength, boolean isLastCodeInSection) {
+    public DrawingUnit(boolean isOutOfUi, float left, float right, float top, float bottomNoLyric, String code, float codeStartX, float codeBaseY, String word_1, float word_1_StartX, float word_1_BaseY, ArrayList<BottomLine> bottomLines, RectF[] additionalPoints, int mCurveNumber, float mCurveNumCenterX, float mCurveNumBaseY, boolean isEndCodeOfLongCurve, int curveLength, boolean isLastCodeInSection) {
         this.isOutOfUi = isOutOfUi;
         this.left = left;
         this.right = right;
         this.top = top;
-        this.bottom = bottom;
+        this.bottomNoLyric = bottomNoLyric;
         this.code = code;
         this.codeStartX = codeStartX;
         this.codeBaseY = codeBaseY;
-        this.word = word;
-        this.wordStartX = wordStartX;
-        this.wordBaseY = wordBaseY;
+        this.word_1 = word_1;
+        this.word_1_StartX = word_1_StartX;
+        this.word_1_BaseY = word_1_BaseY;
         this.bottomLines = bottomLines;
         this.additionalPoints = additionalPoints;
         this.mCurveNumber = mCurveNumber;
@@ -163,19 +170,45 @@ public class DrawingUnit {
         this.additionalPoints = additionalPoints;
     }
 
+    public boolean checkIsOutOfUi( float availableStart, float availableTop,float availableEnd, float availableBottom){
+//        this.isOutOfUi = (right<availableStart||left>availableWidth|| bottomNoLyric <availableTop||top>availableHeight);
+        if(right<availableStart){
+            isOutOfUi =true;
+            shiftAmountToCenterX = (availableStart-left)+(availableEnd-availableStart)/2;//需要向右移动才能到中心，是正值。
+        }else if(left>availableEnd){
+            isOutOfUi = true;
+            shiftAmountToCenterX = -((right-availableEnd)+(availableEnd-availableStart)/2);//需向左
+        }else {
+            shiftAmountToCenterX =0;//不超，置0。
+        }
 
-    public void shiftEntirely(float h_shiftAmount, float v_shiftAmount, float sizeChangedWidth, float sizeChangedHeight){
+        if(bottomNoLyric<availableTop){
+            isOutOfUi=true;
+            shiftAmountToCenterY = (availableTop-top)+(availableBottom-availableTop)/2;
+        }else if(top>availableBottom){
+            isOutOfUi=true;
+            shiftAmountToCenterY = -((bottomNoLyric-availableBottom)+(availableBottom-availableTop)/2);
+        }else {
+            shiftAmountToCenterY = 0;//不超，置0。
+        }
+
+        return isOutOfUi;
+    }
+
+    public void shiftEntirely(float h_shiftAmount, float v_shiftAmount, float availableStart, float availableTop,float availableEnd, float availableBottom){
         //【*注意：绘制时，如果小于0，原则上不予绘制。】
 
         this.left +=h_shiftAmount;
         this.right+=h_shiftAmount;
         this.top+=v_shiftAmount;
-        this.bottom+=v_shiftAmount;
+        this.bottomNoLyric +=v_shiftAmount;
 
         //（注意判断条件，完全遮蔽时）【牛X的写法！】
-        isOutOfUi = (right<0||left>sizeChangedWidth||bottom<0||top>sizeChangedHeight);
+        //【但是注意，这个条件没有考虑内边距问题！】
+        this.isOutOfUi = checkIsOutOfUi(availableStart, availableTop,availableEnd, availableBottom);
+//        isOutOfUi = (right<0||left>availableWidth|| bottomNoLyric <0||top>availableHeight);
 
-        /*if(right<0||left>sizeChangedWidth||bottom<0||top>sizeChangedHeight){
+        /*if(right<0||left>sizeChangedWidth||bottomNoLyric<0||top>sizeChangedHeight){
             //【注意这个判断条件，可能有些别扭；目的是在完全遮蔽时才不绘制】
             isOutOfUi = true;
         }else {
@@ -204,8 +237,8 @@ public class DrawingUnit {
         this.mCurveNumCenterX +=h_shiftAmount;
         this.mCurveNumBaseY +=v_shiftAmount;
 
-        this.wordStartX +=h_shiftAmount;
-        this.wordBaseY +=v_shiftAmount;
+        this.word_1_StartX +=h_shiftAmount;
+        this.word_1_BaseY +=v_shiftAmount;
 
     }
 

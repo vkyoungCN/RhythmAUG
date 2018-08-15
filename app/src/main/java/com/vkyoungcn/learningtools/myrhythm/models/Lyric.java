@@ -10,27 +10,31 @@ import android.os.Parcelable;
 * */
 public class Lyric implements Parcelable {
     private int id;
+    private String title;
     private String lyricSerial;
 
     private String description;
     private boolean isSelfDesign = false;
+    private boolean keepTop;
 
     private long createTime;
     private long lastModifyTime;//可能需要按最近修改排序
 
-    private int starts;//这个字段我总觉得可能有更好的替代。暂留。
+    private int stars;//这个字段我总觉得可能有更好的替代。暂留。
 
     public Lyric() {
     }
 
-    public Lyric(int id, String lyricSerial, String description, boolean isSelfDesign, long createTime, long lastModifyTime, int starts) {
+    public Lyric(int id, String title, String lyricSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int stars) {
         this.id = id;
+        this.title = title;
         this.lyricSerial = lyricSerial;
         this.description = description;
         this.isSelfDesign = isSelfDesign;
+        this.keepTop = keepTop;
         this.createTime = createTime;
         this.lastModifyTime = lastModifyTime;
-        this.starts = starts;
+        this.stars = stars;
     }
 
     public int getId() {
@@ -81,12 +85,28 @@ public class Lyric implements Parcelable {
         this.lastModifyTime = lastModifyTime;
     }
 
-    public int getStarts() {
-        return starts;
+    public int getStars() {
+        return stars;
     }
 
-    public void setStarts(int starts) {
-        this.starts = starts;
+    public void setStars(int stars) {
+        this.stars = stars;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public boolean isKeepTop() {
+        return keepTop;
+    }
+
+    public void setKeepTop(boolean keepTop) {
+        this.keepTop = keepTop;
     }
 
     /*
@@ -99,12 +119,14 @@ public class Lyric implements Parcelable {
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeInt(id);
+        parcel.writeString(title);
         parcel.writeString(lyricSerial);
         parcel.writeString(description);
         parcel.writeByte(isSelfDesign?(byte) 1:(byte) 0);
+        parcel.writeByte(keepTop?(byte) 1:(byte) 0);
         parcel.writeLong(createTime);
         parcel.writeLong(lastModifyTime);
-        parcel.writeInt(starts);
+        parcel.writeInt(stars);
     }
 
     public static final Parcelable.Creator<Lyric> CREATOR = new Parcelable.Creator<Lyric>(){
@@ -121,11 +143,13 @@ public class Lyric implements Parcelable {
 
     private Lyric(Parcel in){
         id = in.readInt();
+        title = in.readString();
         lyricSerial = in.readString();
         description = in.readString();
         isSelfDesign = in.readByte()==1;
+        keepTop = in.readByte() == 1;
         createTime = in.readLong();
         lastModifyTime = in.readLong();
-        starts = in.readInt();
+        stars = in.readInt();
     }
 }

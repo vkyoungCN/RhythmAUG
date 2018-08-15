@@ -10,6 +10,7 @@ import android.util.TypedValue;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
+import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 
 import java.util.ArrayList;
 
@@ -19,7 +20,7 @@ import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
 
-public class RhythmSingleLineEditor extends RhythmView {
+public class RhythmSingleLineEditor extends RhythmSingleLineView{
 //* 如果数据源为空，自动显示一个空的小节；如果有数据显示数据，并将第一音符标蓝框；
 //* 在所有小节之后标示一个+号。
 //* 单行模式，绘制中的小节位于屏幕中。
@@ -42,6 +43,8 @@ public class RhythmSingleLineEditor extends RhythmView {
 
     private ArrayList<ArrayList<Byte>> codesInSections;//对数据源进行分析处理之后，按小节归纳起来。便于进行按节分行的判断。
     private ArrayList<ArrayList<DrawingUnit>> drawingUnits;//绘制数据也需要按小节组织，以便与按小节组织的代码一并处理。
+    private Lyric lyric_1;
+    private Lyric lyric_2;
 
     /* 设置参数*/
     //设置参数与数据源一并设置
@@ -317,77 +320,81 @@ public class RhythmSingleLineEditor extends RhythmView {
             int unitCursor = 0;//用于判断是否到达小节末尾。
             for (int k=0;k<sectionDrawingUnits.size();k++) {
 
+
                 DrawingUnit drawingUnit = sectionDrawingUnits.get(k);
 
-                //字符
-                canvas.drawText(drawingUnit.getCode(),drawingUnit.getCodeStartX(),drawingUnit.getCodeBaseY(), codePaint);
-
-                //下划线
-                for (BottomLine bottomLine :drawingUnit.bottomLines) {
-                    canvas.drawLine(bottomLine.startX,bottomLine.startY,bottomLine.toX,bottomLine.toY,bottomLinePaint);
+                //蓝框
+                if (blueBoxSectionIndex == i && blueBoxUnitIndex == k) {
+                    canvas.drawRect(drawingUnit.left, drawingUnit.top, drawingUnit.right, drawingUnit.bottomNoLyric, blueBoxPaint);
                 }
 
-                //绘制上下加点（旋律模式下）（*如果没有加点则不会进入）
-                for (RectF point : drawingUnit.additionalPoints){
-                    canvas.drawOval(point,bottomLinePaint);
-                }
+                if(!drawingUnit.isOutOfUi) {//本字符在可显示区域
+                    //字符
+                    canvas.drawText(drawingUnit.getCode(), drawingUnit.getCodeStartX(), drawingUnit.getCodeBaseY(), codePaint);
 
-                //均分多连音的弧线和弧线内数字
-                if(drawingUnit.mCurveNumber !=0){
-                    //弧中数字
-                    canvas.drawText(String.valueOf(drawingUnit.mCurveNumber),drawingUnit.mCurveNumCenterX,drawingUnit.mCurveNumBaseY, curveNumPaint);
+                    //下划线
+                    for (BottomLine bottomLine : drawingUnit.bottomLines) {
+                        canvas.drawLine(bottomLine.startX, bottomLine.startY, bottomLine.toX, bottomLine.toY, bottomLinePaint);
+                    }
 
-                    //弧线
-                    canvas.drawArc(drawingUnit.left,drawingUnit.top+additionalHeight+curveOrLinesHeight/3,
-                            drawingUnit.right,drawingUnit.top+additionalHeight+curveOrLinesHeight,0,180,false,bottomLinePaint);//是角度数
-                    //【椭圆划过的角度待调整】
+                    //绘制上下加点（旋律模式下）（*如果没有加点则不会进入）
+                    for (RectF point : drawingUnit.additionalPoints) {
+                        canvas.drawOval(point, bottomLinePaint);
+                    }
 
-                }
+                    //均分多连音的弧线和弧线内数字
+                    if (drawingUnit.mCurveNumber != 0) {
+                        //弧中数字
+                        canvas.drawText(String.valueOf(drawingUnit.mCurveNumber), drawingUnit.mCurveNumCenterX, drawingUnit.mCurveNumBaseY, curveNumPaint);
 
-                //如果到达了小节末尾
-                if(unitCursor == sectionDrawingUnits.size()-1){
-                    //则要绘制小节末的竖线
-                    canvas.drawLine(drawingUnit.right+beatGap/2,drawingUnit.top+additionalHeight+2*curveOrLinesHeight/3,
-                            drawingUnit.right+beatGap/2,drawingUnit.bottom-additionalHeight-curveOrLinesHeight/3,bottomLinePaint);
-                }
+                        //弧线
+                        canvas.drawArc(drawingUnit.left, drawingUnit.top + additionalHeight + curveOrLinesHeight / 3,
+                                drawingUnit.right, drawingUnit.top + additionalHeight + curveOrLinesHeight, 0, 180, false, bottomLinePaint);//是角度数
+                        //【椭圆划过的角度待调整】
 
-                //在有词模式下绘制上方跨音符的连音线【待】
-                //在旋律模式下，可能需要绘制上下加点。【待】
-                //绘制连音弧线（延长音，不是均分多连）
-                if(drawingUnit.isEndCodeOfLongCurve){
-                    float curveStart = 0;
-                    float curveEnd = drawingUnit.right;//覆盖在起端left到末端right（全盖住）
+                    }
 
-                    //获取弧线起端音符的坐标
-                    int span = drawingUnit.curveLength;
-                    //（注：k与span的关系）索引为k时：本音符前面有k个音符存在。span则代表本音符之前的span个音符都在弧线下，所以二者一一对应不需加减处理。
-                    if(span<=k){
-                        //弧线不跨节
-                        curveStart =sectionDrawingUnits.get(k-span).left;
-                        canvas.drawArc(curveStart,drawingUnit.top+additionalHeight,curveEnd,
-                                drawingUnit.top+additionalHeight+curveOrLinesHeight,
-                                0,180,false,bottomLinePaint);//绘制
-                    }else {
-                        //弧线跨节，可能跨行
-                        DrawingUnit duCurveStart = findStartDrawingUnit(k,i,span,drawingUnits);
-                        if(duCurveStart==null){
-                            Toast.makeText(mContext, "连音符跨度编码错误，忽略绘制", Toast.LENGTH_SHORT).show();
-                            //没有绘制
-                        }else {
-                            //必然不跨行
-                            curveStart = duCurveStart.left;
-                            canvas.drawArc(curveStart,drawingUnit.top+additionalHeight,curveEnd,
-                                    drawingUnit.top+additionalHeight+curveOrLinesHeight,
-                                    0,180,false,bottomLinePaint);
+                    //如果到达了小节末尾
+                    if (unitCursor == sectionDrawingUnits.size() - 1) {
+                        //则要绘制小节末的竖线
+                        canvas.drawLine(drawingUnit.right + beatGap / 2, drawingUnit.top + additionalHeight + 2 * curveOrLinesHeight / 3,
+                                drawingUnit.right + beatGap / 2, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight / 3, bottomLinePaint);
+                    }
+
+                    //在有词模式下绘制上方跨音符的连音线【待】
+                    //在旋律模式下，可能需要绘制上下加点。【待】
+                    //绘制连音弧线（延长音，不是均分多连）
+                    if (drawingUnit.isEndCodeOfLongCurve) {
+                        float curveStart = 0;
+                        float curveEnd = drawingUnit.right;//覆盖在起端left到末端right（全盖住）
+
+                        //获取弧线起端音符的坐标
+                        int span = drawingUnit.curveLength;
+                        //（注：k与span的关系）索引为k时：本音符前面有k个音符存在。span则代表本音符之前的span个音符都在弧线下，所以二者一一对应不需加减处理。
+                        if (span <= k) {
+                            //弧线不跨节
+                            curveStart = sectionDrawingUnits.get(k - span).left;
+                            canvas.drawArc(curveStart, drawingUnit.top + additionalHeight, curveEnd,
+                                    drawingUnit.top + additionalHeight + curveOrLinesHeight,
+                                    0, 180, false, bottomLinePaint);//绘制
+                        } else {
+                            //弧线跨节，可能跨行
+                            DrawingUnit duCurveStart = findStartDrawingUnit(k, i, span, drawingUnits);
+                            if (duCurveStart == null) {
+                                Toast.makeText(mContext, "连音符跨度编码错误，忽略绘制", Toast.LENGTH_SHORT).show();
+                                //没有绘制
+                            } else {
+                                //必然不跨行
+                                curveStart = duCurveStart.left;
+                                canvas.drawArc(curveStart, drawingUnit.top + additionalHeight, curveEnd,
+                                        drawingUnit.top + additionalHeight + curveOrLinesHeight,
+                                        0, 180, false, bottomLinePaint);
+                            }
                         }
                     }
-                }
 
-                //蓝框
-                if(blueBoxSectionIndex == i && blueBoxUnitIndex==k){
-                    canvas.drawRect(drawingUnit.left,drawingUnit.top,drawingUnit.right,drawingUnit.bottom,blueBoxPaint);
-                }
 
+                }
             }
         }
 
@@ -427,20 +434,26 @@ public class RhythmSingleLineEditor extends RhythmView {
      * 设置节拍类型（4/4等）
      * 设置字符大小
      * */
-    public void setRhythm(ArrayList<ArrayList<Byte>> codesInSections,int rhythmType, int charSize, int unitWidth){
-        this.codesInSections =codesInSections;
+    public void setRhythm(ArrayList<ArrayList<Byte>> codesInSections,int rhythmType, int codeSize, int unitWidth){
+        setRhythmAndLyric(codesInSections,rhythmType,null,null,codeSize,unitWidth);
+    }
+
+    public void setRhythmAndLyric(ArrayList<ArrayList<Byte>> codesInSections, int rhythmType, Lyric lyric_1, Lyric lyric_2, int codeSize, int unitWidth){
+        this.codesInSections = codesInSections;
         this.rhythmType = rhythmType;
+        this.lyric_1 = lyric_1;
+        this.lyric_2 = lyric_2;
 
         int codeMinSize = 12;
         int codeMaxSize = 28;
-        if(charSize<codeMinSize){
+        if(codeSize<codeMinSize){
             //不允许小于12【暂定】
             this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeMinSize, getResources().getDisplayMetrics());
-        }else if(charSize>codeMaxSize){
+        }else if(codeSize>codeMaxSize){
             //不允许大于28【暂定】
             this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeMaxSize, getResources().getDisplayMetrics());
         }else {
-            this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, charSize, getResources().getDisplayMetrics());
+            this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeSize, getResources().getDisplayMetrics());
         }
 
         int unitMinSize = 16;
@@ -452,24 +465,14 @@ public class RhythmSingleLineEditor extends RhythmView {
             //不允许大于36【暂定】
             this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, unitMaxSize, getResources().getDisplayMetrics());
         }else {
-            this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, charSize, getResources().getDisplayMetrics());
+            this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeSize, getResources().getDisplayMetrics());
         }
-
-        /*switch (codeSize){
-            case CODE_SMALL:
-                this.textSize = textSizeSmall;
-                break;
-            case CODE_MEDIUM:
-                this.textSize = textSizeMedium;
-                break;
-            case CODE_LARGE:
-                this.textSize = textSizeLarge;
-                break;
-        }*/
 
         //由于要根据目标字串的字符数量来绘制控件，所以所有需要用到该数量的初始化动作都只能在此后进行
         initData();
     }
+
+
 
 
     //onSizeC方法中会调用initData，该时点可能尚未设置必要的数据，所以需要判断。??
@@ -553,6 +556,7 @@ public class RhythmSingleLineEditor extends RhythmView {
     }
 
     //只改位置，不改编码数据
+    //①改变蓝框指针的位置；②改变绘制中心【目前只是简单的处理为：如果超绘制区域，则将新指针所在du绘制到（水平）中心（即对所有du进行平移）】
     public int moveBox(int moveType){
         int maxSectionIndex = drawingUnits.size()-1;
         int maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
@@ -568,12 +572,17 @@ public class RhythmSingleLineEditor extends RhythmView {
                     blueBoxUnitIndex = 0;
                     blueBoxSectionIndex++;
                     maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
+                    //移动到中心（如果超出绘制区）
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
                     invalidate();
 
                     return 11;
                 }else {
                     //不跨节
                     blueBoxUnitIndex ++;
+                    //移动到中心（如果超出绘制区）
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+
                     invalidate();
 
                     return 1;
@@ -588,6 +597,9 @@ public class RhythmSingleLineEditor extends RhythmView {
                     blueBoxUnitIndex = 0;
                     blueBoxSectionIndex++;
                     maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
+                    //移动到中心（如果超出绘制区）
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+
                     invalidate();
 
                     return 11;
@@ -603,11 +615,18 @@ public class RhythmSingleLineEditor extends RhythmView {
                     maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
                     blueBoxUnitIndex = maxUnitIndexCurrentSection;
 
+                    //移动到中心（如果超出绘制区）
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+
                     invalidate();
                     return -11;
                 }else {
                     //本节内移动
                     blueBoxUnitIndex--;
+
+                    //移动到中心（如果超出绘制区）
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+
                     invalidate();
 
                     return -1;
@@ -623,6 +642,9 @@ public class RhythmSingleLineEditor extends RhythmView {
                     blueBoxSectionIndex--;
                     maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
                     blueBoxUnitIndex = 0;
+
+                    //移动到中心（如果超出绘制区）
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
 
                     invalidate();
 
@@ -642,6 +664,9 @@ public class RhythmSingleLineEditor extends RhythmView {
                     maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size() - 1;
                     blueBoxUnitIndex = 0;
 
+                    //移动到中心（如果超出绘制区）
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+
                     invalidate();
 
                     return -19;
@@ -652,9 +677,12 @@ public class RhythmSingleLineEditor extends RhythmView {
                 maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
 
                 blueBoxUnitIndex = 0;
-                    invalidate();
 
-                    return 20;
+                //移动到中心（如果超出绘制区）
+                checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+                invalidate();
+
+                return 20;
 
 
         }
@@ -673,7 +701,18 @@ public class RhythmSingleLineEditor extends RhythmView {
 
     }
 
-    private void initDrawingUnits(boolean isTriggerFromOnSC) {
+    public void checkIsBoxOutOfUiAndShiftAllHorizontally(DrawingUnit drawingUnit){
+        if(drawingUnit.isOutOfUi) {//判断蓝框所在位置是否超出绘制区域
+            float shiftAmount = drawingUnit.shiftAmountToCenterX;//只进行水平移动（单行模式下）
+            for (ArrayList<DrawingUnit> drawingUnitSection : drawingUnits) {//所有其他元素均按本元素要求的距离移动
+                for (DrawingUnit du : drawingUnitSection) {
+                    du.shiftEntirely(shiftAmount, 0,padding,padding, sizeChangedWidth, sizeChangedHeight);
+                }
+            }
+        }
+    }
+
+ /*   private void initDrawingUnits(boolean isTriggerFromOnSC) {
         totalRequiredLength = 0;//每次重新计算绘制信息前要清空。
 
         //本方法计算了大部分所需的绘制坐标，但是还有如下未处理：
@@ -718,10 +757,10 @@ public class RhythmSingleLineEditor extends RhythmView {
         if(!isTriggerFromOnSC){
             invalidate();
         }//onSC方法返回后会自动调用onD因而没必要调用invalidate方法。
-    }
+    }*/
 
     //按小节计算（小节内各音符的）绘制数据
-    private ArrayList<DrawingUnit> initSectionDrawingUnit_singleLineMode(ArrayList<Byte> codesInThisSection, float bottomDrawing_Y, float sectionStartX, float unitWidthChanged) {
+    /*private ArrayList<DrawingUnit> initSectionDrawingUnit_singleLineMode(ArrayList<Byte> codesInThisSection, float bottomDrawing_Y, float sectionStartX, float unitWidthChanged) {
         // *注意，sectionStartX要传入“上一小节末尾+节间隔”（非首节时）或者传入padding（是首节时）
 
         int totalValueBeforeThisCodeInBeat = 0;//用于计算拍子【要在循环的末尾添加，因为要使用的是“本音符之前”的总和】
@@ -742,8 +781,8 @@ public class RhythmSingleLineEditor extends RhythmView {
             } else {
                 DrawingUnit drawingUnit = new DrawingUnit();
                 //绘制在同一行内
-                drawingUnit.bottom = bottomDrawing_Y;
-                drawingUnit.top = drawingUnit.bottom - (unitStandardHeight + additionalHeight * 2 + curveOrLinesHeight * 2);
+                drawingUnit.bottomNoLyric = bottomDrawing_Y;
+                drawingUnit.top = drawingUnit.bottomNoLyric - (unitStandardHeight + additionalHeight * 2 + curveOrLinesHeight * 2);
 
                 if (j == 0) {
                     drawingUnit.left = sectionStartX;//首个音符
@@ -778,7 +817,7 @@ public class RhythmSingleLineEditor extends RhythmView {
                 //字符的绘制位置（字符按照给定左下起点方式绘制）
                 //【为了保证①字符基本位于水平中央、②字符带不带附点时的起始位置基本不变，因而采用：左+三分之一单位宽度折半值 方式，后期据情况调整】
                 drawingUnit.codeStartX = drawingUnit.left + unitWidthChanged / 3;//。
-                drawingUnit.codeBaseY = drawingUnit.bottom - additionalHeight - curveOrLinesHeight - 8;//暂定减8像素。
+                drawingUnit.codeBaseY = drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight - 8;//暂定减8像素。
                 //这样所有长度的字串都指定同一起始点即可。
 
                 if (code == valueOfBeat + valueOfBeat / 2 || code == -valueOfBeat - valueOfBeat / 2) {
@@ -795,31 +834,31 @@ public class RhythmSingleLineEditor extends RhythmView {
                     //仅有一条下划线
                     drawingUnit.right = drawingUnit.left + unitWidthChanged;
                     drawingUnit.code = charForCode;
-                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
+                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight));
                 } else if (code == valueOfBeat / 2 + valueOfBeat / 4 || code == -valueOfBeat / 2 - valueOfBeat / 4) {
                     //一线、一附点的画法
                     drawingUnit.right = drawingUnit.left + unitWidthChanged * 1.5f;
-                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
+                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight));
                     drawingUnit.code = charForCode + "·";
                 } else if (code == valueOfBeat / 4 || code == -valueOfBeat / 4) {
                     //两线画法
                     drawingUnit.right = drawingUnit.left + unitWidthChanged;
-                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
-                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10));
+                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight));
+                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight + 10));
                     drawingUnit.code = charForCode;
 
                 } else if (code == valueOfBeat / 4 + valueOfBeat / 8 || code == -valueOfBeat / 4 - valueOfBeat / 8) {
                     //两线、一附点
                     drawingUnit.right = drawingUnit.left + unitWidthChanged * 1.5f;
-                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
-                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10));
+                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight));
+                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight + 10));
                     drawingUnit.code = charForCode + "·";
                 } else if (code == valueOfBeat / 8 || code == -valueOfBeat / 8) {
                     //三线画法
                     drawingUnit.right = drawingUnit.left + unitWidthChanged;
-                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
-                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10));
-                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 20, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 20));
+                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight));
+                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight + 10));
+                    drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight + 20, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight + 20));
                     drawingUnit.code = charForCode;
                 } else if (code == 0) {
                     //独立占拍延音线画法
@@ -847,16 +886,16 @@ public class RhythmSingleLineEditor extends RhythmView {
                         //73~79之间无下划线不处理。
                         if (code > 83 && code < 89) {
                             //一条下划线
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight));
                         } else if (code > 93) {//外层if有<99判断
                             //两条下划线
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight + 10));
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight));
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight + 10));
                         }//不支持三条的
                     } else if (valueOfBeat == 8) {//外层if有<99判断
                         if (code > 93) {
                             //一条下划线
-                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottom - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottom - additionalHeight - curveOrLinesHeight));
+                            drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight));
                         }//无下划线的不处理；八分音符下不可能有四分时值的均分多连音，不处理。
                     }
                 }
@@ -867,7 +906,7 @@ public class RhythmSingleLineEditor extends RhythmView {
             }
         }
         return drawingUnitsInSection;//返回本小节对应的绘制信息列表
-    }
+    }*/
 
     //用于将本音符转换成正确的时值信息然后加总到节拍时值计数器（进一步用于判断是否完成了一个拍子的时值）
    /* private int addValueToBeatTotalValue(int thisCode, int valueOfBeat, int lastTotal){
@@ -1018,7 +1057,7 @@ public class RhythmSingleLineEditor extends RhythmView {
        //改变下层数据绘制位置
         for (ArrayList<DrawingUnit> duInSections:drawingUnits) {
             for (DrawingUnit du :duInSections) {
-                du.shiftEntirely(shiftAmount_X,0,sizeChangedWidth,sizeChangedHeight);
+                du.shiftEntirely(shiftAmount_X,0,padding,padding,sizeChangedWidth,sizeChangedHeight);
             }
         }
 
@@ -1045,6 +1084,9 @@ public class RhythmSingleLineEditor extends RhythmView {
 
         invalidate();//别忘了哦，这样才能绘制出去
     }
+
+
+
 
 
 }
