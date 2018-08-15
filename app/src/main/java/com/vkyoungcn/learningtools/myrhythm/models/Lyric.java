@@ -109,6 +109,7 @@ public class Lyric implements Parcelable {
         this.keepTop = keepTop;
     }
 
+
     /*
      * 以下是Parcelable要求的内容
      * */

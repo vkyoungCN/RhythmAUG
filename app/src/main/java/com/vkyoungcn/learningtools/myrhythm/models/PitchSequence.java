@@ -12,22 +12,26 @@ public class PitchSequence implements Parcelable {
 
     private boolean isSelfDesign = false;
     private boolean keepTop = false;
-    private int starts;//这个字段我总觉得可能有更好的替代。暂留。
+    private int stars;//这个字段我总觉得可能有更好的替代。暂留。
 
     private String description;
     private long createTime;
     private long lastModifyTime;//可能需要按最近修改排序
 
 
-    public PitchSequence(int id, ArrayList<Byte> pitchSequence, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int starts) {
+    public PitchSequence() {
+    }
+
+    public PitchSequence(int id, String title, ArrayList<Byte> pitchSequence, boolean isSelfDesign, boolean keepTop, int stars, String description, long createTime, long lastModifyTime) {
         this.id = id;
+        this.title = title;
         this.pitchSequence = pitchSequence;
-        this.description = description;
         this.isSelfDesign = isSelfDesign;
         this.keepTop = keepTop;
+        this.stars = stars;
+        this.description = description;
         this.createTime = createTime;
         this.lastModifyTime = lastModifyTime;
-        this.starts = starts;
     }
 
     public int getId() {
@@ -44,6 +48,25 @@ public class PitchSequence implements Parcelable {
 
     public void setPitchSequence(ArrayList<Byte> pitchSequence) {
         this.pitchSequence = pitchSequence;
+    }
+
+    public void setPitchesSerialFromStr(String pitchesCodeSerialStr){
+        this.pitchSequence.clear();
+        for (byte b :pitchesCodeSerialStr.getBytes()) {
+            this.pitchSequence.add(b);
+        }//无法利用Arrays.asList()直接转换，基础类型。
+    }
+
+    public String getStrRhythmCodeSerial() {
+        if (pitchSequence == null || pitchSequence.isEmpty()){
+            return "";
+        }else {
+            StringBuilder sbd = new StringBuilder();
+            for (Byte b :pitchSequence) {
+                sbd.append(b);
+            }
+            return sbd.toString();
+        }
     }
 
     public String getDescription() {
@@ -86,12 +109,12 @@ public class PitchSequence implements Parcelable {
         this.lastModifyTime = lastModifyTime;
     }
 
-    public int getStarts() {
-        return starts;
+    public int getStars() {
+        return stars;
     }
 
-    public void setStarts(int starts) {
-        this.starts = starts;
+    public void setStars(int stars) {
+        this.stars = stars;
     }
 
     public void setPitchSequenceFromStr(String rhythmCodeSerialStr){
@@ -113,6 +136,14 @@ public class PitchSequence implements Parcelable {
         }
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     /*
      * 以下是Parcelable要求的内容
      * */
@@ -130,7 +161,7 @@ public class PitchSequence implements Parcelable {
         parcel.writeByte(keepTop?(byte) 1:(byte) 0);
         parcel.writeLong(createTime);
         parcel.writeLong(lastModifyTime);
-        parcel.writeInt(starts);
+        parcel.writeInt(stars);
     }
 
     public static final Parcelable.Creator<PitchSequence> CREATOR = new Parcelable.Creator<PitchSequence>(){
@@ -154,7 +185,7 @@ public class PitchSequence implements Parcelable {
         keepTop = in.readByte() == 1;
         createTime = in.readLong();
         lastModifyTime = in.readLong();
-        starts = in.readInt();
+        stars = in.readInt();
     }
 
 }

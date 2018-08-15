@@ -3,7 +3,6 @@ package com.vkyoungcn.learningtools.myrhythm;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -88,7 +87,7 @@ public class AddRhythmFinalActivity extends AppCompatActivity {
             public void onClick(View v) {
                 rhythm.setSelfDesign(ckb_selfDesign.isChecked());
                 rhythm.setKeepTop(ckb_keepTop.isChecked());
-                rhythm.setStarts(Integer.parseInt((String)(spinner.getSelectedItem())));
+                rhythm.setStars(Integer.parseInt((String)(spinner.getSelectedItem())));
                 rhythm.setDescription(edt_description.getText().toString());//一定非null
 
                 long currentTime = System.currentTimeMillis();

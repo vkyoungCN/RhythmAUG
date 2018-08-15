@@ -4,7 +4,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Rhythm implements Parcelable {
 
@@ -16,35 +15,63 @@ public class Rhythm implements Parcelable {
 
     private int id;
     private String title;
+    private String description;
 
     private int rhythmType;
     private ArrayList<Byte> rhythmCodeSerial;
 
-    private String description;
     private boolean isSelfDesign = false;
-
     private boolean keepTop = false;
+    private int stars;//这个字段我总觉得可能有更好的替代。暂留。
+
     private long createTime;
     private long lastModifyTime;//可能需要按最近修改排序
-
-    private int starts;//这个字段我总觉得可能有更好的替代。暂留。
-
     private int primaryLyricId;//保留一份“主要歌词”的id【暂时只在旋律下显示一行主歌词，因而可以这样操作】
+    private int secondLyricId;
+    private int pitchesId;
+
 
     public Rhythm() {
     }
 
-    public Rhythm(int id, int rhythmType, ArrayList<Byte> rhythmCodeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int starts, int primaryLyricId) {
+    public Rhythm(int id, String title, String description, int rhythmType, ArrayList<Byte> rhythmCodeSerial, boolean isSelfDesign, boolean keepTop, int stars, long createTime, long lastModifyTime, int primaryLyricId, int secondLyricId, int pitchesId) {
         this.id = id;
+        this.title = title;
+        this.description = description;
         this.rhythmType = rhythmType;
         this.rhythmCodeSerial = rhythmCodeSerial;
-        this.description = description;
         this.isSelfDesign = isSelfDesign;
         this.keepTop = keepTop;
+        this.stars = stars;
         this.createTime = createTime;
         this.lastModifyTime = lastModifyTime;
-        this.starts = starts;
         this.primaryLyricId = primaryLyricId;
+        this.secondLyricId = secondLyricId;
+        this.pitchesId = pitchesId;
+    }
+
+    public int getSecondLyricId() {
+        return secondLyricId;
+    }
+
+    public void setSecondLyricId(int secondLyricId) {
+        this.secondLyricId = secondLyricId;
+    }
+
+    public int getPitchesId() {
+        return pitchesId;
+    }
+
+    public void setPitchesId(int pitchesId) {
+        this.pitchesId = pitchesId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public int getId() {
@@ -111,12 +138,12 @@ public class Rhythm implements Parcelable {
         this.lastModifyTime = lastModifyTime;
     }
 
-    public int getStarts() {
-        return starts;
+    public int getStars() {
+        return stars;
     }
 
-    public void setStarts(int starts) {
-        this.starts = starts;
+    public void setStars(int stars) {
+        this.stars = stars;
     }
 
     public void setRhythmCodeSerialFromStr(String rhythmCodeSerialStr){
@@ -165,7 +192,7 @@ public class Rhythm implements Parcelable {
         parcel.writeByte(keepTop?(byte) 1:(byte) 0);
         parcel.writeLong(createTime);
         parcel.writeLong(lastModifyTime);
-        parcel.writeInt(starts);
+        parcel.writeInt(stars);
         parcel.writeInt(primaryLyricId);
     }
 
@@ -191,7 +218,7 @@ public class Rhythm implements Parcelable {
         keepTop = in.readByte() == 1;
         createTime = in.readLong();
         lastModifyTime = in.readLong();
-        starts = in.readInt();
+        stars = in.readInt();
         primaryLyricId = in.readInt();
     }
 
