@@ -3,7 +3,12 @@ package com.vkyoungcn.learningtools.myrhythm.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class Rhythm implements Parcelable {
 
@@ -13,22 +18,22 @@ public class Rhythm implements Parcelable {
     public static final int RHYTHM_TYPE_38 = 38;
     public static final int RHYTHM_TYPE_68 = 68;
 
-    private int id;
-    private String title;
-    private String description;
+    private int id = 0;
+    private String title = "";
+    private String description ="";
 
-    private int rhythmType;
-    private ArrayList<Byte> rhythmCodeSerial;
+    private int rhythmType =0;
+    private ArrayList<Byte> rhythmCodeSerial = new ArrayList<>();
 
     private boolean isSelfDesign = false;
     private boolean keepTop = false;
-    private int stars;//这个字段我总觉得可能有更好的替代。暂留。
+    private int stars=0;//这个字段我总觉得可能有更好的替代。暂留。
 
-    private long createTime;
-    private long lastModifyTime;//可能需要按最近修改排序
-    private int primaryLyricId;//保留一份“主要歌词”的id【暂时只在旋律下显示一行主歌词，因而可以这样操作】
-    private int secondLyricId;
-    private int pitchesId;
+    private long createTime=0;
+    private long lastModifyTime=0;//可能需要按最近修改排序
+    private int primaryLyricId=0;//保留一份“主要歌词”的id【暂时只在旋律下显示一行主歌词，因而可以这样操作】
+    private int secondLyricId=0;
+    private int pitchesId=0;
 
 
     public Rhythm() {
@@ -157,14 +162,45 @@ public class Rhythm implements Parcelable {
         if (rhythmCodeSerial == null || rhythmCodeSerial.isEmpty()){
             return "";
         }else {
-            StringBuilder sbd = new StringBuilder();
-            for (Byte b :rhythmCodeSerial) {
-                sbd.append(b);
-            }
-            return sbd.toString();
+            return getStrCodeFromListCode(rhythmCodeSerial);
         }
     }
 
+    // char转byte
+    private ArrayList<Byte> getArrayListByteFromString (String strCodes) {
+        char[] chars = strCodes.toCharArray();
+        Charset cs = Charset.forName ("UTF-8");
+        CharBuffer cb = CharBuffer.allocate (chars.length);
+        cb.put (chars);
+        cb.flip ();
+        ByteBuffer bb = cs.encode (cb);
+        byte[] bytes = bb.array();
+        ArrayList<Byte> byteArrayList =new ArrayList<>();
+        for (byte b :bytes) {
+            byteArrayList.add(b);
+        }
+        return byteArrayList;
+
+    }
+
+// byte转char
+
+    private String getStrCodeFromListCode (ArrayList<Byte> byteCodes) {
+        Byte[] bytes = new Byte[byteCodes.size()];
+        byteCodes.toArray(bytes);
+
+        byte[] bytes_2 = new byte[byteCodes.size()];
+        for (int i=0;i<byteCodes.size();i++) {
+            bytes_2[i] = bytes[i];
+        }
+
+        Charset cs = Charset.forName ("UTF-8");
+        ByteBuffer bb = ByteBuffer.allocate (bytes.length);
+        bb.put (bytes_2);
+        bb.flip ();
+        CharBuffer cb = cs.decode (bb);
+        return cb.toString();
+    }
 
     public int getPrimaryLyricId() {
         return primaryLyricId;

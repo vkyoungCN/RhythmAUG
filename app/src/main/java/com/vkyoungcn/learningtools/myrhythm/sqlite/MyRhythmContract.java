@@ -27,7 +27,7 @@ public class MyRhythmContract {
         public static final String COLUMN_TITLE ="title";
         public static final String COLUMN_DESCRIPTION = "description";
         public static final String COLUMN_C0DES = "code_serial";
-        public static final String COLUMN_BEAT_TYPE = "beat_type";
+        public static final String COLUMN_RHYTHM_TYPE = "beat_type";
         public static final String COLUMN_STAR = "star";
         public static final String COLUMN_SELF_DESIGN = "self_design";
         public static final String COLUMN_KEEP_TOP = "keep_top";

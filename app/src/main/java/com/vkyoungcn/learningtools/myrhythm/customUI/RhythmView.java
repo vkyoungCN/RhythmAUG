@@ -12,15 +12,8 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
-import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 
 import java.util.ArrayList;
-
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_24;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_34;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
 
 
 public class RhythmView extends View {
@@ -104,6 +97,8 @@ public class RhythmView extends View {
 
     /* 色彩组 */
     private int generalColor_Gray;
+    private int generalColor_LightGray;
+    public int generalCharGray;
 
     public RhythmView(Context context) {
         super(context);
@@ -131,7 +126,7 @@ public class RhythmView extends View {
     private void init(AttributeSet attributeset) {
         initSize();
         initColor();
-        initPaint();
+        initPaintWithOutTextPaint();
         initViewOptions();
     }
 
@@ -161,27 +156,25 @@ public class RhythmView extends View {
 
     private void initColor(){
         generalColor_Gray = ContextCompat.getColor(mContext, R.color.rhythmView_generalGray);
+        generalColor_LightGray = ContextCompat.getColor(mContext, R.color.rhythmView_generalLightGray);
+        generalCharGray = ContextCompat.getColor(mContext, R.color.rhythmView_generalCharGray);
     }
 
 
-    private void initPaint() {
+    //部分初始化需要使用到由外部调用方设置的尺寸大小，暂时只初始化不需要用到该种数据的
+    private void initPaintWithOutTextPaint() {
         bottomLinePaint = new Paint();
-        bottomLinePaint.setColor(generalColor_Gray);
+        bottomLinePaint.setColor(generalCharGray);
         bottomLinePaint.setStrokeWidth(2);//
         bottomLinePaint.setStyle(android.graphics.Paint.Style.STROKE);
 
 
-        codePaint = new Paint();
-        codePaint.setTextSize(textSize);
-//        codePaint.setStrokeWidth(4);
-        codePaint.setColor(generalColor_Gray);
-        codePaint.setAntiAlias(true);
-//        codePaint.setTextAlign(Paint.Align.CENTER);【改为指定起始点方式】
+
 
         curveNumPaint = new Paint();
         curveNumPaint.setTextSize(curveNumSize);
         curveNumPaint.setStrokeWidth(2);
-        curveNumPaint.setColor(generalColor_Gray);
+        curveNumPaint.setColor(generalCharGray);
         curveNumPaint.setAntiAlias(true);
         curveNumPaint.setTextAlign(Paint.Align.CENTER);
 
@@ -192,6 +185,14 @@ public class RhythmView extends View {
         grayEmptyPaint.setAntiAlias(true);
         grayEmptyPaint.setColor(generalColor_Gray);
 
+    }
+    public void initCodePaint(){
+        codePaint = new Paint();
+        codePaint.setTextSize(textSize);
+        codePaint.setStrokeWidth(4);
+        codePaint.setColor(generalCharGray);
+        codePaint.setAntiAlias(true);
+        codePaint.setTextAlign(Paint.Align.CENTER);
     }
 
 
@@ -259,7 +260,7 @@ public class RhythmView extends View {
                 DrawingUnit drawingUnit = sectionDrawingUnits.get(k);
 
                 //字符
-                canvas.drawText(drawingUnit.getCode(),drawingUnit.getCodeStartX(),drawingUnit.getCodeBaseY(), codePaint);
+                canvas.drawText(drawingUnit.getCode(),drawingUnit.getCodeCenterX(),drawingUnit.getCodeBaseY(), codePaint);
 
                 //下划线
                 for (BottomLine bottomLine :drawingUnit.bottomLines) {
@@ -389,6 +390,8 @@ public class RhythmView extends View {
         }else {
             this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeSize, getResources().getDisplayMetrics());
         }
+        initCodePaint();//需要在设置了文字大小后重新初始化部分画笔
+
 
         int unitMinSize = 16;
         int unitMaxSize = 32;
@@ -708,7 +711,7 @@ public class RhythmView extends View {
             float shiftAmount = (totalAvailableHeight-totalHeightNeeded)/2;
             for (ArrayList<DrawingUnit> drawingUnitSection: drawingUnits){
                 for (DrawingUnit du :drawingUnitSection) {
-                    du.shiftEntirely(0, shiftAmount, sizeChangedWidth, sizeChangedHeight);
+                    du.shiftEntirely(0, shiftAmount, padding,padding,sizeChangedWidth-padding, sizeChangedHeight-padding);
                 }
             }
         }
@@ -776,7 +779,7 @@ public class RhythmView extends View {
 
                 //字符的绘制位置（字符按照给定左下起点方式绘制）
                 //【为了保证①字符基本位于水平中央、②字符带不带附点时的起始位置基本不变，因而采用：左+三分之一单位宽度折半值 方式，后期据情况调整】
-                drawingUnit.codeStartX = drawingUnit.left + unitWidthChanged / 3;//。
+                drawingUnit.codeCenterX = drawingUnit.left + unitWidthChanged / 2;//。
                 drawingUnit.codeBaseY = drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight - 8;//暂定减8像素。
                 //这样所有长度的字串都指定同一起始点即可。
 
@@ -868,15 +871,15 @@ public class RhythmView extends View {
                 if(!lyric_1.isEmpty()){
                     drawingUnit.word_1 = lyric_1.substring((accumulateUnitsNumBeforeThisSection+j),(accumulateUnitsNumBeforeThisSection+j));
                     drawingUnit.word_1_BaseY = drawingUnit.bottomNoLyric + unitStandardHeight;
-                    drawingUnit.word_1_StartX = drawingUnit.codeStartX;
+                    drawingUnit.word_1_CenterX = drawingUnit.codeCenterX;
                 }
                 if(!lyric_2.isEmpty()){
                     drawingUnit.word_2 = lyric_1.substring((accumulateUnitsNumBeforeThisSection+j),(accumulateUnitsNumBeforeThisSection+j));
                     drawingUnit.word_2_BaseY = drawingUnit.bottomNoLyric + unitStandardHeight*2;
-                    drawingUnit.word_2_StartX = drawingUnit.codeStartX;
+                    drawingUnit.word_2_CenterX = drawingUnit.codeCenterX;
                 }
 
-                drawingUnit.checkIsOutOfUi(sizeChangedWidth-padding*2,sizeChangedHeight-padding*2);
+                drawingUnit.checkIsOutOfUi(padding,padding,sizeChangedWidth-padding,sizeChangedHeight-padding);
             }
         }
 
@@ -898,7 +901,7 @@ public class RhythmView extends View {
         }
 
         //如果加总后超过一个标准节拍时值，则要“进位”处理，只留“余数”
-        if(lastTotal>valueOfBeat){
+        if(lastTotal>=valueOfBeat){
             lastTotal -= valueOfBeat;
         }
         return lastTotal;

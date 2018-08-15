@@ -12,6 +12,8 @@
 
 
     <color name="rhythmView_generalGray">#e0e0e0</color>
+    <color name="rhythmView_generalLightGray">#f5f5f5</color>
+    <color name="rhythmView_generalCharGray">#616161</color>
     <color name="rhythmView_edBoxBlue">#1976d2</color>
     <color name="rhythmView_sdMaskWhite">#ffffff</color>
     <color name="rhythmView_sdBallPink">#fa75ed</color>

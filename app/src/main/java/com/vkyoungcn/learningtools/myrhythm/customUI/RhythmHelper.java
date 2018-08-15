@@ -1,5 +1,7 @@
 package com.vkyoungcn.learningtools.myrhythm.customUI;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_24;
@@ -9,7 +11,7 @@ import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
 
 public class RhythmHelper {
-
+//    private static final String TAG = "RhythmHelper";
     public static int calculateValueBeat(int rhythmType) {
         //根据节拍形式确定一拍的时值、一节的时值总量。
         int valueOfBeat = 16;
@@ -73,7 +75,7 @@ public class RhythmHelper {
                 totalValue-=b;
             }
             if(totalValue!=0 && totalValue%valueOfSection==0){
-                ArrayList<Byte> codeInSingleSection = new ArrayList<>(rhythmCodes.subList(startIndex,i));//装载单节内的音符
+                ArrayList<Byte> codeInSingleSection = new ArrayList<>(rhythmCodes.subList(startIndex,i+1));//装载单节内的音符【注意指定的右侧索引值是不包含的，仅截取到/包括到到其左邻一个位置。】
                 codesInSections.add(codeInSingleSection);//添加到按节管理的总编码表
                 startIndex = i+1;
             }//这样只有满节的小节（包括最后是0、-等特殊情况）才能处理，最后如果出现不满暂定属于编码错误的情形。
@@ -81,6 +83,7 @@ public class RhythmHelper {
             //【可在节奏新增的界面中，对输入规则做类似规定】，否则将混乱出错。
         }
 
+//        Log.i(TAG, "codeParseIntoSections: section_1="+codesInSections.get(0).toString()+"type="+rhythmType);
         return codesInSections;
     }
 

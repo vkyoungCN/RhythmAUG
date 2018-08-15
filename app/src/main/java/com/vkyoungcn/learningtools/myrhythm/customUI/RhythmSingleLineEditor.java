@@ -197,22 +197,22 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
     private void initPaint() {
         bottomLinePaint = new Paint();
-        bottomLinePaint.setColor(generalColor_Gray);
+        bottomLinePaint.setColor(generalCharGray);
         bottomLinePaint.setStrokeWidth(2);//
         bottomLinePaint.setStyle(Paint.Style.STROKE);
 
 
-        codePaint = new Paint();
+       /* codePaint = new Paint();
         codePaint.setTextSize(textSize);
 //        codePaint.setStrokeWidth(4);
-        codePaint.setColor(generalColor_Gray);
+        codePaint.setColor(generalCharGray);
         codePaint.setAntiAlias(true);
 //        codePaint.setTextAlign(Paint.Align.CENTER);【改为指定起始点方式】
-
+*/
         curveNumPaint = new Paint();
         curveNumPaint.setTextSize(curveNumSize);
         curveNumPaint.setStrokeWidth(2);
-        curveNumPaint.setColor(generalColor_Gray);
+        curveNumPaint.setColor(generalCharGray);
         curveNumPaint.setAntiAlias(true);
         curveNumPaint.setTextAlign(Paint.Align.CENTER);
 
@@ -253,7 +253,15 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         blueBoxPaint.setColor(editBox_blue);
 
     }
-
+    public void initCodePaint(){
+        codePaint = new Paint();
+        codePaint.setTextSize(textSize);
+        codePaint.setStrokeWidth(4);
+        codePaint.setColor(generalCharGray);
+        codePaint.setAntiAlias(true);
+        codePaint.setTextAlign(Paint.Align.CENTER);
+//        Log.i(TAG, "initPaint: textSize="+textSize);
+    }
 
     private void initViewOptions() {
         setFocusable(true);
@@ -330,7 +338,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
                 if(!drawingUnit.isOutOfUi) {//本字符在可显示区域
                     //字符
-                    canvas.drawText(drawingUnit.getCode(), drawingUnit.getCodeStartX(), drawingUnit.getCodeBaseY(), codePaint);
+                    canvas.drawText(drawingUnit.getCode(), drawingUnit.getCodeCenterX(), drawingUnit.getCodeBaseY(), codePaint);
 
                     //下划线
                     for (BottomLine bottomLine : drawingUnit.bottomLines) {
@@ -455,6 +463,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         }else {
             this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeSize, getResources().getDisplayMetrics());
         }
+        initCodePaint();//需要在设置了文字大小后重新初始化部分画笔
 
         int unitMinSize = 16;
         int unitMaxSize = 32;
@@ -706,7 +715,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
             float shiftAmount = drawingUnit.shiftAmountToCenterX;//只进行水平移动（单行模式下）
             for (ArrayList<DrawingUnit> drawingUnitSection : drawingUnits) {//所有其他元素均按本元素要求的距离移动
                 for (DrawingUnit du : drawingUnitSection) {
-                    du.shiftEntirely(shiftAmount, 0,padding,padding, sizeChangedWidth, sizeChangedHeight);
+                    du.shiftEntirely(shiftAmount, 0,padding,padding, sizeChangedWidth-padding, sizeChangedHeight-padding);
                 }
             }
         }
@@ -816,7 +825,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
                 //字符的绘制位置（字符按照给定左下起点方式绘制）
                 //【为了保证①字符基本位于水平中央、②字符带不带附点时的起始位置基本不变，因而采用：左+三分之一单位宽度折半值 方式，后期据情况调整】
-                drawingUnit.codeStartX = drawingUnit.left + unitWidthChanged / 3;//。
+                drawingUnit.codeCenterX = drawingUnit.left + unitWidthChanged / 3;//。
                 drawingUnit.codeBaseY = drawingUnit.bottomNoLyric - additionalHeight - curveOrLinesHeight - 8;//暂定减8像素。
                 //这样所有长度的字串都指定同一起始点即可。
 
@@ -1057,7 +1066,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
        //改变下层数据绘制位置
         for (ArrayList<DrawingUnit> duInSections:drawingUnits) {
             for (DrawingUnit du :duInSections) {
-                du.shiftEntirely(shiftAmount_X,0,padding,padding,sizeChangedWidth,sizeChangedHeight);
+                du.shiftEntirely(shiftAmount_X,0,padding,padding,sizeChangedWidth-padding,sizeChangedHeight-padding);
             }
         }
 

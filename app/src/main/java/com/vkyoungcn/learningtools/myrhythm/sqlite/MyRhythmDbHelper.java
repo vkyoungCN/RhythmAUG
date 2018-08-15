@@ -2,15 +2,20 @@ package com.vkyoungcn.learningtools.myrhythm.sqlite;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 import com.vkyoungcn.learningtools.myrhythm.models.PitchSequence;
 import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 
+import java.util.ArrayList;
+
 public class MyRhythmDbHelper extends SQLiteOpenHelper {
+//    private static final String TAG = "MyRhythmDbHelper";
 
     public static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "MyRhythm.db";
@@ -29,7 +34,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
                     MyRhythmContract.Rhythm.COLUMN_TITLE + " TEXT, "+
                     MyRhythmContract.Rhythm.COLUMN_DESCRIPTION + " TEXT, "+
                     MyRhythmContract.Rhythm.COLUMN_C0DES + " TEXT, "+
-                    MyRhythmContract.Rhythm.COLUMN_BEAT_TYPE + " INTEGER, "+
+                    MyRhythmContract.Rhythm.COLUMN_RHYTHM_TYPE + " INTEGER, "+
 
                     MyRhythmContract.Rhythm.COLUMN_STAR + " INTEGER, "+
                     MyRhythmContract.Rhythm.COLUMN_SELF_DESIGN + " BOOLEAN, "+
@@ -120,6 +125,52 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_PITCHES);
         db.execSQL(SQL_CREATE_ACTION_RECORDS);
 
+        //填充几个数据
+        ArrayList<Rhythm> rhythmDefaultData = new ArrayList<>(2);
+        ArrayList<Byte> codes_1 = new ArrayList<>();
+        codes_1.add((byte)16);
+        codes_1.add((byte)8);
+        codes_1.add((byte)8);
+        codes_1.add((byte)16);
+        codes_1.add((byte)16);
+
+        codes_1.add((byte)8);
+        codes_1.add((byte)8);
+        codes_1.add((byte)8);
+        codes_1.add((byte)8);
+        codes_1.add((byte)4);
+        codes_1.add((byte)4);
+        codes_1.add((byte)8);
+        codes_1.add((byte)16);
+
+        Rhythm rhythm_1 = new Rhythm();
+        long currentTime = System.currentTimeMillis();
+        rhythm_1.setCreateTime(currentTime);
+        rhythm_1.setLastModifyTime(currentTime);
+        rhythm_1.setDescription("测试数据");
+        rhythm_1.setSelfDesign(true);
+        rhythm_1.setKeepTop(true);
+        rhythm_1.setRhythmType(Rhythm.RHYTHM_TYPE_44);
+        rhythm_1.setStars(3);
+        rhythm_1.setTitle("测试用+1");
+        rhythm_1.setRhythmCodeSerial(codes_1);
+        rhythmDefaultData.add(rhythm_1);
+
+        Rhythm rhythm_2 = new Rhythm();
+        rhythm_2.setCreateTime(currentTime);
+        rhythm_2.setLastModifyTime(currentTime);
+        rhythm_2.setDescription("测试数据2");
+        rhythm_2.setSelfDesign(true);
+        rhythm_2.setKeepTop(true);
+        rhythm_2.setRhythmType(Rhythm.RHYTHM_TYPE_24);
+        rhythm_2.setStars(2);
+        rhythm_2.setTitle("测试用+2");
+        rhythm_2.setRhythmCodeSerial(codes_1);
+        rhythmDefaultData.add(rhythm_2);
+
+        createRhythmWithDb(db,rhythm_1);
+        createRhythmWithDb(db,rhythm_2);
+
     }
 
     @Override
@@ -160,7 +211,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
         values.put(MyRhythmContract.Rhythm.COLUMN_TITLE, rhythm.getTitle());
         values.put(MyRhythmContract.Rhythm.COLUMN_DESCRIPTION, rhythm.getDescription());
-        values.put(MyRhythmContract.Rhythm.COLUMN_BEAT_TYPE, rhythm.getRhythmType());
+        values.put(MyRhythmContract.Rhythm.COLUMN_RHYTHM_TYPE, rhythm.getRhythmType());
         values.put(MyRhythmContract.Rhythm.COLUMN_C0DES, rhythm.getStrRhythmCodeSerial());//以字串形式存放
         values.put(MyRhythmContract.Rhythm.COLUMN_STAR,rhythm.getStars());
 
@@ -173,6 +224,32 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         values.put(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID,rhythm.getPitchesId());
 
         l = mSQLiteDatabase.insert(MyRhythmContract.Rhythm.TABLE_NAME, null, values);
+        closeDB();
+
+        return l;
+    }
+
+    public long createRhythmWithDb(SQLiteDatabase db,Rhythm rhythm){
+        long l;
+        ContentValues values = new ContentValues();
+
+        values.put(MyRhythmContract.Rhythm.COLUMN_TITLE, rhythm.getTitle());
+        values.put(MyRhythmContract.Rhythm.COLUMN_DESCRIPTION, rhythm.getDescription());
+        values.put(MyRhythmContract.Rhythm.COLUMN_RHYTHM_TYPE, rhythm.getRhythmType());
+//        Log.i(TAG, "createRhythmWithDb: rh.codes="+rhythm.getRhythmCodeSerial().toString());
+//        Log.i(TAG, "createRhythmWithDb: rh.codesStr="+rhythm.getStrRhythmCodeSerial());
+        values.put(MyRhythmContract.Rhythm.COLUMN_C0DES, rhythm.getStrRhythmCodeSerial());//以字串形式存放
+        values.put(MyRhythmContract.Rhythm.COLUMN_STAR,rhythm.getStars());
+
+        values.put(MyRhythmContract.Rhythm.COLUMN_SELF_DESIGN,rhythm.isSelfDesign());
+        values.put(MyRhythmContract.Rhythm.COLUMN_KEEP_TOP,rhythm.isKeepTop());
+        values.put(MyRhythmContract.Rhythm.COLUMN_CREATE_TIME,rhythm.getCreateTime());
+        values.put(MyRhythmContract.Rhythm.COLUMN_LAST_MODIFY_TIME,rhythm.getLastModifyTime());
+        values.put(MyRhythmContract.Rhythm.COLUMN_PRIMARY_LYRIC_ID,rhythm.getPrimaryLyricId());
+        values.put(MyRhythmContract.Rhythm.COLUMN_SECOND_LYRIC_ID,rhythm.getSecondLyricId());
+        values.put(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID,rhythm.getPitchesId());
+
+        l = db.insert(MyRhythmContract.Rhythm.TABLE_NAME, null, values);
         closeDB();
 
         return l;
@@ -258,7 +335,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         ContentValues contentValues = new ContentValues();
         contentValues.put(MyRhythmContract.Rhythm.COLUMN_TITLE, rhythm.getTitle());
         contentValues.put(MyRhythmContract.Rhythm.COLUMN_DESCRIPTION, rhythm.getDescription());
-        contentValues.put(MyRhythmContract.Rhythm.COLUMN_BEAT_TYPE, rhythm.getRhythmType());
+        contentValues.put(MyRhythmContract.Rhythm.COLUMN_RHYTHM_TYPE, rhythm.getRhythmType());
         contentValues.put(MyRhythmContract.Rhythm.COLUMN_C0DES, rhythm.getStrRhythmCodeSerial());//以字串形式存放
         contentValues.put(MyRhythmContract.Rhythm.COLUMN_STAR,rhythm.getStars());
 
@@ -320,6 +397,70 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         closeDB();
         return affectedRows;
     }
+
+
+
+    public ArrayList<Rhythm> getAllRhythms(){
+        ArrayList<Rhythm> rhythms = new ArrayList<>();
+
+        String selectQuery = "SELECT * FROM "+ MyRhythmContract.Rhythm.TABLE_NAME;
+
+        getReadableDatabaseIfClosedOrNull();
+        Cursor cursor = mSQLiteDatabase.rawQuery(selectQuery,null);
+
+        if(cursor.moveToFirst()){
+            do {
+                Rhythm rhythm_1 = new Rhythm();
+                rhythm_1.setId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm._ID)));
+                rhythm_1.setCreateTime(cursor.getLong(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_CREATE_TIME)));
+                rhythm_1.setLastModifyTime(cursor.getLong(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_LAST_MODIFY_TIME)));
+                rhythm_1.setDescription(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_DESCRIPTION)));
+                rhythm_1.setSelfDesign(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_SELF_DESIGN))==1);
+                rhythm_1.setKeepTop(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_KEEP_TOP))==1);
+                rhythm_1.setRhythmType(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_RHYTHM_TYPE)));
+                rhythm_1.setStars(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_STAR)));
+                rhythm_1.setTitle(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_TITLE)));
+                rhythm_1.setRhythmCodeSerialFromStr(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_C0DES)));
+
+                rhythm_1.setPrimaryLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PRIMARY_LYRIC_ID)));
+                rhythm_1.setSecondLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_SECOND_LYRIC_ID)));
+                rhythm_1.setPitchesId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID)));
+                rhythms.add(rhythm_1);
+            }while (cursor.moveToNext());
+        }else{
+            return null;
+        }
+        try {
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        closeDB();
+
+        return rhythms;
+    }
+
+
+    public int getAmountOfRhythms(){
+        int totalNum = 0;
+        String selectQuery = "SELECT COUNT(*) FROM "+ MyRhythmContract.Rhythm.TABLE_NAME;
+
+        getReadableDatabaseIfClosedOrNull();
+        Cursor cursor = mSQLiteDatabase.rawQuery(selectQuery,null);
+
+        if(cursor.moveToFirst()){
+            totalNum = cursor.getInt(0);
+        }
+        try {
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        closeDB();
+
+        return totalNum;
+    }
+
 
 
     private void getWritableDatabaseIfClosedOrNull(){

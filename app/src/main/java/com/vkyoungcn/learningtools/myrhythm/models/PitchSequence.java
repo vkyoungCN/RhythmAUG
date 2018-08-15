@@ -3,20 +3,23 @@ package com.vkyoungcn.learningtools.myrhythm.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 public class PitchSequence implements Parcelable {
-    private int id;
-    private String title;
-    private ArrayList<Byte> pitchSequence;
+    private int id=0;
+    private String title="";
+    private ArrayList<Byte> pitchSequence=new ArrayList<>();
 
     private boolean isSelfDesign = false;
     private boolean keepTop = false;
-    private int stars;//这个字段我总觉得可能有更好的替代。暂留。
+    private int stars=0;//这个字段我总觉得可能有更好的替代。暂留。
 
-    private String description;
-    private long createTime;
-    private long lastModifyTime;//可能需要按最近修改排序
+    private String description="";
+    private long createTime=0;
+    private long lastModifyTime=0;//可能需要按最近修改排序
 
 
     public PitchSequence() {
@@ -128,11 +131,7 @@ public class PitchSequence implements Parcelable {
         if (pitchSequence == null || pitchSequence.isEmpty()){
             return "";
         }else {
-            StringBuilder sbd = new StringBuilder();
-            for (Byte b : pitchSequence) {
-                sbd.append(b);
-            }
-            return sbd.toString();
+            return getStrCodeFromListCode(pitchSequence);
         }
     }
 
@@ -142,6 +141,24 @@ public class PitchSequence implements Parcelable {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+
+    private String getStrCodeFromListCode (ArrayList<Byte> byteCodes) {
+        Byte[] bytes = new Byte[byteCodes.size()];
+        byteCodes.toArray(bytes);
+
+        byte[] bytes_2 = new byte[byteCodes.size()];
+        for (int i=0;i<byteCodes.size();i++) {
+            bytes_2[i] = bytes[i];
+        }
+
+        Charset cs = Charset.forName ("UTF-8");
+        ByteBuffer bb = ByteBuffer.allocate (bytes.length);
+        bb.put (bytes_2);
+        bb.flip ();
+        CharBuffer cb = cs.decode (bb);
+        return cb.toString();
     }
 
     /*

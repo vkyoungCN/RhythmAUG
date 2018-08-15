@@ -33,15 +33,15 @@ public class DrawingUnit {
     public float bottomWithLyric;//有歌词时（可能一行，最多两行）
 
     public String code = "X";//默认是X，当作为旋律绘制时绘制具体音高的数值。
-    public float codeStartX;//用于字符绘制（字符底边中点）
+    public float codeCenterX;//用于字符绘制（字符底边中点）
     public float codeBaseY;//字符底边【待？基线还是底边？】
 
     public String word_1 = "";//歌词。注意顺序和位置，没有词的位置上留空【暂时只绘制一行歌词，暂时位于bottom下方一个标准单位】]
-    public float word_1_StartX;
+    public float word_1_CenterX;
     public float word_1_BaseY;
 
     public String word_2 = "";//歌词。注意顺序和位置，没有词的位置上留空【暂时只绘制一行歌词，暂时位于bottom下方两个标准单位】]
-    public float word_2_StartX;
+    public float word_2_CenterX;
     public float word_2_BaseY;
 
     public ArrayList<BottomLine> bottomLines = new ArrayList<>();//已实例化，直接add即可。
@@ -68,27 +68,7 @@ public class DrawingUnit {
     public DrawingUnit() {
     }
 
-    public DrawingUnit(boolean isOutOfUi, float left, float right, float top, float bottomNoLyric, String code, float codeStartX, float codeBaseY, String word_1, float word_1_StartX, float word_1_BaseY, ArrayList<BottomLine> bottomLines, RectF[] additionalPoints, int mCurveNumber, float mCurveNumCenterX, float mCurveNumBaseY, boolean isEndCodeOfLongCurve, int curveLength, boolean isLastCodeInSection) {
-        this.isOutOfUi = isOutOfUi;
-        this.left = left;
-        this.right = right;
-        this.top = top;
-        this.bottomNoLyric = bottomNoLyric;
-        this.code = code;
-        this.codeStartX = codeStartX;
-        this.codeBaseY = codeBaseY;
-        this.word_1 = word_1;
-        this.word_1_StartX = word_1_StartX;
-        this.word_1_BaseY = word_1_BaseY;
-        this.bottomLines = bottomLines;
-        this.additionalPoints = additionalPoints;
-        this.mCurveNumber = mCurveNumber;
-        this.mCurveNumCenterX = mCurveNumCenterX;
-        this.mCurveNumBaseY = mCurveNumBaseY;
-        this.isEndCodeOfLongCurve = isEndCodeOfLongCurve;
-        this.curveLength = curveLength;
-        this.isLastCodeInSection = isLastCodeInSection;
-    }
+
 
   /*public void setBottomLineAmount(byte bottomLineAmount) {
             if(bottomLineAmount>3){
@@ -129,12 +109,12 @@ public class DrawingUnit {
         this.code = code;
     }
 
-    public float getCodeStartX() {
-        return codeStartX;
+    public float getCodeCenterX() {
+        return codeCenterX;
     }
 
-    public void setCodeStartX(float codeStartX) {
-        this.codeStartX = codeStartX;
+    public void setCodeCenterX(float codeCenterX) {
+        this.codeCenterX = codeCenterX;
     }
 
     public float getCodeBaseY() {
@@ -217,7 +197,7 @@ public class DrawingUnit {
         }【这种写法，编辑器提示可简化为上方目前采用的写法】*/
         //注意，虽然标记为不绘制，但数据仍然必须修改。
 
-        this.codeStartX+=h_shiftAmount;//用于字符绘制（字符底边中点）
+        this.codeCenterX +=h_shiftAmount;//用于字符绘制（字符底边中点）
         this.codeBaseY+=v_shiftAmount;//字符底边【待？基线还是底边？】
 
         for (BottomLine bl :this.bottomLines) {
@@ -237,7 +217,7 @@ public class DrawingUnit {
         this.mCurveNumCenterX +=h_shiftAmount;
         this.mCurveNumBaseY +=v_shiftAmount;
 
-        this.word_1_StartX +=h_shiftAmount;
+        this.word_1_CenterX +=h_shiftAmount;
         this.word_1_BaseY +=v_shiftAmount;
 
     }

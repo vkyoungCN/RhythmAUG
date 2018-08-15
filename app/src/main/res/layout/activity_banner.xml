@@ -24,7 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:orientation="horizontal"
-        android:layout_gravity="bottomNoLyric|end"
+        android:layout_gravity="bottom|end"
         >
         <Space
             android:layout_width="0dp"

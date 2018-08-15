@@ -9,18 +9,18 @@ import android.os.Parcelable;
 * 相对的是“LFR”，后者携带了交叉表中的“所归属的节奏id、是否是该节奏的主要歌词”两额外字段
 * */
 public class Lyric implements Parcelable {
-    private int id;
-    private String title;
-    private String lyricSerial;
+    private int id=0;
+    private String title="";
+    private String lyricSerial="";
 
-    private String description;
+    private String description="";
     private boolean isSelfDesign = false;
-    private boolean keepTop;
+    private boolean keepTop=false;
 
-    private long createTime;
-    private long lastModifyTime;//可能需要按最近修改排序
+    private long createTime=0;
+    private long lastModifyTime=0;//可能需要按最近修改排序
 
-    private int stars;//这个字段我总觉得可能有更好的替代。暂留。
+    private int stars=0;//这个字段我总觉得可能有更好的替代。暂留。
 
     public Lyric() {
     }

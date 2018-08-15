@@ -26,8 +26,10 @@ public class RhythmPrimaryRvAdapter extends RecyclerView.Adapter<RhythmPrimaryRv
 // 采用纵向列表形式。
     private static final String TAG = "GroupsOfMissionRvAdapter";
 
-    private ArrayList<Rhythm> rhythms;//数据源1
-    private ArrayList<Lyric> lyrics;//数据源2
+    private ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections;//数据源
+    private ArrayList<Lyric> lyrics_1;//数据源-词1
+    private ArrayList<Lyric> lyrics_2;//数据源-词2
+    private ArrayList<Integer> rhythmTypes;//
 
     private Context context;
 
@@ -59,9 +61,12 @@ public class RhythmPrimaryRvAdapter extends RecyclerView.Adapter<RhythmPrimaryRv
 
     }
 
-    public RhythmPrimaryRvAdapter(ArrayList<Rhythm> rhythms,ArrayList<Lyric> lyrics, Context context) {
-        this.rhythms = rhythms;
-        this.lyrics = lyrics;
+    public RhythmPrimaryRvAdapter(ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections, ArrayList<Lyric> lyrics_1,ArrayList<Lyric> lyrics_2,ArrayList<Integer> rhythmType, Context context) {
+        this.rhythmCodesInSections = rhythmCodesInSections;
+        this.lyrics_1 = lyrics_1;
+        this.lyrics_2 = lyrics_2;
+        this.rhythmTypes = rhythmType;
+
         this.context = context;
     }
 
@@ -73,14 +78,22 @@ public class RhythmPrimaryRvAdapter extends RecyclerView.Adapter<RhythmPrimaryRv
 
     @Override
     public void onBindViewHolder(RhythmPrimaryRvAdapter.ViewHolder holder, int position) {
-        Rhythm rhythm = rhythms.get(position);
-        Lyric lyric = lyrics.get(position);
-        holder.getRhv_singleLV().setRhythmAndLyric(rhythm,lyric,14,20);
+        ArrayList<ArrayList<Byte>> codeInSections = rhythmCodesInSections.get(position);
+        int rhythmType = rhythmTypes.get(position);
+        Lyric lyric_1 = new Lyric();
+        Lyric lyric_2 = new Lyric();
+        if(lyrics_1!=null) {
+            lyric_1 = lyrics_1.get(position);
+        }
+        if(lyrics_2!=null){
+            lyric_2 = lyrics_2.get(position);
+        }
+        holder.getRhv_singleLV().setRhythmAndLyric(codeInSections,rhythmType,lyric_1,lyric_2,16,18);
 
     }
 
     @Override
     public int getItemCount() {
-        return rhythms.size();
+        return rhythmCodesInSections.size();
     }
 }

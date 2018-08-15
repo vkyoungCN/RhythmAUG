@@ -105,8 +105,8 @@ public class AddRhythmFinalActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "Old DialogFg still there, removing first...", Toast.LENGTH_SHORT).show();
                     transaction.remove(prev);
                 }
-                DialogFragment dfg = FinalAddRhythmDiaFragment.newInstance();
-                dfg.show(transaction, "FINAL_ADD_RHYTHM");
+//                DialogFragment dfg = FinalAddRhythmDiaFragment.newInstance();
+//                dfg.show(transaction, "FINAL_ADD_RHYTHM");
 
             }
         });
