@@ -11,16 +11,8 @@ import android.util.TypedValue;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
-import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 
 import java.util.ArrayList;
-
-
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_24;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_34;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
 
 public class RhythmSingleLineView extends RhythmView {
 //* 如果数据源为空，自动显示一个空的小节；如果有数据显示数据，并将第一音符标蓝框；
@@ -29,25 +21,6 @@ public class RhythmSingleLineView extends RhythmView {
 
     private static final String TAG = "RhythmSingleLineView";
 
-//    private Context mContext;
-
-//    private ArrayList<Byte> rhythmCodes; //数据源，节奏序列的编码。根据该数据生成各字符单元上的绘制信息。
-//    private int rhythmType;//节拍类型（如4/4），会影响分节的绘制。【不能直接传递在本程序所用的节奏编码方案下的时值总长，因为3/4和6/8等长但绘制不同】
-//    private int valueOfBeat = 16;
-//    private int valueOfSection = 64;
-
-//    private ArrayList<ArrayList<Byte>> codesInSections;//对数据源进行分析处理之后，按小节归纳起来。便于进行按节分行的判断。
-//    private ArrayList<ArrayList<DrawingUnit>> drawingUnits;//绘制数据也需要按小节组织，以便与按小节组织的代码一并处理。
-//    private Lyric lyric_1;
-//    private Lyric lyric_2;
-
-
-    /* 画笔组*/
-//    private Paint bottomLinePaint;
-//    private Paint codePaint;
-//    private Paint curveNumPaint;//用于绘制均分多连音弧线中间的小数字，其字符尺寸较小
-//    private Paint grayEmptyPaint;//在无数据时，在字符行绘制背景替代。
-//    private Paint textWaitingPaint;
 
     //以下是基类没有，而本类特有的画笔
     private Paint maskPaint;
@@ -57,23 +30,6 @@ public class RhythmSingleLineView extends RhythmView {
 
 
     /* 尺寸组 */
-//    private float padding;
-//    private float unitStandardWidth;//24dp。单个普通音符的基准宽度。【按此标准宽度计算各节需占宽度；如果单节占宽超屏幕宽度，则需压缩单节内音符的占宽；
-    // 如果下节因为超长而移到下一行，且本行剩余了更多空间，则需要对各音符占宽予以增加（但是字符大小不变）】
-//    private float unitStandardHeight;//24dp。单个普通音符的基准高度。
-
-//    private float beatGap;//节拍之间、小节之间需要有额外间隔（但似乎没有统一规范），暂定12dp。
-    //注意，一个节拍内的音符之间没有额外间隔。
-
-//    private float lineGap;//不同行之间的间隔。暂定12dp；如果有文字行则需额外安排文字空间。
-//    private float additionalHeight;//用于上下加点绘制的保留区域，暂定6dp
-//    private float curveOrLinesHeight;//用于绘制上方连音线或下方下划线的空间（上下各一份），暂定8dp
-
-//    private float textSize;//【考虑让文字尺寸后期改用和section宽度一致或稍小的直接数据.已尝试不可用】
-//    private float curveNumSize;
-
-//    private int sizeChangedHeight = 0;//是控件onSizeChanged后获得的尺寸之高度，也是传给onDraw进行线段绘制的canvas-Y坐标(单行时)
-//    private int sizeChangedWidth = 0;//未获取数据前设置为0
 
     private float slidingVerticalBarShort;
     private float slidingVerticalBarMedium;
@@ -83,8 +39,7 @@ public class RhythmSingleLineView extends RhythmView {
 
 
     /* 色彩组 */
-//    private int generalColor_Gray;
-//    private int editBox_blue;
+
     private int slidingMask_white;
     private int slidingBall_pink;
     private int slidingVerticalBar_black;
@@ -251,14 +206,6 @@ public class RhythmSingleLineView extends RhythmView {
 
         //开始计算绘制信息。以小节为单位进行。
         //如果有歌词信息，则要（将各字）附加在各Du中。
-        String lyricStr_1 = "";
-        String lyricStr_2 = "";
-        if(lyric_1 !=null) {
-            lyricStr_1 = lyric_1.getLyricSerial();
-        }
-        if(lyric_2!=null){
-            lyricStr_2 = lyric_2.getLyricSerial();
-        }
 
         int accumulateSizeBeforeThisSection = 0;//用于在一维的总表中定位（按小节组织的）二维表中的位置
         for (int i = 0; i < codesInSections.size(); i++) {
@@ -268,13 +215,13 @@ public class RhythmSingleLineView extends RhythmView {
             //如果不换行，则不需复杂的计算逻辑，直接向后扩展即可
             if(i == 0){
                 //第一小节
-                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit_singleLineMode(codesInSections.get(i), bottomDrawing_Y, padding, unitStandardWidth,lyricStr_1,lyricStr_2,0);
+                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit_singleLineMode(codesInSections.get(i), bottomDrawing_Y, padding, unitStandardWidth,strLyric_1,strLyric_2,0);
                 drawingUnits.add(sectionDrawingUnit);
                 accumulateSizeBeforeThisSection+=drawingUnits.get(i).size();
 
             }else {
                 float startX = drawingUnits.get(i-1).get(drawingUnits.get(i-1).size()-1).right+beatGap;
-                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit_singleLineMode(codesInSections.get(i), bottomDrawing_Y, startX, unitStandardWidth,lyricStr_1,lyricStr_2,accumulateSizeBeforeThisSection);
+                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit_singleLineMode(codesInSections.get(i), bottomDrawing_Y, startX, unitStandardWidth,strLyric_1,strLyric_2  ,accumulateSizeBeforeThisSection);
                 drawingUnits.add(sectionDrawingUnit);
                 accumulateSizeBeforeThisSection+=drawingUnits.get(i).size();
             }

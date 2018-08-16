@@ -53,5 +53,6 @@
     <string name="add_rhythm_finish_false">失败</string>
     <string name="add_rhythm_final_report">新增节奏完成</string>
     <string name="str_sharp8">########</string>
+    <string name="plh_sharp_id">#%1$d</string>
 
 </resources>

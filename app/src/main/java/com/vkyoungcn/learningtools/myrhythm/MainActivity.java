@@ -10,7 +10,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -19,12 +18,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.adapter.RhythmPrimaryRvAdapter;
-import com.vkyoungcn.learningtools.myrhythm.customUI.DrawingUnit;
-import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmHelper;
 import com.vkyoungcn.learningtools.myrhythm.fragments.AddRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
+import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
-import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
 import java.lang.ref.WeakReference;
@@ -53,12 +50,12 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
     /* 业务逻辑变量*/
     private boolean isFabPanelExtracted = false;//FAB面板组默认处于回缩状态。
 
-    ArrayList<Rhythm> rhythms;
-    ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections;
-    ArrayList<Integer> rhythmTypes;
+    ArrayList<CompoundRhythm> compoundRhythms;
+//    ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections;
+//    ArrayList<Integer> rhythmTypes;
     int rhythmsAllAmount;
-    ArrayList<Lyric> primaryLyrics;
-    ArrayList<Lyric> secondLyrics;
+//    ArrayList<Lyric> primaryLyrics;
+//    ArrayList<Lyric> secondLyrics;
 
     private RhythmPrimaryRvAdapter adapter;
 
@@ -164,7 +161,7 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
                 flt_mask.setVisibility(View.GONE);
 
                 //初始化Rv构造器，令UI加载Rv控件……
-                adapter = new RhythmPrimaryRvAdapter(rhythmCodesInSections,primaryLyrics,secondLyrics, rhythmTypes,this) ;
+                adapter = new RhythmPrimaryRvAdapter(compoundRhythms,this) ;
                 mRv.setLayoutManager(new LinearLayoutManager(this));
                 mRv.setHasFixedSize(true);
                 mRv.setAdapter(adapter);
@@ -201,19 +198,11 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
             //获取这些Rhythm对应的主要歌词记录【暂定在此rv中只显示节奏+词；而旋律只在点进详情后再显示】
             MyRhythmDbHelper rhythmDbHelper = MyRhythmDbHelper.getInstance(getApplicationContext());
 
-            rhythms = rhythmDbHelper.getAllRhythms() ;
+            //暂时只获取一周内修改过的节奏记录
+            long timeThreshold = System.currentTimeMillis()-1000*60*60*24*7;
+            //一周内修改过的所有节奏记录（带词序字串）
+            compoundRhythms = rhythmDbHelper.getCompoundRhythmsModifiedLaterThan(timeThreshold) ;
             rhythmsAllAmount = rhythmDbHelper.getAmountOfRhythms();//有一个控件需要使用节奏总数量
-
-            rhythmCodesInSections = new ArrayList<>();
-            rhythmTypes = new ArrayList<>();
-            for (Rhythm rh :rhythms) {
-                Log.i(TAG, "run: rhythm-"+rh.getId()+"rh.codes="+rh.getRhythmCodeSerial().toString());
-                rhythmCodesInSections.add(RhythmHelper.codeParseIntoSections(rh.getRhythmCodeSerial(),rh.getRhythmType()));
-//                primaryLyrics.add(rh.getPrimaryLyricId());
-                rhythmTypes.add(rh.getRhythmType());
-
-            }
-
 
 
             Message message = new Message();

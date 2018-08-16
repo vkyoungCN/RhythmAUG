@@ -21,7 +21,7 @@
         <TextView
             android:id="@+id/tv_title_MA"
             android:layout_width="0dp"
-            android:layout_weight="2"
+            android:layout_weight="1"
             android:layout_height="match_parent"
             android:layout_marginStart="8dp"
             android:textSize="16sp"

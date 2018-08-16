@@ -27,16 +27,16 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
     private static final String TAG = "RhythmEditor";
 
-    private Context mContext;
+//    private Context mContext;
 
     private boolean ready = false;//由于“未设置”和“已设置但空数据”时数据源列表都是空，因而需要另设字段用于判断数据是否设置完毕。
     //当设置了数据后，置true，可以开始正式绘制。
 
 //    private ArrayList<Byte> rhythmCodes; //数据源，节奏序列的编码。根据该数据生成各字符单元上的绘制信息。
-    private int rhythmType;//节拍类型（如4/4），会影响分节的绘制。【不能直接传递在本程序所用的节奏编码方案下的时值总长，因为3/4和6/8等长但绘制不同】
+//    private int rhythmType;//节拍类型（如4/4），会影响分节的绘制。【不能直接传递在本程序所用的节奏编码方案下的时值总长，因为3/4和6/8等长但绘制不同】
 //    private int unitAmount;
-    private int valueOfBeat = 16;
-    private int valueOfSection = 64;
+//    private int valueOfBeat = 16;
+//    private int valueOfSection = 64;
 
     private int blueBoxSectionIndex = 0;//蓝框位置，小节的索引【注意，是针对dU列表而言的索引，由于code中多一个延音弧尾端标记，所以无法对应。】
     private int blueBoxUnitIndex = 0;//蓝框位置(小节内du的索引)

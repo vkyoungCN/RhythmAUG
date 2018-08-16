@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
+import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 
 import java.util.ArrayList;
@@ -30,15 +31,15 @@ public class RhythmView extends View {
 
     Context mContext;
 
-//    private ArrayList<Byte> rhythmCodes; //数据源，节奏序列的编码。根据该数据生成各字符单元上的绘制信息。
+    private ArrayList<Byte> rhythmCodes; //数据源，节奏序列的编码。根据该数据生成各字符单元上的绘制信息。
     int rhythmType;//节拍类型（如4/4），会影响分节的绘制。【不能直接传递在本程序所用的节奏编码方案下的时值总长，因为3/4和6/8等长但绘制不同】
     int valueOfBeat = 16;
     int valueOfSection = 64;
 
     ArrayList<ArrayList<Byte>> codesInSections;//对数据源进行分析处理之后，按小节归纳起来。便于进行按节分行的判断。
     ArrayList<ArrayList<DrawingUnit>> drawingUnits;//绘制数据也需要按小节组织，以便与按小节组织的代码一并处理。
-    Lyric lyric_1;
-    Lyric lyric_2;
+    String strLyric_1;
+    String strLyric_2;
 
     private float topYDistanceBetweenTwoLine;//全局化以便可以提前处理，避免在for循环中多次处理。
 
@@ -357,10 +358,10 @@ public class RhythmView extends View {
         //遍历方式进行
         for (ArrayList<DrawingUnit> drawingUnitsInSections : drawingUnits) {
             for (DrawingUnit drawingUnit : drawingUnitsInSections) {
-                if (lyric_1 != null) {
+                if (strLyric_1 != null&&!strLyric_1.isEmpty()) {
                     canvas.drawText(drawingUnit.word_1, drawingUnit.word_1_CenterX, drawingUnit.word_1_BaseY, codePaint);
                 }
-                if (lyric_2 != null) {
+                if (strLyric_2 != null&&!strLyric_2.isEmpty()) {
                     canvas.drawText(drawingUnit.word_2, drawingUnit.word_2_CenterX, drawingUnit.word_2_BaseY, codePaint);
                 }
             }
@@ -386,8 +387,14 @@ public class RhythmView extends View {
 
 
 
+    public void setRhythmViewData(CompoundRhythm compoundRhythm){
+        setRhythmViewData(RhythmHelper.codeParseIntoSections(compoundRhythm.getRhythmCodeSerial(),compoundRhythm.getRhythmType()),
+                compoundRhythm.getRhythmType(),compoundRhythm.getPrimaryLyricSerial(),compoundRhythm.getSecondLyricSerial(),
+                18,20,20);
+    }
+
     /* 一个简化的外部设置方法，采用默认调校好的尺寸大小*/
-    public void setRhythmViewData(ArrayList<ArrayList<Byte>> codesInSections, int rhythmType, Lyric lyric_1, Lyric lyric_2){
+    public void setRhythmViewData(ArrayList<ArrayList<Byte>> codesInSections, int rhythmType, String lyric_1, String lyric_2){
         setRhythmViewData(codesInSections,rhythmType,lyric_1,lyric_2,18,20,20);
     }
 
@@ -396,11 +403,11 @@ public class RhythmView extends View {
      * 设置节拍类型（4/4等）
      * 设置字符大小
      * */
-    public void setRhythmViewData(ArrayList<ArrayList<Byte>> codesInSections, int rhythmType, Lyric lyric_1, Lyric lyric_2, int codeSize, int unitWidth, int unithHeight){
+    public void setRhythmViewData(ArrayList<ArrayList<Byte>> codesInSections, int rhythmType, String primaryLyricString, String secondLyricString, int codeSize, int unitWidth, int unithHeight){
         this.codesInSections = codesInSections;
         this.rhythmType = rhythmType;
-        this.lyric_1 = lyric_1;
-        this.lyric_2 = lyric_2;
+        this.strLyric_1 = primaryLyricString;
+        this.strLyric_2 = secondLyricString;
 
         int codeMinSize = 12;
         int codeMaxSize = 28;
@@ -472,14 +479,6 @@ public class RhythmView extends View {
         drawingUnits = new ArrayList<ArrayList<DrawingUnit>>();//初步初始（后面采用add方式，因而不需彻底初始）
 
         //如果有歌词信息，则还要附加在Du中。（各dU分别对应一个字，无字的du也要对应特别占位符）
-        String lyricStr_1 = "";
-        String lyricStr_2 = "";
-        if(lyric_1 !=null) {
-            lyricStr_1 = lyric_1.getLyricSerial();
-        }
-        if(lyric_2!=null){
-            lyricStr_2 = lyric_2.getLyricSerial();
-        }
 
         int accumulateSizeBeforeThisSection = 0;//为了能在一维的总表中对应（按小节组织的）二维表中的位置
 
@@ -491,9 +490,9 @@ public class RhythmView extends View {
 
         //两行之间的标准间距，（包含行高在内，是否包含词显示区高度则取决于是否有词）
         topYDistanceBetweenTwoLine=(unitStandardHeight + additionalHeight * 2 + curveOrLinesHeight * 2 + lineGap);
-        if(lyric_2!=null){
+        if(this.strLyric_2 !=null){
             topYDistanceBetweenTwoLine+=(unitStandardHeight*2);
-        }else if(lyric_1!=null){
+        }else if(this.strLyric_1 !=null){
             topYDistanceBetweenTwoLine+=unitStandardHeight;
         }
 
@@ -519,7 +518,7 @@ public class RhythmView extends View {
                     //①本行只有本节自己，对本节的基础宽度压缩（不需下移）
                     float unitWidthSingleZipped = (availableTotalWidth / sectionRequiredLength) * unitStandardWidth;//与外部使用的uW变量同名
                     //【在此计算本行本节的绘制数据】
-                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidthSingleZipped,lyricStr_1,lyricStr_2,accumulateSizeBeforeThisSection);
+                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidthSingleZipped,strLyric_1,strLyric_2,accumulateSizeBeforeThisSection);
                     drawingUnits.add(sectionDrawingUnit);
                     accumulateSizeBeforeThisSection+=drawingUnits.get(i).size();
 
@@ -533,7 +532,7 @@ public class RhythmView extends View {
                     float sectionStartX = padding;
 
                     //先对行内首节进行计算
-                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted,lyricStr_1,lyricStr_2,accumulateSizeBeforeThisSection);
+                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted,strLyric_1,strLyric_2,accumulateSizeBeforeThisSection);
                     //并添加到总记录
                     drawingUnits.add(sectionDrawingUnit);
 
@@ -545,7 +544,7 @@ public class RhythmView extends View {
                         int indexBeforeCalculate = i-sectionAmountInLine+k-1;
                         //先计算起始X，需要依赖同line中前一节最末音符的右边缘坐标。
                         sectionStartX = drawingUnits.get(indexBeforeCalculate).get(drawingUnits.get(indexBeforeCalculate).size()-1).right+beatGap;
-                        ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted,lyricStr_1,lyricStr_2,accumulateSizeBeforeThisSection);
+                        ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted,strLyric_1,strLyric_2,accumulateSizeBeforeThisSection);
                         drawingUnits.add(sectionDrawingUnit_2);
 
                     }
@@ -556,7 +555,7 @@ public class RhythmView extends View {
                     lineCursor++;
                     float unitWidth_zipped = (availableTotalWidth / sectionRequiredLength) * unitStandardWidth;
                     //【在此计算本节绘制数据】
-                    ArrayList<DrawingUnit> sectionDrawingUnit_3 = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidth_zipped,lyricStr_1,lyricStr_2,accumulateSizeBeforeThisSection);
+                    ArrayList<DrawingUnit> sectionDrawingUnit_3 = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidth_zipped,strLyric_1,strLyric_2,accumulateSizeBeforeThisSection);
                     drawingUnits.add(sectionDrawingUnit_3);
 
                     accumulateSizeBeforeThisSection+=drawingUnits.get(i).size();
@@ -575,7 +574,7 @@ public class RhythmView extends View {
                 //计算其他行的绘制数据
                 float sectionStartX = padding;
                 //先对行内首节进行计算
-                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted,lyricStr_1,lyricStr_2,accumulateSizeBeforeThisSection);
+                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted,strLyric_1,strLyric_2,accumulateSizeBeforeThisSection);
                 //并添加到总记录
                 drawingUnits.add(sectionDrawingUnit);
 
@@ -587,7 +586,7 @@ public class RhythmView extends View {
                     int indexBeforeCalculate = i-sectionAmountInLine+k-1;
                     //先计算起始X，需要依赖同line中前一节最末音符的右边缘坐标。
                     sectionStartX = drawingUnits.get(indexBeforeCalculate).get(drawingUnits.get(indexBeforeCalculate).size()-1).right+beatGap;
-                    ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted,lyricStr_1,lyricStr_2,accumulateSizeBeforeThisSection);
+                    ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted,strLyric_1,strLyric_2,accumulateSizeBeforeThisSection);
                     drawingUnits.add(sectionDrawingUnit_2);
                 }
 
@@ -603,7 +602,7 @@ public class RhythmView extends View {
                 //且在此计算本节绘制数据。
                 if (i == codesInSections.size() - 1) {
                     float unitWidth_singleExtracted = (availableTotalWidth / sectionRequiredLength) * unitStandardWidth;
-                    ArrayList<DrawingUnit> sectionDrawingUnit_3 = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidth_singleExtracted,lyricStr_1,lyricStr_2,accumulateSizeBeforeThisSection);
+                    ArrayList<DrawingUnit> sectionDrawingUnit_3 = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidth_singleExtracted,strLyric_1,strLyric_2,accumulateSizeBeforeThisSection);
                     drawingUnits.add(sectionDrawingUnit_3);
                 }
 
@@ -619,7 +618,7 @@ public class RhythmView extends View {
                     //计算其他行的绘制数据
                     float sectionStartX = padding;
                     //先对行内首节进行计算
-                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted,lyricStr_1,lyricStr_2,accumulateSizeBeforeThisSection);
+                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted,strLyric_1,strLyric_2,accumulateSizeBeforeThisSection);
                     //并添加到总记录
                     drawingUnits.add(sectionDrawingUnit);
                     accumulateSizeBeforeThisSection+=drawingUnits.get(i).size();
@@ -632,7 +631,7 @@ public class RhythmView extends View {
                         int indexBeforeCalculate = i-sectionAmountInLine+k-1;
                         //先计算起始X，需要依赖同line中前一节最末音符的右边缘坐标。
                         sectionStartX = drawingUnits.get(indexBeforeCalculate).get(drawingUnits.get(indexBeforeCalculate).size()-1).right+beatGap;
-                        ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted,lyricStr_1,lyricStr_2,accumulateSizeBeforeThisSection);
+                        ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted,strLyric_1,strLyric_2,accumulateSizeBeforeThisSection);
                         drawingUnits.add(sectionDrawingUnit_2);
                     }
                 }//【注意！】此分支下仅当到达尾节时才进行计算（本行绘制数据的计算）【否则在后面的节超屏宽时会再次触发对本节的计算，重复负荷】

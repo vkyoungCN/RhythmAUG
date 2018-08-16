@@ -230,6 +230,9 @@ public class Rhythm implements Parcelable {
         parcel.writeLong(lastModifyTime);
         parcel.writeInt(stars);
         parcel.writeInt(primaryLyricId);
+        parcel.writeInt(secondLyricId);
+        parcel.writeInt(pitchesId);
+
     }
 
     public static final Parcelable.Creator<Rhythm> CREATOR = new Parcelable.Creator<Rhythm>(){
@@ -256,6 +259,9 @@ public class Rhythm implements Parcelable {
         lastModifyTime = in.readLong();
         stars = in.readInt();
         primaryLyricId = in.readInt();
+        secondLyricId = in.readInt();
+        pitchesId = in.readInt();
+
     }
 
 }

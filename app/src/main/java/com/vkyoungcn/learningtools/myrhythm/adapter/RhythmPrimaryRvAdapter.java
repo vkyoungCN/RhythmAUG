@@ -5,14 +5,18 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
+import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 import com.vkyoungcn.learningtools.myrhythm.R;
 
 import java.util.ArrayList;
+
+import static java.lang.String.valueOf;
 
 /*
  * 作者：杨胜 @中国海洋大学
@@ -26,20 +30,29 @@ public class RhythmPrimaryRvAdapter extends RecyclerView.Adapter<RhythmPrimaryRv
 // 采用纵向列表形式。
     private static final String TAG = "GroupsOfMissionRvAdapter";
 
-    private ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections;//数据源
-    private ArrayList<Lyric> lyrics_1;//数据源-词1
-    private ArrayList<Lyric> lyrics_2;//数据源-词2
-    private ArrayList<Integer> rhythmTypes;//
+    private ArrayList<CompoundRhythm> compoundRhythms;
+//    private ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections;//数据源
+//    private ArrayList<Lyric> lyrics_1;//数据源-词1
+//    private ArrayList<Lyric> lyrics_2;//数据源-词2
+//    private ArrayList<Integer> rhythmTypes;//
 
     private Context context;
 
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         private final RhythmSingleLineView rhv_singleLV;
+        private final TextView tv_id;
+        private final TextView tv_title;
+        private final TextView tv_createTime;
+
 
 
         private ViewHolder(View itemView) {
             super(itemView);
             rhv_singleLV = itemView.findViewById(R.id.rhView_singleLine_MA);
+            tv_id = itemView.findViewById(R.id.tv_rhId_MA);
+            tv_title = itemView.findViewById(R.id.tv_title_MA);
+            tv_createTime = itemView.findViewById(R.id.tv_createTime_MA);
+
             rhv_singleLV.setOnClickListener(this);
         }
 
@@ -59,16 +72,31 @@ public class RhythmPrimaryRvAdapter extends RecyclerView.Adapter<RhythmPrimaryRv
             return rhv_singleLV;
         }
 
+        public TextView getTv_id() {
+            return tv_id;
+        }
+
+        public TextView getTv_title() {
+            return tv_title;
+        }
+
+        public TextView getTv_createTime() {
+            return tv_createTime;
+        }
     }
 
-    public RhythmPrimaryRvAdapter(ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections, ArrayList<Lyric> lyrics_1,ArrayList<Lyric> lyrics_2,ArrayList<Integer> rhythmType, Context context) {
+    public RhythmPrimaryRvAdapter(ArrayList<CompoundRhythm> compoundRhythms,Context context){
+        this.compoundRhythms = compoundRhythms;
+        this.context = context;
+    }
+    /*public RhythmPrimaryRvAdapter(ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections, ArrayList<Lyric> lyrics_1,ArrayList<Lyric> lyrics_2,ArrayList<Integer> rhythmType, Context context) {
         this.rhythmCodesInSections = rhythmCodesInSections;
         this.lyrics_1 = lyrics_1;
         this.lyrics_2 = lyrics_2;
         this.rhythmTypes = rhythmType;
 
         this.context = context;
-    }
+    }*/
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -78,22 +106,17 @@ public class RhythmPrimaryRvAdapter extends RecyclerView.Adapter<RhythmPrimaryRv
 
     @Override
     public void onBindViewHolder(RhythmPrimaryRvAdapter.ViewHolder holder, int position) {
-        ArrayList<ArrayList<Byte>> codeInSections = rhythmCodesInSections.get(position);
-        int rhythmType = rhythmTypes.get(position);
-        Lyric lyric_1 = new Lyric();
-        Lyric lyric_2 = new Lyric();
-        if(lyrics_1!=null) {
-            lyric_1 = lyrics_1.get(position);
-        }
-        if(lyrics_2!=null){
-            lyric_2 = lyrics_2.get(position);
-        }
-        holder.getRhv_singleLV().setRhythmViewData(codeInSections,rhythmType,lyric_1,lyric_2);
+        CompoundRhythm compoundRhythm = compoundRhythms.get(position);
+
+        holder.getRhv_singleLV().setRhythmViewData(compoundRhythm);
+        holder.getTv_id().setText(String.format(context.getResources().getString(R.string.plh_sharp_id),compoundRhythm.getId()));
+        holder.getTv_title().setText(compoundRhythm.getTitle());
+        holder.getTv_createTime().setText(compoundRhythm.getCreateTimeStr());
 
     }
 
     @Override
     public int getItemCount() {
-        return rhythmCodesInSections.size();
+        return compoundRhythms.size();
     }
 }
