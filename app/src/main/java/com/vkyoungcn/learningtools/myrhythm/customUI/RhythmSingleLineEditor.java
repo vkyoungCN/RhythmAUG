@@ -161,7 +161,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
     }
 
 
-    private void init(AttributeSet attributeset) {
+    void init(AttributeSet attributeset) {
         initSizeAndColor();
         initPaint();
         initViewOptions();
@@ -195,7 +195,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         slidingVerticalBar_black =  ContextCompat.getColor(mContext, R.color.rhythmView_sdVBarBlack);
     }
 
-    private void initPaint() {
+    void initPaint() {
         bottomLinePaint = new Paint();
         bottomLinePaint.setColor(generalCharGray);
         bottomLinePaint.setStrokeWidth(2);//
@@ -263,7 +263,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 //        Log.i(TAG, "initPaint: textSize="+textSize);
     }
 
-    private void initViewOptions() {
+    void initViewOptions() {
         setFocusable(true);
         setFocusableInTouchMode(true);
     }

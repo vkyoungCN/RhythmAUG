@@ -1,6 +1,5 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
-import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -14,7 +13,6 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmHelper;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
-import com.vkyoungcn.learningtools.myrhythm.fragments.FinalAddRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 
 import java.util.ArrayList;
@@ -60,7 +58,7 @@ public class AddRhythmFinalActivity extends AppCompatActivity {
         }
 
         ArrayList<ArrayList<Byte>> codeInSections = RhythmHelper.codeParseIntoSections(rhythm.getRhythmCodeSerial(),rhythm.getRhythmType());
-        rhythmView.setRhythmViewInfo(codeInSections,rhythm.getRhythmType(),null,null,14,18);
+        rhythmView.setRhythmViewData(codeInSections,rhythm.getRhythmType(),null,null);
         String strRhythmType = "";
         switch (rhythm.getRhythmType()){
             case RHYTHM_TYPE_24:

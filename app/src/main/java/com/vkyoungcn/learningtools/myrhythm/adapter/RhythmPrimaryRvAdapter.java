@@ -88,7 +88,7 @@ public class RhythmPrimaryRvAdapter extends RecyclerView.Adapter<RhythmPrimaryRv
         if(lyrics_2!=null){
             lyric_2 = lyrics_2.get(position);
         }
-        holder.getRhv_singleLV().setRhythmAndLyric(codeInSections,rhythmType,lyric_1,lyric_2,16,18);
+        holder.getRhv_singleLV().setRhythmViewData(codeInSections,rhythmType,lyric_1,lyric_2);
 
     }
 
