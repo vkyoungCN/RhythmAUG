@@ -247,7 +247,7 @@ public class Rhythm implements Parcelable {
         }
     };
 
-    private Rhythm(Parcel in){
+    Rhythm(Parcel in){
         id = in.readInt();
         title = in.readString();
         rhythmType = in.readInt();

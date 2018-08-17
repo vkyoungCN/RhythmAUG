@@ -393,6 +393,11 @@ public class RhythmView extends View {
                 18,20,20);
     }
 
+    public void setRhythmViewData(CompoundRhythm compoundRhythm, int codeSize,int unitWidth, int unitHeight){
+        setRhythmViewData(RhythmHelper.codeParseIntoSections(compoundRhythm.getRhythmCodeSerial(),compoundRhythm.getRhythmType()),
+                compoundRhythm.getRhythmType(),compoundRhythm.getPrimaryLyricSerial(),compoundRhythm.getSecondLyricSerial(),
+                codeSize,unitWidth,unitHeight);
+    }
     /* 一个简化的外部设置方法，采用默认调校好的尺寸大小*/
     public void setRhythmViewData(ArrayList<ArrayList<Byte>> codesInSections, int rhythmType, String lyric_1, String lyric_2){
         setRhythmViewData(codesInSections,rhythmType,lyric_1,lyric_2,18,20,20);

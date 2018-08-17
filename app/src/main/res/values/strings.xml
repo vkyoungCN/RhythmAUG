@@ -54,5 +54,16 @@
     <string name="add_rhythm_final_report">新增节奏完成</string>
     <string name="str_sharp8">########</string>
     <string name="plh_sharp_id">#%1$d</string>
+    <string name="selfDesign">原创</string>
+    <string name="keepTop2">置顶</string>
+    <string name="plh_stars_num">级别：%1$d</string>
+    <string name="linkingPitchesAndLyrics">关联的音序和歌词</string>
+    <string name="rhythmDetail">节奏详情</string>
+    <string name="descriptions">描述信息</string>
+    <string name="confirm_delete">确认删除</string>
+    <string name="confirm_delete_2">请注意：点击确定后将删除该节奏！</string>
+    <string name="linkingPitches">关联的音序</string>
+    <string name="saveNeedClick">要保存所做的修改，请点击保存</string>
+    <string name="str_save">保存</string>
 
 </resources>

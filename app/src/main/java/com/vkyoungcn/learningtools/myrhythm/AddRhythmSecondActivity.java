@@ -26,7 +26,7 @@ import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
 
-public class AddRhythmActivity extends AppCompatActivity implements View.OnClickListener {
+public class AddRhythmSecondActivity extends AppCompatActivity implements View.OnClickListener {
 
     /* 逻辑*/
     private int valueOfBeat = 16;

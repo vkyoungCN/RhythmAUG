@@ -1,6 +1,7 @@
 package com.vkyoungcn.learningtools.myrhythm.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,10 +9,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vkyoungcn.learningtools.myrhythm.RhythmDetailActivity;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
 import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
-import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
-import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 import com.vkyoungcn.learningtools.myrhythm.R;
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ import static java.lang.String.valueOf;
  * email: yangsheng@ouc.edu.cn
  * 2018.08.01
  * */
-public class RhythmPrimaryRvAdapter extends RecyclerView.Adapter<RhythmPrimaryRvAdapter.ViewHolder>{
+public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHolder>{
 //* 是展示任务所属分组的RecyclerView所使用的适配器
 // 采用纵向列表形式。
     private static final String TAG = "GroupsOfMissionRvAdapter";
@@ -38,7 +38,7 @@ public class RhythmPrimaryRvAdapter extends RecyclerView.Adapter<RhythmPrimaryRv
 
     private Context context;
 
-    class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener,View.OnLongClickListener{
         private final RhythmSingleLineView rhv_singleLV;
         private final TextView tv_id;
         private final TextView tv_title;
@@ -61,11 +61,32 @@ public class RhythmPrimaryRvAdapter extends RecyclerView.Adapter<RhythmPrimaryRv
             switch (v.getId()){
                 case R.id.rhView_singleLine_MA:
                     //进入详情页
-                    Toast.makeText(context, "详情页施工中", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(context, "详情页施工中", Toast.LENGTH_SHORT).show();
+                    Intent intentToRDA = new Intent(context, RhythmDetailActivity.class);
+                    intentToRDA.putExtra("RHYTHM",compoundRhythms.get(getAdapterPosition()));
+
+                    context.startActivity(intentToRDA);
                     break;
 
             }
         }
+
+
+        @Override
+        public boolean onLongClick(View v) {
+            switch (v.getId()) {
+                case R.id.rhView_singleLine_MA:
+                    //弹出删除确认DFG
+//                    Toast.makeText(context, "详情页施工中", Toast.LENGTH_SHORT).show();
+                    Intent intentToRDA = new Intent(context, RhythmDetailActivity.class);
+                    intentToRDA.putExtra("RHYTHM_ID", compoundRhythms.get(getAdapterPosition()).getId());
+
+                    context.startActivity(intentToRDA);
+                    break;
+            }
+                return true;//如果返回false则其他方法需要继续处理本事件。
+        }
+
 
 
         private RhythmSingleLineView getRhv_singleLV() {
@@ -85,11 +106,11 @@ public class RhythmPrimaryRvAdapter extends RecyclerView.Adapter<RhythmPrimaryRv
         }
     }
 
-    public RhythmPrimaryRvAdapter(ArrayList<CompoundRhythm> compoundRhythms,Context context){
+    public RhythmRvAdapter(ArrayList<CompoundRhythm> compoundRhythms, Context context){
         this.compoundRhythms = compoundRhythms;
         this.context = context;
     }
-    /*public RhythmPrimaryRvAdapter(ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections, ArrayList<Lyric> lyrics_1,ArrayList<Lyric> lyrics_2,ArrayList<Integer> rhythmType, Context context) {
+    /*public RhythmRvAdapter(ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections, ArrayList<Lyric> lyrics_1,ArrayList<Lyric> lyrics_2,ArrayList<Integer> rhythmType, Context context) {
         this.rhythmCodesInSections = rhythmCodesInSections;
         this.lyrics_1 = lyrics_1;
         this.lyrics_2 = lyrics_2;
@@ -105,7 +126,7 @@ public class RhythmPrimaryRvAdapter extends RecyclerView.Adapter<RhythmPrimaryRv
     }
 
     @Override
-    public void onBindViewHolder(RhythmPrimaryRvAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(RhythmRvAdapter.ViewHolder holder, int position) {
         CompoundRhythm compoundRhythm = compoundRhythms.get(position);
 
         holder.getRhv_singleLV().setRhythmViewData(compoundRhythm);

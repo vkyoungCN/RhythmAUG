@@ -17,11 +17,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vkyoungcn.learningtools.myrhythm.adapter.RhythmPrimaryRvAdapter;
+import com.vkyoungcn.learningtools.myrhythm.adapter.RhythmRvAdapter;
 import com.vkyoungcn.learningtools.myrhythm.fragments.AddRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
 import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
-import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
 import java.lang.ref.WeakReference;
@@ -57,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
 //    ArrayList<Lyric> primaryLyrics;
 //    ArrayList<Lyric> secondLyrics;
 
-    private RhythmPrimaryRvAdapter adapter;
+    private RhythmRvAdapter adapter;
 
     /* 多线程*/
     private Handler handler = new MainActivityHandler(this);//涉及弱引用，通过其发送消息。
@@ -161,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
                 flt_mask.setVisibility(View.GONE);
 
                 //初始化Rv构造器，令UI加载Rv控件……
-                adapter = new RhythmPrimaryRvAdapter(compoundRhythms,this) ;
+                adapter = new RhythmRvAdapter(compoundRhythms,this) ;
                 mRv.setLayoutManager(new LinearLayoutManager(this));
                 mRv.setHasFixedSize(true);
                 mRv.setAdapter(adapter);
@@ -178,11 +177,13 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
         switch (dfgType){
             case ADD_RHYTHM:
                 //准备进入第二步（新增、编辑Rh）
-                Intent intentToRhStep_2 = new Intent(this,AddRhythmActivity.class);
+                Intent intentToRhStep_2 = new Intent(this,AddRhythmSecondActivity.class);
                 intentToRhStep_2.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                 intentToRhStep_2.putExtra("BUNDLE",data);
                 this.startActivity(intentToRhStep_2);
                 break;
+            case DELETE_RHYTHM:
+
 
 
 

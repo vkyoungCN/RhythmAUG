@@ -17,8 +17,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity" />
-        <activity android:name=".AddRhythmActivity" />
-        <activity android:name=".AddRhythmFinalActivity"></activity>
+        <activity android:name=".AddRhythmSecondActivity" />
+        <activity android:name=".AddRhythmFinalActivity" />
+        <activity android:name=".RhythmDetailActivity"></activity>
     </application>
 
 </manifest>

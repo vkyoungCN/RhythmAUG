@@ -128,6 +128,8 @@ public class CompoundRhythm extends Rhythm implements Parcelable {
     };
 
     private CompoundRhythm(Parcel in){
+        super(in);
+
         primaryLyricSerial = in.readString();
         secondLyricSerial = in.readString();
     }

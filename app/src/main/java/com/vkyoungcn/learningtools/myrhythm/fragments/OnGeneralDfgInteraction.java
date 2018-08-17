@@ -16,5 +16,7 @@ public interface OnGeneralDfgInteraction {
 
     int ADD_RHYTHM = 2201;
 
+    int DELETE_RHYTHM =2211;
+
     void onButtonClickingDfgInteraction(int dfgType, Bundle data);
 }
