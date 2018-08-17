@@ -109,7 +109,7 @@ public class RhythmSingleLineView extends RhythmView {
     }
 
 
-    private void initSizeAndColor() {
+    void initSizeAndColor() {
         super.initSize();//需要先调用基类以便完成共有变量的初始
         super.initColor();
 //        Log.i(TAG, "initSizeAndColor: ");【测试已确定是经过基类的构造方法中对init的调用到达了本方法】]

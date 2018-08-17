@@ -38,13 +38,15 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 //    private int valueOfBeat = 16;
 //    private int valueOfSection = 64;
 
+    /*特有*/
+    //逻辑
     private int blueBoxSectionIndex = 0;//蓝框位置，小节的索引【注意，是针对dU列表而言的索引，由于code中多一个延音弧尾端标记，所以无法对应。】
     private int blueBoxUnitIndex = 0;//蓝框位置(小节内du的索引)
 
-    private ArrayList<ArrayList<Byte>> codesInSections;//对数据源进行分析处理之后，按小节归纳起来。便于进行按节分行的判断。
-    private ArrayList<ArrayList<DrawingUnit>> drawingUnits;//绘制数据也需要按小节组织，以便与按小节组织的代码一并处理。
-    private Lyric lyric_1;
-    private Lyric lyric_2;
+//    private ArrayList<ArrayList<Byte>> codesInSections;//对数据源进行分析处理之后，按小节归纳起来。便于进行按节分行的判断。
+//    private ArrayList<ArrayList<DrawingUnit>> drawingUnits;//绘制数据也需要按小节组织，以便与按小节组织的代码一并处理。
+//    private Lyric lyric_1;
+//    private Lyric lyric_2;
 
     /* 设置参数*/
     //设置参数与数据源一并设置
@@ -55,65 +57,66 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
     //    private boolean isDataInitBeInterruptedBecauseOfNoSize = false;
 
     /* 画笔组*/
-    private Paint bottomLinePaint;
-    private Paint codePaint;
-    private Paint curveNumPaint;//用于绘制均分多连音弧线中间的小数字，其字符尺寸较小
-    private Paint grayEmptyPaint;//在无数据时，在字符行绘制背景替代。
+//    private Paint bottomLinePaint;
+//    private Paint codePaint;
+//    private Paint curveNumPaint;//用于绘制均分多连音弧线中间的小数字，其字符尺寸较小
+//    private Paint grayEmptyPaint;//在无数据时，在字符行绘制背景替代。
     private Paint codeUnitOutLinePaint;//在编辑模式下，修改的位置上绘制浅蓝色方框
 //    private Paint textWaitingPaint;
-    private Paint maskPaint;
-    private Paint slidingBallPaint;
-    private Paint slidingVerticalBarPaint;
-    private Paint slidingVerticalBarCenterBoxPaint;
+//    private Paint maskPaint;
+//    private Paint slidingBallPaint;
+//    private Paint slidingVerticalBarPaint;
+//    private Paint slidingVerticalBarCenterBoxPaint;
 
     private Paint blueBoxPaint;
 
 
 
     /* 尺寸组 */
-    private float padding;
-    private float unitStandardWidth;//24dp。单个普通音符的基准宽度。【按此标准宽度计算各节需占宽度；如果单节占宽超屏幕宽度，则需压缩单节内音符的占宽；
+//    private float padding;
+//    private float unitStandardWidth;//24dp。单个普通音符的基准宽度。【按此标准宽度计算各节需占宽度；如果单节占宽超屏幕宽度，则需压缩单节内音符的占宽；
     // 如果下节因为超长而移到下一行，且本行剩余了更多空间，则需要对各音符占宽予以增加（但是字符大小不变）】
     private float unitStandardHeight;//24dp。单个普通音符的基准高度。
 
-    private float beatGap;//节拍之间、小节之间需要有额外间隔（但似乎没有统一规范），暂定12dp。
+//    private float beatGap;//节拍之间、小节之间需要有额外间隔（但似乎没有统一规范），暂定12dp。
     //注意，一个节拍内的音符之间没有额外间隔。
 
 //    private float lineGap;//不同行之间的间隔。暂定12dp；如果有文字行则需额外安排文字空间。
-    private float additionalHeight;//用于上下加点绘制的保留区域，暂定6dp
-    private float curveOrLinesHeight;//用于绘制上方连音线或下方下划线的空间（上下各一份），暂定8dp
+//    private float additionalHeight;//用于上下加点绘制的保留区域，暂定6dp
+//    private float curveOrLinesHeight;//用于绘制上方连音线或下方下划线的空间（上下各一份），暂定8dp
 
-    private float textSize;//【考虑让文字尺寸后期改用和section宽度一致或稍小的直接数据.已尝试不可用】
-    private float curveNumSize;
+//    private float textSize;//【考虑让文字尺寸后期改用和section宽度一致或稍小的直接数据.已尝试不可用】
+//    private float curveNumSize;
 
-    private int sizeChangedHeight = 0;//是控件onSizeChanged后获得的尺寸之高度，也是传给onDraw进行线段绘制的canvas-Y坐标(单行时)
-    private int sizeChangedWidth = 0;//未获取数据前设置为0
+//    private int sizeChangedHeight = 0;//是控件onSizeChanged后获得的尺寸之高度，也是传给onDraw进行线段绘制的canvas-Y坐标(单行时)
+//    private int sizeChangedWidth = 0;//未获取数据前设置为0
 
-    private float slidingVerticalBarShort;
-    private float slidingVerticalBarMedium;
-    private float slidingVerticalBarLong;
-    private float slidingVerticalBarGap;
-    private float slidingBallDiameter;
+//    private float slidingVerticalBarShort;
+//    private float slidingVerticalBarMedium;
+//    private float slidingVerticalBarLong;
+//    private float slidingVerticalBarGap;
+//    private float slidingBallDiameter;
 
 
     /* 色彩组 */
-    private int generalColor_Gray;
+//    private int generalColor_Gray;
     private int editBox_blue;
-    private int slidingMask_white;
-    private int slidingBall_pink;
-    private int slidingVerticalBar_black;
+//    private int slidingMask_white;
+//    private int slidingBall_pink;
+//    private int slidingVerticalBar_black;
 
 
     /* 滑动交互所需变量*/
-    private boolean isSlidingModeOn =false;
-    private float totalRequiredLength = 0;
-    private boolean noNeedToSliding = false;
+//    private boolean isSlidingModeOn =false;
+//    private float totalRequiredLength = 0;
+//    private boolean noNeedToSliding = false;
 
-    private ArrayList<VerticalBar> verticalBars;//滑动时的刻度
-    private RectF clickingBallRectF;
-    private RectF slidingBarCenterBox;
-    private int leftEndAddedAmount = 0;//判断刻度位置（以便绘制长线的移动后位置）
+//    private ArrayList<VerticalBar> verticalBars;//滑动时的刻度
+//    private RectF clickingBallRectF;
+//    private RectF slidingBarCenterBox;
+//    private int leftEndAddedAmount = 0;//判断刻度位置（以便绘制长线的移动后位置）
 
+/*
 
     public static final int MOVE_NEXT_UNIT = 2901;
     public static final int MOVE_NEXT_SECTION = 2902;
@@ -122,10 +125,11 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
     public static final int MOVE_FINAL_SECTION = 2905;
     public static final int DELETE_MOVE_LAST_SECTION = 2906;
 
+*/
 
 
     //用于进入滑动模式时的刻度短线绘制
-    private class VerticalBar{
+/*    private class VerticalBar{
         float x;
         float top;
         float bottom;
@@ -135,20 +139,20 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
             this.top = top;
             this.bottom = bottom;
         }
-    }
+    }*/
 
 
     public RhythmSingleLineEditor(Context context) {
         super(context);
         mContext = context;
-        init(null);
+//        init(null);
 //        this.listener = null;
     }
 
     public RhythmSingleLineEditor(Context context, AttributeSet attributeset) {
         super(context, attributeset);
         mContext = context;
-        init(attributeset);
+//        init(attributeset);
 //        this.listener = null;
     }
 
@@ -156,148 +160,33 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
     public RhythmSingleLineEditor(Context context, AttributeSet attributeset, int defStyledAttrs) {
         super(context, attributeset, defStyledAttrs);
         mContext = context;
-        init(attributeset);
+//        init(attributeset);
 //        this.listener = null;
     }
 
 
-    void init(AttributeSet attributeset) {
+   /* void init(AttributeSet attributeset) {
         initSizeAndColor();
         initPaint();
         initViewOptions();
-    }
+    }*/
 
 
-    private void initSizeAndColor() {
-        padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
-        unitStandardWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
-        unitStandardHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
-
-        beatGap = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getResources().getDisplayMetrics());
-//        lineGap = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getResources().getDisplayMetrics());
-        additionalHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6, getResources().getDisplayMetrics());
-        curveOrLinesHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
-
-        curveNumSize =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 10, getResources().getDisplayMetrics());
-
-        generalColor_Gray = ContextCompat.getColor(mContext, R.color.rhythmView_generalGray);
+    void initSizeAndColor() {
+        super.initSizeAndColor();
+        //本子类特有的（蓝色框的颜色）
         editBox_blue = ContextCompat.getColor(mContext, R.color.rhythmView_edBoxBlue);
 
-        //与滑动有关的
-        slidingVerticalBarShort = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getResources().getDisplayMetrics());
-        slidingVerticalBarMedium = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, getResources().getDisplayMetrics());
-        slidingVerticalBarLong = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
-        slidingVerticalBarGap = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, getResources().getDisplayMetrics());
-        slidingBallDiameter = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 22, getResources().getDisplayMetrics());
-
-        slidingMask_white = ContextCompat.getColor(mContext, R.color.rhythmView_sdMaskWhite);
-        slidingBall_pink = ContextCompat.getColor(mContext, R.color.rhythmView_sdBallPink);
-        slidingVerticalBar_black =  ContextCompat.getColor(mContext, R.color.rhythmView_sdVBarBlack);
     }
 
     void initPaint() {
-        bottomLinePaint = new Paint();
-        bottomLinePaint.setColor(generalCharGray);
-        bottomLinePaint.setStrokeWidth(2);//
-        bottomLinePaint.setStyle(Paint.Style.STROKE);
+        super.initPaint();
 
-
-       /* codePaint = new Paint();
-        codePaint.setTextSize(textSize);
-//        codePaint.setStrokeWidth(4);
-        codePaint.setColor(generalCharGray);
-        codePaint.setAntiAlias(true);
-//        codePaint.setTextAlign(Paint.Align.CENTER);【改为指定起始点方式】
-*/
-        curveNumPaint = new Paint();
-        curveNumPaint.setTextSize(curveNumSize);
-        curveNumPaint.setStrokeWidth(2);
-        curveNumPaint.setColor(generalCharGray);
-        curveNumPaint.setAntiAlias(true);
-        curveNumPaint.setTextAlign(Paint.Align.CENTER);
-
-
-        grayEmptyPaint = new Paint();
-        grayEmptyPaint.setStyle(Paint.Style.FILL);
-        grayEmptyPaint.setStrokeWidth(4);
-        grayEmptyPaint.setAntiAlias(true);
-        grayEmptyPaint.setColor(generalColor_Gray);
-
-        maskPaint = new Paint();
-        maskPaint.setStyle(Paint.Style.FILL);
-        maskPaint.setStrokeWidth(4);
-        maskPaint.setAlpha(70);
-        maskPaint.setColor(slidingMask_white);
-
-        slidingBallPaint = new Paint();
-        slidingBallPaint.setStyle(Paint.Style.FILL);
-        slidingBallPaint.setStrokeWidth(2);
-        slidingBallPaint.setAntiAlias(true);
-        slidingBallPaint.setColor(slidingBall_pink);
-
-        slidingVerticalBarPaint = new Paint();
-        slidingVerticalBarPaint.setStyle(Paint.Style.FILL);
-        slidingVerticalBarPaint.setStrokeWidth(2);
-        slidingVerticalBarPaint.setAntiAlias(true);
-        slidingVerticalBarPaint.setColor(slidingVerticalBar_black);
-
-        slidingVerticalBarCenterBoxPaint = new Paint();
-        slidingVerticalBarCenterBoxPaint.setStyle(Paint.Style.STROKE);
-        slidingVerticalBarCenterBoxPaint.setStrokeWidth(2);
-        slidingVerticalBarCenterBoxPaint.setAntiAlias(true);
-        slidingVerticalBarCenterBoxPaint.setColor(slidingBall_pink);
-
+        //本类特有
         blueBoxPaint = new Paint();
         blueBoxPaint.setStyle(Paint.Style.STROKE);
         blueBoxPaint.setStrokeWidth(2);
         blueBoxPaint.setColor(editBox_blue);
-
-    }
-    public void initCodePaint(){
-        codePaint = new Paint();
-        codePaint.setTextSize(textSize);
-        codePaint.setStrokeWidth(4);
-        codePaint.setColor(generalCharGray);
-        codePaint.setAntiAlias(true);
-        codePaint.setTextAlign(Paint.Align.CENTER);
-//        Log.i(TAG, "initPaint: textSize="+textSize);
-    }
-
-    void initViewOptions() {
-        setFocusable(true);
-        setFocusableInTouchMode(true);
-    }
-
-    //【据说是系统计算好控件的实际尺寸后以本方法通知用户】
-    // 【调用顺序：M(多次)-S(单次)-D】。
-    @Override
-    protected void onSizeChanged(int w, int h, int old_w, int old_h) {
-        sizeChangedHeight = h;
-        sizeChangedWidth = w;
-
-        if(!codesInSections.isEmpty()){
-            //如果数据源此时非空，则代表数据源的设置早于onSC，也即数据源设置方法中的绘制信息初始化方法被中止，
-            //需要再次再次初始化绘制信息（但是传入isTBOSC标记，只初始绘制信息不进行刷新）
-            initDrawingUnits(true);
-        }//【这里如是单线程则没有问题，如果是多线程，则可能在initDU返回前就调用了onDraw，则可能无法正确绘制，
-        // 那样的话取消传入“禁止刷新”的标记即可。（倒是应该不会下标越界，毕竟是for是有判断的）】
-
-
-        //万一程序对targetCode的设置（数据初始化）早于控件尺寸的确定（则是无法初始化下划线数据的），
-        // 则需要在此重新对下划线数据进行设置
-        /*if(isDataInitBeInterruptedBecauseOfNoSize){
-            isDataInitBeInterruptedBecauseOfNoSize =false;//表示事件/状况已被消耗掉
-//            Log.i(TAG, "onSizeChanged: initBL");
-            initDrawingUnits(w,rhythmCodes.size());
-        }*/
-
-        super.onSizeChanged(w, h, old_w, old_h);
-    }
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        //合理的尺寸由外部代码及布局文件实现，这里不设计复杂的尺寸交互申请逻辑，而是直接使用结果。
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.getSize(heightMeasureSpec));
 
     }
 

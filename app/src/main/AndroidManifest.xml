@@ -19,7 +19,8 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".AddRhythmSecondActivity" />
         <activity android:name=".AddRhythmFinalActivity" />
-        <activity android:name=".RhythmDetailActivity"></activity>
+        <activity android:name=".RhythmDetailActivity" />
+        <activity android:name=".EditRhythmActivity"></activity>
     </application>
 
 </manifest>

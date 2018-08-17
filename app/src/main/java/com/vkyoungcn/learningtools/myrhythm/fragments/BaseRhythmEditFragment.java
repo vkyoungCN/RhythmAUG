@@ -1,7 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm.fragments;
 
 import android.app.Fragment;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,11 +10,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vkyoungcn.learningtools.myrhythm.AddRhythmFinalActivity;
 import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor;
 import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
-import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 
 import java.util.ArrayList;
 
@@ -25,15 +22,10 @@ import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEdit
 import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor.MOVE_LAST_UNIT;
 import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor.MOVE_NEXT_SECTION;
 import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor.MOVE_NEXT_UNIT;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_24;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_34;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
 
 
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
-public class RhythmEditBaseFragment extends Fragment implements View.OnClickListener {
+public class BaseRhythmEditFragment extends Fragment implements View.OnClickListener {
 
     /* 逻辑*/
     int valueOfBeat = 16;
@@ -108,12 +100,12 @@ public class RhythmEditBaseFragment extends Fragment implements View.OnClickList
 
 
 
-    public RhythmEditBaseFragment() {
+    public BaseRhythmEditFragment() {
         // Required empty public constructor
     }
 
-    public static RhythmEditBaseFragment newInstance(CompoundRhythm compoundRhythm) {
-        RhythmEditBaseFragment fragment = new RhythmEditBaseFragment();
+    public static BaseRhythmEditFragment newInstance(CompoundRhythm compoundRhythm) {
+        BaseRhythmEditFragment fragment = new BaseRhythmEditFragment();
         Bundle bundle = new Bundle();
         bundle.putParcelable("RHYTHM",compoundRhythm);
         fragment.setArguments(bundle);

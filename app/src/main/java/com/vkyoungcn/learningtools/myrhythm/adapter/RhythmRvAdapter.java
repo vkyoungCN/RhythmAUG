@@ -1,5 +1,9 @@
 package com.vkyoungcn.learningtools.myrhythm.adapter;
 
+import android.app.Activity;
+import android.app.DialogFragment;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
@@ -11,6 +15,7 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.RhythmDetailActivity;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
+import com.vkyoungcn.learningtools.myrhythm.fragments.DeleteRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
 import com.vkyoungcn.learningtools.myrhythm.R;
 
@@ -64,7 +69,6 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
 //                    Toast.makeText(context, "详情页施工中", Toast.LENGTH_SHORT).show();
                     Intent intentToRDA = new Intent(context, RhythmDetailActivity.class);
                     intentToRDA.putExtra("RHYTHM",compoundRhythms.get(getAdapterPosition()));
-
                     context.startActivity(intentToRDA);
                     break;
 
@@ -77,11 +81,16 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
             switch (v.getId()) {
                 case R.id.rhView_singleLine_MA:
                     //弹出删除确认DFG
-//                    Toast.makeText(context, "详情页施工中", Toast.LENGTH_SHORT).show();
-                    Intent intentToRDA = new Intent(context, RhythmDetailActivity.class);
-                    intentToRDA.putExtra("RHYTHM_ID", compoundRhythms.get(getAdapterPosition()).getId());
+                    FragmentTransaction transaction =((Activity)context).getFragmentManager().beginTransaction();
+                    Fragment prev = ((Activity)context).getFragmentManager().findFragmentByTag("DELETE_RHYTHM");
 
-                    context.startActivity(intentToRDA);
+                    if (prev != null) {
+                        Toast.makeText(context, "Old DialogFg still there, removing first...", Toast.LENGTH_SHORT).show();
+                        transaction.remove(prev);
+                    }
+                    DialogFragment dfg = DeleteRhythmDiaFragment.newInstance(getAdapterPosition());
+                    dfg.show(transaction, "DELETE_RHYTHM");
+
                     break;
             }
                 return true;//如果返回false则其他方法需要继续处理本事件。
