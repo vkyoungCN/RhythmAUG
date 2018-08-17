@@ -65,5 +65,6 @@
     <string name="linkingPitches">关联的音序</string>
     <string name="saveNeedClick">要保存所做的修改，请点击保存</string>
     <string name="str_save">保存</string>
+    <string name="str_Rhythm_edit">编辑节奏</string>
 
 </resources>

@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -8,6 +9,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
@@ -38,6 +40,7 @@ public class RhythmDetailActivity extends AppCompatActivity {
     private TextView tv_lastModifyTime;
     private TextView tv_stars;
     private TextView tv_descriptions;
+    private EditText edt_descriptions;
 //    private TextView tv_mask_1;
 //    private TextView tv_mask_2;
 
@@ -61,6 +64,19 @@ public class RhythmDetailActivity extends AppCompatActivity {
         tv_lastModifyTime = findViewById(R.id.tv_lastModifyTime_RDA);
         tv_stars = findViewById(R.id.tv_starts_RDA);
         tv_descriptions = findViewById(R.id.tv_description_RDA);
+        edt_descriptions = findViewById(R.id.edt_description_RDA);
+        edt_descriptions.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if(v.getId()==R.id.edt_description_RDA||!hasFocus){
+                    //失去焦点
+                    compoundRhythm.setDescription(edt_descriptions.getText().toString());
+                    edt_descriptions.setVisibility(View.GONE);
+                    tv_descriptions.setVisibility(View.VISIBLE);
+                    tv_descriptions.setText(compoundRhythm.getDescription());
+                }
+            }
+        });
 //        tv_mask_1 = findViewById(R.id.tv_mask1_RDA);
 //        tv_mask_2 = findViewById(R.id.tv_mask2_RDA);
 
@@ -89,6 +105,26 @@ public class RhythmDetailActivity extends AppCompatActivity {
 
 
     }
+
+
+
+    public void goEditRhythm(View view){
+        //需要跳转到专用的页面进行修改
+        Intent intentToRhEditor = new Intent(this,)
+
+    }
+
+    public void editDescription(View view){
+        if(edt_descriptions.getVisibility()==View.GONE){
+            //尽在edt尚未打卡时起作用
+            tv_descriptions.setVisibility(View.GONE);
+            edt_descriptions.setVisibility(View.VISIBLE);
+            edt_descriptions.setText(compoundRhythm.getDescription());
+        }
+
+    }
+
+
 
    /* final static class RhythmDetailActivityHandler extends Handler {
         private final WeakReference<RhythmDetailActivity> activityWeakReference;
