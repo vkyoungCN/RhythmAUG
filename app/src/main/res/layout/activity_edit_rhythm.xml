@@ -29,6 +29,6 @@
 
     <include
         android:id="@+id/editMain_ERA"
-        layout="@layout/edit_rhythm"
+        layout="@layout/fragment_edit_rhythm"
         />
 </LinearLayout>

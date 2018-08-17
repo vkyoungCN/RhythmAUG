@@ -403,6 +403,7 @@ public class RhythmView extends View {
         setRhythmViewData(codesInSections,rhythmType,lyric_1,lyric_2,18,20,20);
     }
 
+
     /*
      * 方法由程序调用，动态设置目标字串
      * 设置节拍类型（4/4等）

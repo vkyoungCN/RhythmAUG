@@ -30,7 +30,7 @@
 
     <include
         android:id="@+id/editPart_ARA"
-        layout="@layout/edit_rhythm"
+        layout="@layout/fragment_edit_rhythm"
         />
 
 </LinearLayout>
