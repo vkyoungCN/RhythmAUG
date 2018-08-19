@@ -229,6 +229,46 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         return l;
     }
 
+    /* 如果传递c_Rh类则需要对两表操作*/
+    /*public long createRhythm(CompoundRhythm compoundRhythm){
+        long l;
+        getWritableDatabaseIfClosedOrNull();
+
+        mSQLiteDatabase.beginTransaction();
+
+        //先生成对应的Lyric数据
+        Lyric lyric_p = new Lyric();
+        lyric_p.setLyricSerial(compoundRhythm.getPrimaryLyricSerial());
+
+
+
+        ContentValues values_rh = new ContentValues();
+
+        values_rh.put(MyRhythmContract.Rhythm.COLUMN_TITLE, compoundRhythm.getTitle());
+        values_rh.put(MyRhythmContract.Rhythm.COLUMN_DESCRIPTION, compoundRhythm.getDescription());
+        values_rh.put(MyRhythmContract.Rhythm.COLUMN_RHYTHM_TYPE, compoundRhythm.getRhythmType());
+        values_rh.put(MyRhythmContract.Rhythm.COLUMN_C0DES, compoundRhythm.getStrRhythmCodeSerial());//以字串形式存放
+        values_rh.put(MyRhythmContract.Rhythm.COLUMN_STAR,compoundRhythm.getStars());
+
+        values_rh.put(MyRhythmContract.Rhythm.COLUMN_SELF_DESIGN,compoundRhythm.isSelfDesign());
+        values_rh.put(MyRhythmContract.Rhythm.COLUMN_KEEP_TOP,compoundRhythm.isKeepTop());
+        values_rh.put(MyRhythmContract.Rhythm.COLUMN_CREATE_TIME,compoundRhythm.getCreateTime());
+        values_rh.put(MyRhythmContract.Rhythm.COLUMN_LAST_MODIFY_TIME,compoundRhythm.getLastModifyTime());
+        values_rh.put(MyRhythmContract.Rhythm.COLUMN_PRIMARY_LYRIC_ID,compoundRhythm.getPrimaryLyricId());
+        values_rh.put(MyRhythmContract.Rhythm.COLUMN_SECOND_LYRIC_ID,compoundRhythm.getSecondLyricId());
+        values_rh.put(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID,compoundRhythm.getPitchesId());
+
+        l = mSQLiteDatabase.insert(MyRhythmContract.Rhythm.TABLE_NAME, null, values_rh);
+
+        mSQLiteDatabase.setTransactionSuccessful();
+        mSQLiteDatabase.endTransaction();
+
+
+        closeDB();
+
+        return l;
+    }
+*/
     public long createRhythmWithDb(SQLiteDatabase db,Rhythm rhythm){
         long l;
         ContentValues values = new ContentValues();
@@ -255,6 +295,22 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         return l;
     }
 
+
+    /* 用于在事务内的lyric生成方法*/
+    public void createLyric_inTRS(Lyric lyric){
+        ContentValues values = new ContentValues();
+
+        values.put(MyRhythmContract.Lyric.COLUMN_TITLE, lyric.getTitle());
+        values.put(MyRhythmContract.Lyric.COLUMN_DESCRIPTION, lyric.getDescription());
+        values.put(MyRhythmContract.Lyric.COLUMN_WORDS, lyric.getLyricSerial());//以字串形式存放
+        values.put(MyRhythmContract.Lyric.COLUMN_STAR,lyric.getStars());
+
+        values.put(MyRhythmContract.Lyric.COLUMN_SELF_DESIGN,lyric.isSelfDesign());
+        values.put(MyRhythmContract.Lyric.COLUMN_KEEP_TOP,lyric.isKeepTop());
+        values.put(MyRhythmContract.Lyric.COLUMN_CREATE_TIME,lyric.getCreateTime());
+        values.put(MyRhythmContract.Lyric.COLUMN_LAST_MODIFY_TIME,lyric.getLastModifyTime());
+
+    }
 
     public long createLyric(Lyric lyric){
         long l;

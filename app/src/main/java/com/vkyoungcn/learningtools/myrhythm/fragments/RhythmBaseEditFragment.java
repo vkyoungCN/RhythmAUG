@@ -25,7 +25,7 @@ import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEdit
 
 
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
-public class BaseRhythmEditFragment extends Fragment implements View.OnClickListener {
+public class RhythmBaseEditFragment extends Fragment implements View.OnClickListener {
 
     /* 逻辑*/
     int valueOfBeat = 16;
@@ -100,12 +100,12 @@ public class BaseRhythmEditFragment extends Fragment implements View.OnClickList
 
 
 
-    public BaseRhythmEditFragment() {
+    public RhythmBaseEditFragment() {
         // Required empty public constructor
     }
 
-    public static BaseRhythmEditFragment newInstance(CompoundRhythm compoundRhythm) {
-        BaseRhythmEditFragment fragment = new BaseRhythmEditFragment();
+    public static RhythmBaseEditFragment newInstance(CompoundRhythm compoundRhythm) {
+        RhythmBaseEditFragment fragment = new RhythmBaseEditFragment();
         Bundle bundle = new Bundle();
         bundle.putParcelable("RHYTHM",compoundRhythm);
         fragment.setArguments(bundle);

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AddRhythmSecondActivity"
+    tools:context=".CreateRhythmActivity"
     android:orientation="vertical"
     >
     <LinearLayout
@@ -27,10 +27,11 @@
             />
     </LinearLayout>
 
+    <FrameLayout
+        android:id="@+id/flt_fgContainer_CRA"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <include
-        android:id="@+id/editPart_ARA"
-        layout="@layout/fragment_edit_rhythm"
-        />
+    </FrameLayout>
 
 </LinearLayout>

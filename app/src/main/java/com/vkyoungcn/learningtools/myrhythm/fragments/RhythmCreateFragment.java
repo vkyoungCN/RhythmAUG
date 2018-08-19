@@ -20,7 +20,7 @@ import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
 
 
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
-public class RhythmCreateFragment extends BaseRhythmEditFragment {
+public class RhythmCreateFragment extends RhythmBaseEditFragment {
 
     /* 逻辑*/
 //    private int valueOfBeat = 16;
@@ -121,13 +121,13 @@ public class RhythmCreateFragment extends BaseRhythmEditFragment {
                     codes.addAll(codes_section);
                 }
                 compoundRhythm.setRhythmCodeSerial(codes);
-                intentToStep_3.putExtra("RHYTHM",compoundRhythm);
+                intentToStep_3.putExtra("COMPOUND_RHYTHM",compoundRhythm);
                 getActivity().startActivity(intentToStep_3);
 
             }
         });
 
-        rh_editor_ARA.setRhythm(codesInSections,rhythmType,20,22);
+        rh_editor_ARA.setRhythmViewData(codesInSections,rhythmType,null,null,18,22,22);
 
         return rootView;
     }

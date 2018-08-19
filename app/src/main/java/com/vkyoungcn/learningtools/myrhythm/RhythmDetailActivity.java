@@ -101,9 +101,6 @@ public class RhythmDetailActivity extends AppCompatActivity {
 
         rhythmView.setRhythmViewData(compoundRhythm,22,24,24);//比默认的尺寸（18/20/20）稍大
 
-
-
-
     }
 
 
@@ -132,7 +129,10 @@ public class RhythmDetailActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         //返回之后，就是编码数据有所改变，从新加载rhV的显示
-        rhythmView.setRhythmViewData(compoundRhythm);//重新设置后会随即刷新。
+        if(resultCode == 701){
+            rhythmView.setRhythmViewData(compoundRhythm);//重新设置后会随即刷新。
+
+        }
         //其他控件应当不需要改变。
     }
 

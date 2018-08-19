@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
         switch (dfgType){
             case ADD_RHYTHM:
                 //准备进入第二步（新增、编辑Rh）
-                Intent intentToRhStep_2 = new Intent(this,AddRhythmSecondActivity.class);
+                Intent intentToRhStep_2 = new Intent(this,CreateRhythmActivity.class);
                 intentToRhStep_2.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                 intentToRhStep_2.putExtra("BUNDLE",data);
                 this.startActivity(intentToRhStep_2);

@@ -1,9 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".EditRhythmActivity">
+    tools:context=".EditRhythmActivity"
+    android:orientation="vertical"
+    >
+    <!--标题栏-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:background="#efefef"
+        android:gravity="center"
+        android:text="@string/str_Rhythm_edit"
+        android:textSize="16sp" />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        />
+    <FrameLayout
+        android:id="@+id/flt_fgContainer_ERA"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-</android.support.constraint.ConstraintLayout>
+
+    </FrameLayout>
+
+</LinearLayout>
