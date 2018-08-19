@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +14,7 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmHelper;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
+import com.vkyoungcn.learningtools.myrhythm.fragments.FinalAddRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
 import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
@@ -110,8 +112,8 @@ public class AddRhythmFinalActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "Old DialogFg still there, removing first...", Toast.LENGTH_SHORT).show();
                     transaction.remove(prev);
                 }
-//                DialogFragment dfg = FinalAddRhythmDiaFragment.newInstance();
-//                dfg.show(transaction, "FINAL_ADD_RHYTHM");
+                DialogFragment dfg = FinalAddRhythmDiaFragment.newInstance(resultOk);
+                dfg.show(transaction, "FINAL_ADD_RHYTHM");
 
             }
         });
