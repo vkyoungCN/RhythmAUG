@@ -35,36 +35,20 @@ import java.util.Comparator;
  * email: yangsheng@ouc.edu.cn
  * 2018.08.04
  * */
-public class MainActivity extends AppCompatActivity implements OnGeneralDfgInteraction,MyRhythmConstants {
+public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgInteraction,MyRhythmConstants {
 //* 功能：主页面，程序启动后经欢迎（banner页）页面后到达的第一个稳定页面；
 
     private static final String TAG = "MainActivity";
 
-    public static final int MESSAGE_PRE_DB_FETCHED = 5011;
-    public static final int MESSAGE_RE_FETCHED = 5012;
-
-    MyRhythmDbHelper rhythmDbHelper;
     long timeThreshold;
     /* 控件*/
+    //本实现类的新字段
     private RelativeLayout rlt_fabPanel;
-    private FrameLayout flt_mask;
-    private RecyclerView mRv;
     private TextView tv_rhythmAmount;
 
     /* 业务逻辑变量*/
     private boolean isFabPanelExtracted = false;//FAB面板组默认处于回缩状态。
-
-    ArrayList<CompoundRhythm> compoundRhythms;
-//    ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections;
-//    ArrayList<Integer> rhythmTypes;
     int rhythmsAllAmount;
-//    ArrayList<Lyric> primaryLyrics;
-//    ArrayList<Lyric> secondLyrics;
-
-    private RhythmRvAdapter adapter;
-
-    /* 多线程*/
-    private Handler handler = new MainActivityHandler(this);//涉及弱引用，通过其发送消息。
 
 
     @Override
@@ -73,12 +57,11 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
         setContentView(R.layout.activity_main);
 
         rlt_fabPanel = findViewById(R.id.rlt_fabPanel_MA);
-        flt_mask = findViewById(R.id.flt_mask_MA);
+        maskView = findViewById(R.id.flt_mask_MA);
         mRv = findViewById(R.id.rv_some_rhythm_MA);
         tv_rhythmAmount = findViewById(R.id.tv_rhythmAmount_MA);
 
         timeThreshold = System.currentTimeMillis()-1000*60*60*24*7;
-        rhythmDbHelper = MyRhythmDbHelper.getInstance(getApplicationContext());
 
         rlt_fabPanel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,10 +74,31 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
             }
         });
 
-        new Thread(new PrepareCompoundRhythmsAndAmountRunnable()).start();
-
+        new Thread(new FetchDataRunnable()).start();//使用基类中的实现
     }
 
+
+    //在本实现类中对获取数据线程进行功能特化
+    private class FetchDataRunnable implements Runnable{
+        @Override
+        public void run() {
+            //获取数据
+            dataFetched = rhythmDbHelper.getTopKeepCompoundRhythmsOrModifiedLaterThan(timeThreshold) ;
+
+            //对返回的节奏进行排序（置顶的在最上，其余按时间，越近越先）
+            shaftRhythms(dataFetched);
+
+            //获取总量数字
+            rhythmsAllAmount = rhythmDbHelper.getAmountOfRhythms();//有一个控件需要使用节奏总数量
+
+            //然后封装消息
+            Message message = new Message();
+            message.what = MESSAGE_PRE_DB_FETCHED;
+            //数据通过全局变量直接传递。
+
+            handler.sendMessage(message);
+        }
+    }
     /*
      * 当Fab按键系统的主按钮点击时调用
      *
@@ -140,62 +144,24 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
 
     }
 
-
-    final static class MainActivityHandler extends Handler {
-        private final WeakReference<MainActivity> activityWeakReference;
-
-        private MainActivityHandler(MainActivity activity) {
-            this.activityWeakReference = new WeakReference<>(activity);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            MainActivity mainActivity = activityWeakReference.get();
-            if (mainActivity != null) {
-                mainActivity.handleMessage(msg);
-            }
-        }
+    public void toAllRhythms(){
+        Intent intentToAllRhs = new Intent(this,AllRhythmsActivity.class);
+        this.startActivity(intentToAllRhs);
     }
 
+
     void handleMessage(Message message) {
-        switch (message.what){
-            case MESSAGE_PRE_DB_FETCHED:
-                //上方还有一个Tv没有设置数据
-                tv_rhythmAmount.setText(String.format(getResources().getString(R.string.psh_totalRhythmAmount),rhythmsAllAmount));
+        super.handleMessage(message);
 
-                //取消上方遮罩
-                if(flt_mask.getVisibility() == View.VISIBLE) {
-                    flt_mask.setVisibility(View.GONE);
-                }
-
-                //初始化Rv构造器，令UI加载Rv控件……
-                adapter = new RhythmRvAdapter(compoundRhythms,this) ;
-                mRv.setLayoutManager(new LinearLayoutManager(this));
-                mRv.setAdapter(adapter);
-
-                break;
-
-            case MESSAGE_RE_FETCHED:
-                //Tv更新数据
-                tv_rhythmAmount.setText(String.format(getResources().getString(R.string.psh_totalRhythmAmount),rhythmsAllAmount));
-
-                //取消上方遮罩
-                if(flt_mask.getVisibility() == View.VISIBLE) {
-                    flt_mask.setVisibility(View.GONE);
-                }
-
-                //Rv数据修改
-                adapter.notifyDataSetChanged();
-                break;
-
-
-        }
+        //上方还有一个Tv没有设置数据(不区分sw_case)
+        tv_rhythmAmount.setText(String.format(getResources().getString(R.string.psh_totalRhythmAmount),rhythmsAllAmount));
 
     }
 
 
     @Override
     public void onButtonClickingDfgInteraction(int dfgType, Bundle data) {
+        super.onButtonClickingDfgInteraction(dfgType,data);
         switch (dfgType){
             case CREATE_RHYTHM:
                 //准备进入第二步（新增、编辑Rh）
@@ -205,67 +171,14 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
                 this.startActivityForResult(intentToRhStep_2,REQUEST_CODE_RH_CREATE);
                 break;
             case DELETE_RHYTHM:
-                //真正的删除任务在这里实现
-
-                rhythmDbHelper.deleteRhythmById(data.getInt("RHYTHM_ID"));
-
-                //删完要刷新
-                new Thread(new ReFetchCompoundRhythmsRunnable()).start();
-
+                //基类中执行 DB删除和刷新，再执行改总数
+                tv_rhythmAmount.setText(String.format(getResources().getString(R.string.psh_totalRhythmAmount),rhythmsAllAmount));
                 break;
 
         }
     }
 
 
-    class FetchDataRunnable_Bass implements Runnable{
-        @Override
-        public void run() {
-            //获取这些Rhythm对应的主要歌词记录【暂定在此rv中只显示节奏+词；而旋律只在点进详情后再显示】
-
-            //暂时只获取一周内修改过的节奏记录(以及标有置顶标记的)
-            //一周内修改过的所有节奏记录（带词序字串）
-            compoundRhythms = rhythmDbHelper.getTopKeepCompoundRhythmsOrModifiedLaterThan(timeThreshold) ;
-
-            //对返回的节奏进行排序（置顶的在最上，其余按时间，越近越先）
-            shaftRhythms(compoundRhythms);
-
-            //获取总量数字
-            rhythmsAllAmount = rhythmDbHelper.getAmountOfRhythms();//有一个控件需要使用节奏总数量
-
-        }
-    }
-
-
-
-    public class PrepareCompoundRhythmsAndAmountRunnable extends FetchDataRunnable_Bass {
-        @Override
-        public void run() {
-            super.run();
-
-            //然后封转消息
-            Message message = new Message();
-            message.what = MESSAGE_PRE_DB_FETCHED;
-            //数据通过全局变量直接传递。
-
-            handler.sendMessage(message);
-        }
-    }
-
-
-    public class ReFetchCompoundRhythmsRunnable extends FetchDataRunnable_Bass {
-        @Override
-        public void run() {
-            super.run();
-
-            Message message = new Message();
-            message.what = MESSAGE_RE_FETCHED;
-            //数据通过全局变量直接传递。
-
-            handler.sendMessage(message);
-
-        }
-    }
 
     /*
      * 阻止返回到Logo页
@@ -288,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
 
         switch (resultCode){
             case RESULT_CODE_RH_CREATE_DONE:
-                new Thread(new ReFetchCompoundRhythmsRunnable()).start();
+                new Thread(new FetchDataRunnable()).start();
                 break;
             case RESULT_CODE_RH_CREATE_FAILURE:
             default:
@@ -318,21 +231,5 @@ public class MainActivity extends AppCompatActivity implements OnGeneralDfgInter
         compoundRhythms.addAll(tempCodes_UnKeepTop);
     }
 
-    class SortByModifyTime implements Comparator {
-        public int compare(Object o1, Object o2) {
-            CompoundRhythm s1 = (CompoundRhythm) o1;
-            CompoundRhythm s2 = (CompoundRhythm) o2;
-            return -Long.compare(s1.getLastModifyTime(), s2.getLastModifyTime());
-            //降序
-        }
-    }
-
-
-    public void toAllRhythms(){
-        Intent intentToAllRhs = new Intent(this,AllRhythmsActivity.class);
-        this.startActivity(intentToAllRhs);
-
-
-    }
 
 }

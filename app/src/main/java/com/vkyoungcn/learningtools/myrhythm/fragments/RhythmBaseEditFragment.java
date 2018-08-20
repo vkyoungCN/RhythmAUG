@@ -30,8 +30,10 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
 
     /* 逻辑*/
     int valueOfBeat = 16;
-//    int valueOfSection = 64;
+    int valueOfSection = 64;
     int sectionSize = 4;
+    int availableValue = 0;
+    int span = 1;
 
     //交互发回Activity进行，简化复杂问题。
     OnGeneralDfgInteraction mListener;
@@ -103,6 +105,12 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
     TextView tv_lastUnit;
     TextView tv_nextUnit;
 
+    /* 新增控件*/
+    TextView tv_InfoRhType;
+    TextView tv_InfoBV;
+    TextView tv_InfoSV;
+    TextView tv_InfoCPRV;
+
 
 
     public RhythmBaseEditFragment() {
@@ -121,7 +129,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+        //在各子类具体实现，或是要获取传入的cRh，或是根据传入cRh的rType新建一个空的。
     }
 
     @Override
@@ -182,6 +190,12 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
         tv_lastUnit=rootView.findViewById(R.id.tv_lastUnit_ER);
         tv_nextUnit = rootView.findViewById(R.id.tv_nextUnit_ER);
 
+        tv_InfoRhType = rootView.findViewById(R.id.tv_Info_rhType_ER);
+        tv_InfoBV = rootView.findViewById(R.id.tv_Info_beatValue_ER);
+        tv_InfoSV = rootView.findViewById(R.id.tv_Info_sectionValue_ER);
+        tv_InfoCPRV = rootView.findViewById(R.id.tv_Info_currentPlaceRestValue_ER);
+
+
 
         //设监听
         imv_x0.setOnClickListener(this);
@@ -236,6 +250,13 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
         tv_xm.setText(String.valueOf(valueOfBeat));
         tv_xm1.setText(String.valueOf(valueOfBeat/2));
         tv_xm2.setText(String.valueOf(valueOfBeat/4));
+
+        tv_InfoRhType.setText(String.format(getContext().getResources().getString(R.string.plh_rh_type),compoundRhythm.getRhythmType()));
+        tv_InfoBV.setText(String.format(getContext().getResources().getString(R.string.plh_beat_value),valueOfBeat));
+        //onCV在onC之后(在实现类中，onC之后就已经初始化了cRh和编码因而可以设置下列值)
+        checkCurrentAvailableSpan();
+        tv_InfoSV.setText(String.format(getContext().getResources().getString(R.string.plh_section_value),valueOfSection));
+        tv_InfoCPRV.setText(String.format(getContext().getResources().getString(R.string.plh_currentPlaceRest_value),availableValue));
 
 
 //        rh_editor_ER.setRhythm(compoundRhythm);rh编辑器的设置由实现类负责
@@ -346,6 +367,19 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
     }
 
     void changeCode(Byte newCode){
+        //【逻辑修改】①要先确定当前框框套住的音符（原值）及原值+其后紧邻的所有空值的总值（可用总值）
+        //新值=原值：直接改变该位置上的编码
+        //新输入的值<原值，则“拆分”(实际是：删除编码*1，新增编码*2，其中后一音符要与原音符的字符一致)
+        //新值>原值，但小于等于总可用值，按所占用的空间生成若干个音符（如果与整拍值不对等，则还要拆分）
+        //新值>总可用值，提示先删除。
+
+        int oldValueInsideBox = 0;
+        int maxAvailableValue = 0;//注意这个值必须是当前框及框后所有“紧邻”空拍的总值和（有间隔则不算）
+        //计划以-2代表后续是没有限制的状态（比如直接位于句尾，或有若干个空拍之后就是句尾）
+        ArrayList<Integer> availableIndexes = new ArrayList<>();//装载当前音符及后续若干个紧邻的空音符的索！引！
+
+        fillAvailableIndexList();
+        //当输入的值比原
         //确定剩余的可用时值值
         ArrayList<Byte> currentSectionCodes = codesInSections.get(currentSectionIndex);
         int emptyValueInSection = 0;
@@ -392,6 +426,81 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
 
     }
 
+    void fillAvailableIndexList(){
+
+
+    }
+
+    /* 本拍时值+本拍后续的所有次第紧邻的空拍时值之和*/
+    void checkCurrentAvailableSpan(){
+        span = 1;//自己是要包括在内的（这个1就是自己）
+        availableValue = 0;
+        checkCurrentCodeValue(codesInSections.get(currentSectionIndex).get(currentUnitIndexInSection));
+
+        //spanToFirstUnAvailablePlace();
+        for(int i=currentSectionIndex; i<codesInSections.size();i++){
+            ArrayList<Byte> codeInsideSection = codesInSections.get(i);
+            if(i==currentSectionIndex) {
+                for (int j=currentUnitIndexInSection+1;j<codeInsideSection.size();j++){
+                    byte currentCode = codeInsideSection.get(j);
+                    if(currentCode>112){
+                        //延音弧线结束标记，不作数
+                        continue;
+                    }else if(currentCode>0){
+                        //此时必然小于112，包括：有时值的音符、均分多连音两类，都是“不再可用”，要停止
+                        return ;
+                    }else if(currentCode==0) {
+                        //空拍、延长符，都是可用的
+                        span++;
+                        availableValue+=valueOfBeat;
+                    }else {
+                        //只剩小于0
+                        span++;
+                        availableValue-=currentCode;
+
+                    }
+                }
+            }else {
+                for (Byte code : codeInsideSection) {
+                    if(code>112){
+                        //延音弧线结束标记，不作数
+                        continue;
+                    }else if(code>0){
+                        //此时必然小于112，包括：有时值的音符、均分多连音两类，都是“不再可用”，要停止
+                        return;
+                    }else if(code==0) {
+                        //空拍、延长符，都是可用的
+                        span++;
+                        availableValue+=valueOfBeat;
+                    }else {
+                        //只剩小于0
+                        span++;
+                        availableValue-=code;
+
+                    } {
+                        //这时是空拍、延长符，都是可用的
+                        span++;
+                    }
+                }
+            }
+        }
+    }
+
+    int checkCurrentCodeValue(byte code) {
+        if (code > 112) {
+            //上弧连音专用符号，不记时值
+            return 0;//但是由于实际上不会选中结束符，因而这种状态是错误的
+        } else if (code > 77 || code == 0) {
+            //时值计算
+            return valueOfBeat;
+        } else if (code > 0) {
+            //时值计算
+            return code;
+        } else {//b<0
+            //时值计算：空拍带时值，时值绝对值与普通音符相同
+            return -code;
+        }
+    }
     void changeCodeToMultiDivided(int ten, int fraction){
         //确定剩余的可用时值值
         ArrayList<Byte> currentSectionCodes = codesInSections.get(currentSectionIndex);

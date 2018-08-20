@@ -10,7 +10,7 @@
     <android.support.v7.widget.CardView
         android:id="@+id/card_ER"
         android:layout_width="match_parent"
-        android:layout_height="180dp"
+        android:layout_height="145dp"
         app:cardCornerRadius="8dp"
         android:layout_margin="2dp"
         >
@@ -28,8 +28,77 @@
 
     <!--下方按键区-->
 
+    <!--紧邻按键区上方的提示栏区域-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:orientation="horizontal"
+        android:layout_above="@+id/llt_buttonsPanel_ER"
+        android:background="#f5f5f5"
+        >
+        <TextView
+            android:id="@+id/tv_Info_rhType_ER"
+            android:layout_width="72dp"
+            android:textSize="12sp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/plh_rh_type"
+            android:layout_marginStart="4dp"
+            />
+        <TextView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#e0e0e0"
+            />
+        <TextView
+            android:id="@+id/tv_Info_beatValue_ER"
+            android:layout_width="72dp"
+            android:layout_height="match_parent"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:text="@string/plh_beat_value"
+            android:layout_marginStart="4dp"
+            />
+        <TextView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#e0e0e0"
+            />
+        <TextView
+            android:id="@+id/tv_Info_sectionValue_ER"
+            android:layout_width="72dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/plh_section_value"
+            android:textSize="12sp"
+            android:layout_marginStart="4dp"
+            />
+        <TextView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#e0e0e0"
+            />
+
+        <TextView
+            android:id="@+id/tv_Info_currentPlaceRestValue_ER"
+            android:layout_width="96dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/plh_currentPlaceRest_value"
+            android:textSize="12sp"
+            android:layout_marginStart="4dp"
+            />
+        <TextView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#e0e0e0"
+            />
+
+    </LinearLayout>
+
     <!--具体内容开始-->
     <LinearLayout
+        android:id="@+id/llt_buttonsPanel_ER"
         android:layout_width="match_parent"
         android:layout_height="251dp"
         android:orientation="horizontal"
@@ -121,6 +190,7 @@
                     android:id="@+id/tv_x0_ER"
                     android:layout_width="48dp"
                     android:layout_height="42dp"
+                   android:textColor="@color/myRhythm_indigo"
                     android:gravity="center"
                     android:padding="2dp"
                     android:text="@string/str_sharp2" />
@@ -129,6 +199,7 @@
                     android:padding="2dp"
                     android:layout_width="48dp"
                     android:layout_height="42dp"
+                    android:textColor="@color/myRhythm_indigo"
                     android:gravity="center"
                     android:text="@string/str_sharp2"
                     />
@@ -139,6 +210,7 @@
                     android:layout_height="42dp"
                     android:gravity="center"
                     android:text="@string/str_sharp2"
+                    android:textColor="@color/myRhythm_indigo"
                     />
                 <TextView
                     android:id="@+id/tv_xb3_ER"
@@ -147,6 +219,7 @@
                     android:layout_height="42dp"
                     android:gravity="center"
                     android:text="@string/str_sharp2"
+                    android:textColor="@color/myRhythm_indigo"
                     />
 
             </LinearLayout>
@@ -237,6 +310,7 @@
                     android:layout_height="42dp"
                     android:gravity="center"
                     android:padding="2dp"
+                    android:textColor="@color/myRhythm_indigo"
                     android:text="@string/str_sharp2" />
                 <TextView
                     android:id="@+id/tv_xpb1_ER"
@@ -244,6 +318,7 @@
                     android:layout_width="48dp"
                     android:layout_height="42dp"
                     android:gravity="center"
+                    android:textColor="@color/myRhythm_indigo"
                     android:text="@string/str_sharp2"
                     />
                 <TextView
@@ -252,6 +327,7 @@
                     android:layout_width="48dp"
                     android:layout_height="42dp"
                     android:gravity="center"
+                    android:textColor="@color/myRhythm_indigo"
                     android:text="@string/str_sharp2"
                     />
                 <!--<TextView
@@ -350,6 +426,7 @@
                     android:layout_width="48dp"
                     android:layout_height="42dp"
                     android:gravity="center"
+                    android:textColor="@color/myRhythm_indigo"
                     android:padding="2dp"
                     android:text="@string/str_sharp2" />
 
@@ -357,6 +434,7 @@
                     android:id="@+id/tv_xl2_ER"
                     android:layout_width="48dp"
                     android:layout_height="42dp"
+                    android:textColor="@color/myRhythm_indigo"
                     android:gravity="center"
                     android:padding="2dp"
                     android:text="@string/str_sharp2" />
@@ -365,6 +443,7 @@
                     android:id="@+id/tv_xl3_ER"
                     android:layout_width="48dp"
                     android:layout_height="42dp"
+                    android:textColor="@color/myRhythm_indigo"
                     android:gravity="center"
                     android:padding="2dp"
                     android:text="@string/str_sharp2" />
@@ -464,11 +543,13 @@
                     android:layout_height="42dp"
                     android:gravity="center"
                     android:padding="2dp"
+                    android:textColor="@color/myRhythm_indigo"
                     android:text="@string/str_sharp2" />
 
                 <TextView
                     android:id="@+id/tv_xm1_ER"
                     android:layout_width="48dp"
+                    android:textColor="@color/myRhythm_indigo"
                     android:layout_height="42dp"
                     android:gravity="center"
                     android:padding="2dp"
@@ -479,6 +560,7 @@
                     android:layout_width="48dp"
                     android:layout_height="42dp"
                     android:gravity="center"
+                    android:textColor="@color/myRhythm_indigo"
                     android:padding="2dp"
                     android:text="@string/str_sharp2" />
                 <TextView

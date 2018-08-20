@@ -386,13 +386,12 @@ public class RhythmSingleLineView extends RhythmView {
 //                Log.i(TAG, "initSectionDrawingUnit_singleLineMode: totalValueBeforeThisCodeInBeat="+totalValueBeforeThisCodeInBeat);
                 drawingUnitsInSection.add(drawingUnit);//添加本音符对应的绘制信息。
 
-
-                if(!lyric_1.isEmpty()){
+                if(lyric_1!=null&&!lyric_1.isEmpty()){
                     drawingUnit.word_1 = lyric_1.substring((accumulateUnitsNumBeforeThisSection+j),(accumulateUnitsNumBeforeThisSection+j));
                     drawingUnit.word_1_BaseY = drawingUnit.bottomNoLyric + unitStandardHeight;
                     drawingUnit.word_1_CenterX = drawingUnit.codeCenterX;
                 }
-                if(!lyric_2.isEmpty()){
+                if(lyric_2!=null&&!lyric_2.isEmpty()){
                     drawingUnit.word_2 = lyric_1.substring((accumulateUnitsNumBeforeThisSection+j),(accumulateUnitsNumBeforeThisSection+j));
                     drawingUnit.word_2_BaseY = drawingUnit.bottomNoLyric + unitStandardHeight*2;
                     drawingUnit.word_2_CenterX = drawingUnit.codeCenterX;

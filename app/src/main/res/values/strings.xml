@@ -71,5 +71,9 @@
     <string name="auto_record">修改时间：自动记录</string>
     <string name="input_title">填入标题</string>
     <string name="all_rhythms">所有节奏</string>
+    <string name="plh_rh_type">类型：%1$d</string>
+    <string name="plh_beat_value">基本拍子(X)值=%1$d</string>
+    <string name="plh_section_value">小节总值=%1$d</string>
+    <string name="plh_currentPlaceRest_value">当前位置可用总值=%1$d</string>
 
 </resources>

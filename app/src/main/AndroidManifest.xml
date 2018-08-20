@@ -22,7 +22,9 @@
         <activity android:name=".RhythmDetailActivity" />
         <activity android:name=".RhythmPureEditActivity" />
         <activity android:name=".RhythmOverallEditActivity" />
-        <activity android:name=".AllRhythmsActivity"></activity>
+        <activity android:name=".AllRhythmsActivity"/>
+        <activity android:name=".RhythmRvBassActivity"/>
+        <activity android:name=".RvBassActivity"/>
     </application>
 
 </manifest>

@@ -49,24 +49,30 @@ public class RhythmCreateFragment extends RhythmBaseEditFragment {
             switch (compoundRhythm.getRhythmType()) {
                 case RHYTHM_TYPE_24:
                     //此时beat值==16无需修改
+                    valueOfSection =32;
                     sectionSize = 2;
                     break;
                 case RHYTHM_TYPE_34:
+                    valueOfSection =48;
                     sectionSize = 3;
                     break;
                 case RHYTHM_TYPE_44:
                     break;
                 case RHYTHM_TYPE_38:
+                    valueOfSection =24;
                     valueOfBeat = 8;
                     sectionSize = 3;
                     break;
                 case RHYTHM_TYPE_68:
+                    valueOfSection =48;
                     valueOfBeat = 8;
                     sectionSize = 6;
                     break;
                 default:
                     valueOfBeat = 16;
                     sectionSize = 4;
+                    valueOfSection =64;
+
             }
 
             //初始化初始数据源
