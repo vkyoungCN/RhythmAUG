@@ -172,7 +172,7 @@
             android:id="@+id/tv_confirm_ARFA"
             android:layout_width="match_parent"
             android:layout_height="44dp"
-            android:background="#e57373"
+            android:background="@color/myRhythm_orange"
             android:gravity="center"
             android:layout_alignParentBottom="true"
             android:text="@string/confirm"

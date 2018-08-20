@@ -8,15 +8,14 @@
     >
 
     <android.support.v7.widget.CardView
-        android:id="@+id/card_ARA"
-        android:layout_below="@id/title_ARA"
+        android:id="@+id/card_ER"
         android:layout_width="match_parent"
         android:layout_height="180dp"
         app:cardCornerRadius="8dp"
         android:layout_margin="2dp"
         >
         <com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor
-            android:id="@+id/rh_editor_ARA"
+            android:id="@+id/rh_editor_ER"
             android:layout_margin="4dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

@@ -6,8 +6,7 @@
     <string name="author_plus_name">created by 杨镇时</string>
     <string name="author_info_1">yangsheng@ouc.edu.cn</string>
     <string name="title_activity_main">MainActivity</string>
-    <string name="str_mostUsingRhythm">常用节奏</string>
-    <string name="str_mostUsingRhythm_2">常用及新增节奏</string>
+    <string name="str_mostUsingRhythm_2">置顶及最近修改的节奏</string>
     <string name="psh_totalRhythmAmount">当前共有%1$d条节奏记录</string>
     <string name="str_toAllRhythms">查看所有</string>
     <string name="str_Rhythms">Rhythms!</string>
@@ -63,8 +62,14 @@
     <string name="confirm_delete">确认删除</string>
     <string name="confirm_delete_2">请注意：点击确定后将删除该节奏！</string>
     <string name="linkingPitches">关联的音序</string>
-    <string name="saveNeedClick">要保存所做的修改，请点击保存</string>
+    <string name="clickToSave">点击确定保存所做的修改</string>
     <string name="str_save">保存</string>
     <string name="str_Rhythm_edit">编辑节奏</string>
+    <string name="clickToEdit">点击进入修改页面</string>
+    <string name="modify">修改</string>
+    <string name="clickToEditRh">点击修改编码</string>
+    <string name="auto_record">修改时间：自动记录</string>
+    <string name="input_title">填入标题</string>
+    <string name="all_rhythms">所有节奏</string>
 
 </resources>

@@ -47,7 +47,12 @@ public class Rhythm implements Parcelable {
         this.rhythmCodeSerial = rhythmCodeSerial;
         this.isSelfDesign = isSelfDesign;
         this.keepTop = keepTop;
-        this.stars = stars;
+
+        //星级需要有限制（1~9）
+        if(stars>9){this.stars=9;}
+        else if(stars<1){this.stars =1;}
+        else {this.stars = stars;}
+
         this.createTime = createTime;
         this.lastModifyTime = lastModifyTime;
         this.primaryLyricId = primaryLyricId;
@@ -148,7 +153,9 @@ public class Rhythm implements Parcelable {
     }
 
     public void setStars(int stars) {
-        this.stars = stars;
+        if(stars>0&&stars<9){
+            this.stars = stars;
+        }//对数据进行合理限制。【对应spinner的数据源数组也是1~9的范围】
     }
 
     public void setRhythmCodeSerialFromStr(String rhythmCodeSerialStr){

@@ -81,6 +81,15 @@
             android:src="@drawable/edit_1"
             android:onClick="goEditRhythm"
             />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="40dp"
+            android:layout_marginBottom="4dp"
+            android:text="@string/clickToEditRh"
+            />
 
     </android.support.v7.widget.CardView>
 
@@ -105,6 +114,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:gravity="center_vertical"
+            android:clickable="false"
             android:layout_marginEnd="8dp"
             android:text="@string/selfDesign"
             />
@@ -112,6 +122,7 @@
             android:id="@+id/ckb_isKeepTop_RDA"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:clickable="false"
             android:gravity="center_vertical"
             android:layout_marginEnd="4dp"
             android:text="@string/keepTop2"
@@ -244,7 +255,6 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-
             >
             <TextView
                 android:id="@+id/tv_description_RDA"
@@ -253,9 +263,9 @@
                 android:layout_margin="8dp"
                 android:gravity="center"
                 android:textSize="16sp"
-                android:text="@string/descriptionHere"
+
                 />
-            <EditText
+            <!--<EditText
                 android:id="@+id/edt_description_RDA"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -263,22 +273,11 @@
                 android:gravity="center"
                 android:textSize="16sp"
                 android:text="@string/descriptionHere"
-                android:visibility="gone"
-                />
+                />-->
 
         </ScrollView>
 
         <!--描述部分的修改-->
-        <ImageView
-            android:padding="4dp"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_gravity="end|bottom"
-            android:layout_margin="12dp"
-            android:src="@drawable/edit_1"
-            android:onClick="editDescription"
-
-            />
     </FrameLayout>
     <!--底部信息及按键，横置覆盖于rv上层-->
     <FrameLayout
@@ -294,20 +293,21 @@
             android:gravity="center"
             android:paddingStart="12dp"
             android:paddingEnd="4dp"
-            android:text="@string/saveNeedClick"
+            android:text="@string/clickToEdit"
             />
         <TextView
             android:layout_width="96dp"
             android:layout_height="match_parent"
             android:layout_gravity="end"
             android:gravity="center"
-            android:text="@string/str_save"
-            android:background="@color/myRhythm_cyan"
+            android:text="@string/modify"
+            android:background="@color/myRhythm_red"
+            android:onClick="toEditActivity"
             />
         <TextView
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/myRhythm_red"
+            android:background="@color/myRhythm_cyan"
             android:layout_gravity="bottom"
             />
     </FrameLayout>

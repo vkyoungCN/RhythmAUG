@@ -49,7 +49,7 @@ public class AddRhythmDiaFragment extends DialogFragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView =  inflater.inflate(R.layout.dfg_add_rhythm, container, false);
+        View rootView =  inflater.inflate(R.layout.dfg_create_rhythm, container, false);
         //所有需要用到的8个控件，获取引用
         //【虽然IDE说redundant，但是不转型后面setText时亲测出错崩溃】
         rgp_rhythmType = (RadioGroup) rootView.findViewById(R.id.rg_type_addRhDfg);
@@ -111,7 +111,7 @@ public class AddRhythmDiaFragment extends DialogFragment
 
                 //要发回的数据
                 data.putInt("RHYTHM_TYPE",rhythmType);
-                mListener.onButtonClickingDfgInteraction(OnGeneralDfgInteraction.ADD_RHYTHM,data);
+                mListener.onButtonClickingDfgInteraction(OnGeneralDfgInteraction.CREATE_RHYTHM,data);
 
                 dismiss();
                 break;

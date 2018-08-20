@@ -12,6 +12,7 @@ import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
 
 import java.util.ArrayList;
 
+import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.RHYTHM_CREATE_EDITED;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_24;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_34;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
@@ -22,28 +23,9 @@ import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
 public class RhythmCreateFragment extends RhythmBaseEditFragment {
 
-    /* 逻辑*/
-//    private int valueOfBeat = 16;
     private int valueOfSection = 64;
-//    private int sectionSize = 4;
 
-//    private CompoundRhythm compoundRhythm;【新建不需传递cr但需要rhythmType；编辑则需要comRh，然后直接交给editor】
     private int rhythmType;
-//    private ArrayList<Byte> codes = new ArrayList<>();//都需要对comRh的编码序列进行编辑
-//    private ArrayList<ArrayList<Byte>> codesInSections = new ArrayList<>();//都要使用这个进行处理
-    //【RhEditor只是负责显示，逻辑部分其实需要由本fg负责】
-
-//    private int currentSectionIndex = 0;
-//    private int currentUnitIndexInSection = 0;//在act中依靠这两各变量来确定编辑框位置。
-
-//    Rhythm rhythm ;
-
-    /* 自定义控件*/
-//    private RhythmSingleLineEditor rh_editor_ARA;
-
-    /* 35个控件，其中33个（非edt的）有点击事件*/
-    private TextView tv_allConfirm;
-
 
     public RhythmCreateFragment() {
         // Required empty public constructor
@@ -66,24 +48,19 @@ public class RhythmCreateFragment extends RhythmBaseEditFragment {
 
             switch (compoundRhythm.getRhythmType()) {
                 case RHYTHM_TYPE_24:
-//                valueOfSection = 32;
                     //此时beat值==16无需修改
                     sectionSize = 2;
                     break;
                 case RHYTHM_TYPE_34:
-//                valueOfSection = 48;
                     sectionSize = 3;
                     break;
                 case RHYTHM_TYPE_44:
-//                valueOfSection = 64;
                     break;
                 case RHYTHM_TYPE_38:
-//                valueOfSection = 24;
                     valueOfBeat = 8;
                     sectionSize = 3;
                     break;
                 case RHYTHM_TYPE_68:
-//                valueOfSection = 48;
                     valueOfBeat = 8;
                     sectionSize = 6;
                     break;
@@ -114,20 +91,25 @@ public class RhythmCreateFragment extends RhythmBaseEditFragment {
         tv_allConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //在新建状态下，结束后直接前往下一页
-                Intent intentToStep_3 = new Intent(getContext(),AddRhythmFinalActivity.class);
-                //将修改完成的code编码设置给rhythm类。
+                //在新建状态下，结束后直接前往下一页（但是请求要发回activity进行，以使startActivity及onResult正确）
+
+                //准备数据
                 for (ArrayList<Byte> codes_section:codesInSections) {
                     codes.addAll(codes_section);
                 }
                 compoundRhythm.setRhythmCodeSerial(codes);
-                intentToStep_3.putExtra("COMPOUND_RHYTHM",compoundRhythm);
-                getActivity().startActivity(intentToStep_3);
+
+                Bundle data = new Bundle();
+                data.putParcelable("COMPOUND_RHYTHM",compoundRhythm);
+
+                mListener.onButtonClickingDfgInteraction(RHYTHM_CREATE_EDITED,data);
+
+
 
             }
         });
 
-        rh_editor_ARA.setRhythmViewData(codesInSections,rhythmType,null,null,18,22,22);
+        rh_editor_ER.setRhythmViewData(codesInSections,rhythmType,null,null,18,22,22);
 
         return rootView;
     }

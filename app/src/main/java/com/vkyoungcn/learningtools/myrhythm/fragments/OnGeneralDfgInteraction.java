@@ -14,9 +14,14 @@ public interface OnGeneralDfgInteraction {
 // 以Bundle形式发回。）
 
 
-    int ADD_RHYTHM = 2201;
+    int CREATE_RHYTHM = 2201;
 
     int DELETE_RHYTHM =2211;
+
+    int RHYTHM_CREATE_EDITED = 2215;
+    int RHYTHM_CREATE_DONE = 2216;
+
+    int RHYTHM_PURE_EDIT_DONE = 2217;
 
     void onButtonClickingDfgInteraction(int dfgType, Bundle data);
 }

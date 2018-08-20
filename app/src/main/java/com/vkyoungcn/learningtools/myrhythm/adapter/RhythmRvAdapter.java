@@ -68,7 +68,7 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
                     //进入详情页
 //                    Toast.makeText(context, "详情页施工中", Toast.LENGTH_SHORT).show();
                     Intent intentToRDA = new Intent(context, RhythmDetailActivity.class);
-                    intentToRDA.putExtra("RHYTHM",compoundRhythms.get(getAdapterPosition()));
+                        intentToRDA.putExtra("COMPOUND_RHYTHM",compoundRhythms.get(getAdapterPosition()));
                     context.startActivity(intentToRDA);
                     break;
 
@@ -88,7 +88,7 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
                         Toast.makeText(context, "Old DialogFg still there, removing first...", Toast.LENGTH_SHORT).show();
                         transaction.remove(prev);
                     }
-                    DialogFragment dfg = DeleteRhythmDiaFragment.newInstance(getAdapterPosition());
+                    DialogFragment dfg = DeleteRhythmDiaFragment.newInstance(compoundRhythms.get(getAdapterPosition()).getId());
                     dfg.show(transaction, "DELETE_RHYTHM");
 
                     break;

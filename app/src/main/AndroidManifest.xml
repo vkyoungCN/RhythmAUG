@@ -20,7 +20,9 @@
         <activity android:name=".CreateRhythmActivity" />
         <activity android:name=".AddRhythmFinalActivity" />
         <activity android:name=".RhythmDetailActivity" />
-        <activity android:name=".EditRhythmActivity"></activity>
+        <activity android:name=".RhythmPureEditActivity" />
+        <activity android:name=".RhythmOverallEditActivity" />
+        <activity android:name=".AllRhythmsActivity"></activity>
     </application>
 
 </manifest>

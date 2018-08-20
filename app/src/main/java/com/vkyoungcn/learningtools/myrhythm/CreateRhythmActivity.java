@@ -2,15 +2,21 @@ package com.vkyoungcn.learningtools.myrhythm;
 
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
 import com.vkyoungcn.learningtools.myrhythm.fragments.RhythmCreateFragment;
 import com.vkyoungcn.learningtools.myrhythm.fragments.RhythmEditFragment;
 import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
 
-public class CreateRhythmActivity extends AppCompatActivity {
+import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_CREATE;
+import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_DONE;
+import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_FAILURE;
+
+public class CreateRhythmActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,5 +40,32 @@ public class CreateRhythmActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onButtonClickingDfgInteraction(int dfgType, Bundle data) {
+        switch (dfgType){
+            case RHYTHM_CREATE_EDITED:
+                Intent intentToStep_3 = new Intent(this,AddRhythmFinalActivity.class);
+                intentToStep_3.putExtra("COMPOUND_RHYTHM_BUNDLE",data);
+                this.startActivityForResult(intentToStep_3,REQUEST_CODE_RH_CREATE);
+        break;
+        }
+    }
 
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (resultCode){
+            case RESULT_CODE_RH_CREATE_DONE:
+                setResult(RESULT_CODE_RH_CREATE_DONE,data);//这个data应该是null
+                this.finish();
+                break;
+            case RESULT_CODE_RH_CREATE_FAILURE:
+            default:
+                setResult(RESULT_CODE_RH_CREATE_FAILURE,data);//这个data应该是null
+                this.finish();
+                break;
+        }
+    }
 }

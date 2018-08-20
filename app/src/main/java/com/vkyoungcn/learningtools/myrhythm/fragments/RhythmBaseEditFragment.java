@@ -1,6 +1,7 @@
 package com.vkyoungcn.learningtools.myrhythm.fragments;
 
 import android.app.Fragment;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +33,10 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
 //    int valueOfSection = 64;
     int sectionSize = 4;
 
+    //交互发回Activity进行，简化复杂问题。
+    OnGeneralDfgInteraction mListener;
+
+
     CompoundRhythm compoundRhythm = new CompoundRhythm();//【新建不需传递cr但会通过rhythmType构建一个新的comRh；
     // 编辑需要传递comRh。无论如何，都需要将comRh提交给editor】
 //    int rhythmType;
@@ -45,7 +50,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
 //    Rhythm rhythm ;
 
     /* 自定义控件*/
-    RhythmSingleLineEditor rh_editor_ARA;
+    RhythmSingleLineEditor rh_editor_ER;
 
     /* 35个控件，其中33个（非edt的）有点击事件*/
     TextView tv_x0;
@@ -124,58 +129,58 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
                                 Bundle savedInstanceState) {
         View rootView =  inflater.inflate(R.layout.fragment_edit_rhythm, container, false);
 
-        rh_editor_ARA = rootView.findViewById(R.id.rh_editor_ARA);
+        rh_editor_ER = rootView.findViewById(R.id.rh_editor_ER);
 
-        tv_x0 = rootView.findViewById(R.id.tv_x0_ARA);
-        tv_xb1 = rootView.findViewById(R.id.tv_xb1_ARA);
-        tv_xb2 = rootView.findViewById(R.id.tv_xb2_ARA) ;
-        tv_xb3 = rootView.findViewById(R.id.tv_xb3_ARA) ;
+        tv_x0 = rootView.findViewById(R.id.tv_x0_ER);
+        tv_xb1 = rootView.findViewById(R.id.tv_xb1_ER);
+        tv_xb2 = rootView.findViewById(R.id.tv_xb2_ER) ;
+        tv_xb3 = rootView.findViewById(R.id.tv_xb3_ER) ;
 
-        tv_xp = rootView.findViewById(R.id.tv_xp_ARA) ;
-        tv_xpb1 = rootView.findViewById(R.id.tv_xpb1_ARA) ;
-        tv_xpb2 = rootView.findViewById(R.id.tv_xpb2_ARA) ;
+        tv_xp = rootView.findViewById(R.id.tv_xp_ER) ;
+        tv_xpb1 = rootView.findViewById(R.id.tv_xpb1_ER) ;
+        tv_xpb2 = rootView.findViewById(R.id.tv_xpb2_ER) ;
 
-        tv_xl1 = rootView.findViewById(R.id.tv_xl1_ARA) ;
-        tv_xl2 = rootView.findViewById(R.id.tv_xl2_ARA) ;
-        tv_xl3 = rootView.findViewById(R.id.tv_xl3_ARA) ;
+        tv_xl1 = rootView.findViewById(R.id.tv_xl1_ER) ;
+        tv_xl2 = rootView.findViewById(R.id.tv_xl2_ER) ;
+        tv_xl3 = rootView.findViewById(R.id.tv_xl3_ER) ;
 
-        tv_xm = rootView.findViewById(R.id.tv_xm_ARA) ;
-        tv_xm1 = rootView.findViewById(R.id.tv_xm1_ARA) ;
-        tv_xm2 = rootView.findViewById(R.id.tv_xm2_ARA) ;
+        tv_xm = rootView.findViewById(R.id.tv_xm_ER) ;
+        tv_xm1 = rootView.findViewById(R.id.tv_xm1_ER) ;
+        tv_xm2 = rootView.findViewById(R.id.tv_xm2_ER) ;
 
-        tv_empty = rootView.findViewById(R.id.tv_empty_ARA);
+        tv_empty = rootView.findViewById(R.id.tv_empty_ER);
 
-        imv_x0 = rootView.findViewById(R.id.imv_x0_ARA);
-        imv_xb1 = rootView.findViewById(R.id.imv_xb1_ARA) ;
-        imv_xb2 = rootView.findViewById(R.id.imv_xb2_ARA) ;
-        imv_xb3 = rootView.findViewById(R.id.imv_xb3_ARA) ;
+        imv_x0 = rootView.findViewById(R.id.imv_x0_ER);
+        imv_xb1 = rootView.findViewById(R.id.imv_xb1_ER) ;
+        imv_xb2 = rootView.findViewById(R.id.imv_xb2_ER) ;
+        imv_xb3 = rootView.findViewById(R.id.imv_xb3_ER) ;
 
-        imv_xp = rootView.findViewById(R.id.imv_xp_ARA) ;
-        imv_xpb1 = rootView.findViewById(R.id.imv_xpb1_ARA) ;
-        imv_xpb2 = rootView.findViewById(R.id.imv_xpb2_ARA) ;
+        imv_xp = rootView.findViewById(R.id.imv_xp_ER) ;
+        imv_xpb1 = rootView.findViewById(R.id.imv_xpb1_ER) ;
+        imv_xpb2 = rootView.findViewById(R.id.imv_xpb2_ER) ;
 
-        imv_xl1 = rootView.findViewById(R.id.imv_xl1_ARA) ;
-        imv_xl2 = rootView.findViewById(R.id.imv_xl2_ARA) ;
-        imv_xl3 = rootView.findViewById(R.id.imv_xl3_ARA) ;
+        imv_xl1 = rootView.findViewById(R.id.imv_xl1_ER) ;
+        imv_xl2 = rootView.findViewById(R.id.imv_xl2_ER) ;
+        imv_xl3 = rootView.findViewById(R.id.imv_xl3_ER) ;
 
-        imv_xm = rootView.findViewById(R.id.imv_xm_ARA) ;
-        imv_xm1 = rootView.findViewById(R.id.imv_xm1_ARA) ;
-        imv_xm2 = rootView.findViewById(R.id.imv_xm2_ARA) ;
+        imv_xm = rootView.findViewById(R.id.imv_xm_ER) ;
+        imv_xm1 = rootView.findViewById(R.id.imv_xm1_ER) ;
+        imv_xm2 = rootView.findViewById(R.id.imv_xm2_ER) ;
 
 
-        edt_xmNum = rootView.findViewById(R.id.edt_xmNum_ARA);
-        edt_longCurveNum = rootView.findViewById(R.id.edt_longCurveSpan_ARA);
+        edt_xmNum = rootView.findViewById(R.id.edt_xmNum_ER);
+        edt_longCurveNum = rootView.findViewById(R.id.edt_longCurveSpan_ER);
 
-        imv_longCurve = rootView.findViewById(R.id.imv_longCurveEnd_ARA);
+        imv_longCurve = rootView.findViewById(R.id.imv_longCurveEnd_ER);
 
-        tv_longCurve_remove =rootView.findViewById(R.id.tv_longCurveRemove_ARA) ;
-        tv_allConfirm = rootView.findViewById(R.id.tv_confirmAddRhythm_ARA);
-        tv_addSection = rootView.findViewById(R.id.tv_addEmptySection_ARA);
+        tv_longCurve_remove =rootView.findViewById(R.id.tv_longCurveRemove_ER) ;
+        tv_allConfirm = rootView.findViewById(R.id.tv_confirmAddRhythm_ER);
+        tv_addSection = rootView.findViewById(R.id.tv_addEmptySection_ER);
 
-        tv_lastSection = rootView.findViewById(R.id.tv_lastSection_ARA);
-        tv_nextSection = rootView.findViewById(R.id.tv_nextSection_ARA);
-        tv_lastUnit=rootView.findViewById(R.id.tv_lastUnit_ARA);
-        tv_nextUnit = rootView.findViewById(R.id.tv_nextUnit_ARA);
+        tv_lastSection = rootView.findViewById(R.id.tv_lastSection_ER);
+        tv_nextSection = rootView.findViewById(R.id.tv_nextSection_ER);
+        tv_lastUnit=rootView.findViewById(R.id.tv_lastUnit_ER);
+        tv_nextUnit = rootView.findViewById(R.id.tv_nextUnit_ER);
 
 
         //设监听
@@ -233,7 +238,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
         tv_xm2.setText(String.valueOf(valueOfBeat/4));
 
 
-//        rh_editor_ARA.setRhythm(compoundRhythm);rh编辑器的设置由实现类负责
+//        rh_editor_ER.setRhythm(compoundRhythm);rh编辑器的设置由实现类负责
 
         return rootView;
 
@@ -243,52 +248,52 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.imv_x0_ARA :
+            case R.id.imv_x0_ER :
                 changeCode((byte)valueOfBeat);
                 break;
-            case R.id.imv_xb1_ARA :
+            case R.id.imv_xb1_ER :
                 changeCode((byte)(valueOfBeat/2));
                 break;
-            case R.id.imv_xb2_ARA :
+            case R.id.imv_xb2_ER :
                 changeCode((byte)(valueOfBeat/4));
                 break;
-            case R.id.imv_xb3_ARA:
+            case R.id.imv_xb3_ER:
                 changeCode((byte)(valueOfBeat/8));
                 break;
-            case R.id.imv_xp_ARA :
+            case R.id.imv_xp_ER :
                 changeCode((byte)(valueOfBeat+valueOfBeat/2));
                 break;
-            case R.id.imv_xpb1_ARA :
+            case R.id.imv_xpb1_ER :
                 changeCode((byte)(valueOfBeat/2+valueOfBeat/4));
                 break;
-            case R.id.imv_xpb2_ARA :
+            case R.id.imv_xpb2_ER :
                 changeCode((byte)(valueOfBeat/4+valueOfBeat/8));
                 break;
-            case R.id.imv_xl1_ARA :
+            case R.id.imv_xl1_ER :
                 changeCode((byte)(valueOfBeat*2));
                 break;
-            case R.id.imv_xl2_ARA :
+            case R.id.imv_xl2_ER :
                 changeCode((byte)(valueOfBeat*3));
                 break;
-            case R.id.imv_xl3_ARA :
+            case R.id.imv_xl3_ER :
                 changeCode((byte)(valueOfBeat*3));
                 break;
-            case R.id.imv_xm1_ARA :
+            case R.id.imv_xm1_ER :
                 int fraction = Integer.parseInt(edt_xmNum.getText().toString());
                 changeCodeToMultiDivided(8,fraction);
                 break;
-            case R.id.imv_xm2_ARA :
+            case R.id.imv_xm2_ER :
                 int fraction_2 = Integer.parseInt(edt_xmNum.getText().toString());
                 changeCodeToMultiDivided(9,fraction_2);
                 break;
-            case R.id.imv_xm_ARA :
+            case R.id.imv_xm_ER :
                 int fraction_3 = Integer.parseInt(edt_xmNum.getText().toString());
                 changeCodeToMultiDivided(7,fraction_3);
                 break;
-            case R.id.tv_empty_ARA :
+            case R.id.tv_empty_ER :
                 changeToEmpty();
                 break;
-            case R.id.imv_longCurveEnd_ARA:
+            case R.id.imv_longCurveEnd_ER:
                 int spanNum = Integer.parseInt(edt_longCurveNum.getText().toString());
                 if(spanNum>7||spanNum<2){
                     //不合理的跨度
@@ -297,7 +302,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
                 }
                 insertCurveEndAfterCurrent(spanNum);
                 break;
-            case R.id.tv_longCurveRemove_ARA:
+            case R.id.tv_longCurveRemove_ER:
 
                 int returnNum = checkAndRemoveLongCurve();
                 if(returnNum<0){
@@ -305,28 +310,28 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
                 }
                 break;
 
-            case R.id.tv_lastSection_ARA:
+            case R.id.tv_lastSection_ER:
                 moveBox(MOVE_LAST_SECTION);
                 break;
-            case R.id.tv_lastUnit_ARA:
+            case R.id.tv_lastUnit_ER:
                 moveBox(MOVE_LAST_UNIT);
 
                 break;
-            case R.id.tv_nextSection_ARA:
+            case R.id.tv_nextSection_ER:
                 moveBox(MOVE_NEXT_SECTION);
                 break;
-            case R.id.tv_nextUnit_ARA:
+            case R.id.tv_nextUnit_ER:
                 moveBox(MOVE_NEXT_UNIT);
                 break;
 
-           /* case R.id.tv_confirmAddRhythm_ARA:
+           /* case R.id.tv_confirmAddRhythm_ER:
                 //子类行为不同
                 // 新建：直接前往下一页
                 // 编辑，返回上一页（可能还需要上一页是startAFResult的调用方式）
                 【由子类负责以匿名接口方式实现】
 
                 break;*/
-            case R.id.tv_addEmptySection_ARA:
+            case R.id.tv_addEmptySection_ER:
                 //在最后添加一个新的小节，编辑框移动到新小节第一位置
                 ArrayList<Byte> newSection = new ArrayList<>();
                 for (int i=0;i<sectionSize;i++) {
@@ -382,7 +387,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
         }
 
         //通知到UI改变
-        rh_editor_ARA.codeChangedReDraw();
+        rh_editor_ER.codeChangedReDraw();
 
 
     }
@@ -408,7 +413,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
         }
 
         //通知到UI改变
-        rh_editor_ARA.codeChangedReDraw();
+        rh_editor_ER.codeChangedReDraw();
 
 
     }
@@ -441,7 +446,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
         }
 
         //通知到UI改变
-        rh_editor_ARA.codeChangedReDraw();
+        rh_editor_ER.codeChangedReDraw();
 
 
     }
@@ -460,7 +465,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
         }
 
         //通知到UI改变
-        rh_editor_ARA.codeChangedReDraw();
+        rh_editor_ER.codeChangedReDraw();
 
 
     }
@@ -479,7 +484,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
                         //在有效跨度内，可以移除
                         codesInThisSection.remove(i);
                         //通知到UI改变
-                        rh_editor_ARA.codeChangedReDraw();
+                        rh_editor_ER.codeChangedReDraw();
                     } else {
                         numForReturn = -1;//代表不在弧线覆盖范围内
                     }
@@ -496,7 +501,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
     }
 
     void moveBox(int moveType){
-        int result = rh_editor_ARA.moveBox(moveType);
+        int result = rh_editor_ER.moveBox(moveType);
 
         switch (result){
             case 1:
@@ -525,5 +530,23 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
                 currentSectionIndex = codesInSections.size()-1;
                 currentUnitIndexInSection = 0;
         }
+    }
+
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnGeneralDfgInteraction) {
+            mListener = (OnGeneralDfgInteraction) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnGeneralDfgInteraction");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 }

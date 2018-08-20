@@ -74,7 +74,7 @@
                 android:gravity="center"
                 android:text="@string/hold_for_loading"
                 android:textSize="16sp"
-                android:visibility="gone" />
+                />
 
         </FrameLayout>
         <!--Rv标题区-->
@@ -144,6 +144,7 @@
                 android:gravity="center"
                 android:text="@string/str_toAllRhythms"
                 android:background="@color/myRhythm_teal"
+                android:onClick="toAllRhythms"
                 />
             <TextView
                 android:layout_width="match_parent"

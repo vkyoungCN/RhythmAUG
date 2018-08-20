@@ -229,6 +229,37 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         return l;
     }
 
+
+    /* 如果不涉及歌词*/
+    public int updateRhythm(Rhythm rhythm){
+        int affectedRows = 0;
+
+        getReadableDatabaseIfClosedOrNull();
+
+        ContentValues values = new ContentValues();
+
+        values.put(MyRhythmContract.Rhythm.COLUMN_TITLE, rhythm.getTitle());
+        values.put(MyRhythmContract.Rhythm.COLUMN_DESCRIPTION, rhythm.getDescription());
+        values.put(MyRhythmContract.Rhythm.COLUMN_RHYTHM_TYPE, rhythm.getRhythmType());
+        values.put(MyRhythmContract.Rhythm.COLUMN_C0DES, rhythm.getStrRhythmCodeSerial());//以字串形式存放
+        values.put(MyRhythmContract.Rhythm.COLUMN_STAR,rhythm.getStars());
+
+        values.put(MyRhythmContract.Rhythm.COLUMN_SELF_DESIGN,rhythm.isSelfDesign());
+        values.put(MyRhythmContract.Rhythm.COLUMN_KEEP_TOP,rhythm.isKeepTop());
+        values.put(MyRhythmContract.Rhythm.COLUMN_CREATE_TIME,rhythm.getCreateTime());
+        values.put(MyRhythmContract.Rhythm.COLUMN_LAST_MODIFY_TIME,rhythm.getLastModifyTime());
+        values.put(MyRhythmContract.Rhythm.COLUMN_PRIMARY_LYRIC_ID,rhythm.getPrimaryLyricId());
+        values.put(MyRhythmContract.Rhythm.COLUMN_SECOND_LYRIC_ID,rhythm.getSecondLyricId());
+        values.put(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID,rhythm.getPitchesId());
+
+        affectedRows = mSQLiteDatabase.update(MyRhythmContract.Rhythm.TABLE_NAME,values,
+                MyRhythmContract.Rhythm._ID+" = ? ",new String[]{String.valueOf(rhythm.getId())} );
+        closeDB();
+        return affectedRows;
+    }
+
+
+
     /* 如果传递c_Rh类则需要对两表操作*/
     /*public long createRhythm(CompoundRhythm compoundRhythm){
         long l;
@@ -455,7 +486,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
     }
 
 
-
+    /* 获取纯rh表的节奏记录*/
     public ArrayList<Rhythm> getAllRhythms(){
         ArrayList<Rhythm> rhythms = new ArrayList<>();
 
@@ -496,11 +527,115 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         return rhythms;
     }
 
+    public ArrayList<CompoundRhythm> getAllCompoundRhythms(){
+        ArrayList<CompoundRhythm> rhythms = new ArrayList<>();
+
+        String selectQuery = "SELECT * FROM "+ MyRhythmContract.Rhythm.TABLE_NAME;
+
+        getReadableDatabaseIfClosedOrNull();
+        mSQLiteDatabase.beginTransaction();
+
+        Cursor cursor = mSQLiteDatabase.rawQuery(selectQuery,null);
+
+        if(cursor.moveToFirst()){
+            do {
+                CompoundRhythm compoundRhythm = new CompoundRhythm();
+
+                compoundRhythm.setId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm._ID)));
+                compoundRhythm.setCreateTime(cursor.getLong(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_CREATE_TIME)));
+                compoundRhythm.setLastModifyTime(cursor.getLong(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_LAST_MODIFY_TIME)));
+                compoundRhythm.setDescription(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_DESCRIPTION)));
+                compoundRhythm.setSelfDesign(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_SELF_DESIGN))==1);
+                compoundRhythm.setKeepTop(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_KEEP_TOP))==1);
+                compoundRhythm.setRhythmType(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_RHYTHM_TYPE)));
+                compoundRhythm.setStars(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_STAR)));
+                compoundRhythm.setTitle(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_TITLE)));
+                compoundRhythm.setRhythmCodeSerialFromStr(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_C0DES)));
+
+                compoundRhythm.setPrimaryLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PRIMARY_LYRIC_ID)));
+                compoundRhythm.setSecondLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_SECOND_LYRIC_ID)));
+                compoundRhythm.setPitchesId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID)));
+
+                compoundRhythm.setPrimaryLyricSerial(getLyricStringById_TRS(compoundRhythm.getPrimaryLyricId()));
+                compoundRhythm.setSecondLyricSerial(getLyricStringById_TRS(compoundRhythm.getSecondLyricId()));
+
+                rhythms.add(compoundRhythm);
+            }while (cursor.moveToNext());
+        }else{
+            return null;
+        }
+        try {
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        mSQLiteDatabase.setTransactionSuccessful();
+        mSQLiteDatabase.endTransaction();
+
+        closeDB();
+
+        return rhythms;
+    }
+
     public ArrayList<CompoundRhythm> getCompoundRhythmsModifiedLaterThan(long time){
         ArrayList<CompoundRhythm> compoundRhythms = new ArrayList<>();
 
         String selectQuery = "SELECT * FROM "+ MyRhythmContract.Rhythm.TABLE_NAME+
                 " WHERE "+MyRhythmContract.Rhythm.COLUMN_LAST_MODIFY_TIME+" > "+time;
+
+        getReadableDatabaseIfClosedOrNull();
+        mSQLiteDatabase.beginTransaction();
+
+        Cursor cursor = mSQLiteDatabase.rawQuery(selectQuery,null);
+
+        if(cursor.moveToFirst()){
+            do {
+                CompoundRhythm compoundRhythm = new CompoundRhythm();
+                compoundRhythm.setId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm._ID)));
+                compoundRhythm.setCreateTime(cursor.getLong(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_CREATE_TIME)));
+                compoundRhythm.setLastModifyTime(cursor.getLong(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_LAST_MODIFY_TIME)));
+                compoundRhythm.setDescription(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_DESCRIPTION)));
+                compoundRhythm.setSelfDesign(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_SELF_DESIGN))==1);
+                compoundRhythm.setKeepTop(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_KEEP_TOP))==1);
+                compoundRhythm.setRhythmType(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_RHYTHM_TYPE)));
+                compoundRhythm.setStars(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_STAR)));
+                compoundRhythm.setTitle(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_TITLE)));
+                compoundRhythm.setRhythmCodeSerialFromStr(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_C0DES)));
+
+                compoundRhythm.setPrimaryLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PRIMARY_LYRIC_ID)));
+                compoundRhythm.setSecondLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_SECOND_LYRIC_ID)));
+                compoundRhythm.setPitchesId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID)));
+
+                compoundRhythm.setPrimaryLyricSerial(getLyricStringById_TRS(compoundRhythm.getPrimaryLyricId()));
+                compoundRhythm.setSecondLyricSerial(getLyricStringById_TRS(compoundRhythm.getSecondLyricId()));
+
+                compoundRhythms.add(compoundRhythm);
+            }while (cursor.moveToNext());
+        }else{
+            return null;
+        }
+
+        try {
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        mSQLiteDatabase.setTransactionSuccessful();
+        mSQLiteDatabase.endTransaction();
+
+        closeDB();
+        return compoundRhythms;
+    }
+
+    //获取修改时间在某时间内，或者虽不在指定时间内，但标有置顶的节奏项目
+    public ArrayList<CompoundRhythm> getTopKeepCompoundRhythmsOrModifiedLaterThan(long time){
+        ArrayList<CompoundRhythm> compoundRhythms = new ArrayList<>();
+
+        String selectQuery = "SELECT * FROM "+ MyRhythmContract.Rhythm.TABLE_NAME+
+                " WHERE "+MyRhythmContract.Rhythm.COLUMN_LAST_MODIFY_TIME+" > "+time
+                +" OR "+MyRhythmContract.Rhythm.COLUMN_KEEP_TOP+" = 1 ";
 
         getReadableDatabaseIfClosedOrNull();
         mSQLiteDatabase.beginTransaction();

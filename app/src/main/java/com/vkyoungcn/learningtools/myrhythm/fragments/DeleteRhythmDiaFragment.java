@@ -21,7 +21,7 @@ import com.vkyoungcn.learningtools.myrhythm.R;
 public class DeleteRhythmDiaFragment extends DialogFragment
         implements View.OnClickListener {
     private static final String TAG = "DeleteGroupDiaFragment";
-    private int position = 0;
+    private int rhId = 0;
 
     private OnGeneralDfgInteraction mListener;
 
@@ -30,10 +30,10 @@ public class DeleteRhythmDiaFragment extends DialogFragment
     }
 
 
-    public static DeleteRhythmDiaFragment newInstance(int position) {
+    public static DeleteRhythmDiaFragment newInstance(int rhId) {
         DeleteRhythmDiaFragment fragment = new DeleteRhythmDiaFragment();
         Bundle args = new Bundle();
-        args.putInt("POSITION",position);
+        args.putInt("RHYTHM_ID",rhId);
         fragment.setArguments(args);
 
         return fragment;
@@ -43,7 +43,7 @@ public class DeleteRhythmDiaFragment extends DialogFragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            position = getArguments().getInt("POSITION");
+            rhId = getArguments().getInt("RHYTHM_ID");
         }
     }
 
@@ -87,7 +87,7 @@ public class DeleteRhythmDiaFragment extends DialogFragment
         switch (view.getId()){
             case R.id.btn_ok_deleteRhythmDfg://删除分组，将位置发回给activity，由调用方负责去DB实际删除,并更新列表显示。
                 Bundle data = new Bundle();
-                data.putInt("POSITION",position);
+                data.putInt("RHYTHM_ID", rhId);
                 mListener.onButtonClickingDfgInteraction(OnGeneralDfgInteraction.DELETE_RHYTHM,data);
                 this.dismiss();
                 break;

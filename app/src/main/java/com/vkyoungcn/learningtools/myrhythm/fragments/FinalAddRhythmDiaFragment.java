@@ -11,6 +11,8 @@ import android.widget.TextView;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
 
+import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.RHYTHM_CREATE_DONE;
+
 /*
  * 作者：杨胜 @中国海洋大学
  * 别名：杨镇时
@@ -52,7 +54,7 @@ public class FinalAddRhythmDiaFragment extends DialogFragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView =  inflater.inflate(R.layout.dfg_report_add_rhythm, container, false);
+        View rootView =  inflater.inflate(R.layout.dfg_report_added_rhythm, container, false);
         TextView tv_result = (TextView) rootView.findViewById(R.id.tv_result_FarDfg);
         TextView confirm = (TextView) rootView.findViewById(R.id.btn_ok_finaladdRhDfg);
 
@@ -92,6 +94,7 @@ public class FinalAddRhythmDiaFragment extends DialogFragment
         switch (view.getId()){
             case R.id.btn_ok_finaladdRhDfg:
                 //确定了直接返回就好了
+                mListener.onButtonClickingDfgInteraction(RHYTHM_CREATE_DONE,null);
                 this.dismiss();
                 break;
         }
