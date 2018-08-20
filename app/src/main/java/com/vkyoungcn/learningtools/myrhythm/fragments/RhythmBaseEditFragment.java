@@ -254,7 +254,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
         tv_InfoRhType.setText(String.format(getContext().getResources().getString(R.string.plh_rh_type),compoundRhythm.getRhythmType()));
         tv_InfoBV.setText(String.format(getContext().getResources().getString(R.string.plh_beat_value),valueOfBeat));
         //onCV在onC之后(在实现类中，onC之后就已经初始化了cRh和编码因而可以设置下列值)
-        checkCurrentAvailableSpan();
+        checkCodeValue(codesInSections.get(0).get(0));
         tv_InfoSV.setText(String.format(getContext().getResources().getString(R.string.plh_section_value),valueOfSection));
         tv_InfoCPRV.setText(String.format(getContext().getResources().getString(R.string.plh_currentPlaceRest_value),availableValue));
 
@@ -373,13 +373,55 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
         //新值>原值，但小于等于总可用值，按所占用的空间生成若干个音符（如果与整拍值不对等，则还要拆分）
         //新值>总可用值，提示先删除。
 
-        int oldValueInsideBox = 0;
-        int maxAvailableValue = 0;//注意这个值必须是当前框及框后所有“紧邻”空拍的总值和（有间隔则不算）
-        //计划以-2代表后续是没有限制的状态（比如直接位于句尾，或有若干个空拍之后就是句尾）
-        ArrayList<Integer> availableIndexes = new ArrayList<>();//装载当前音符及后续若干个紧邻的空音符的索！引！
+        span = 1;
+        byte currentCode = codesInSections.get(currentSectionIndex).get(currentUnitIndexInSection);
+        int valueOfCodeInsideBox = checkCodeValue(currentCode);
+        availableValue = valueOfCodeInsideBox;
+        //可用值最少会等于当前选定音符的值(先把当前的音符时值加上)
+        span = availableSpanAndValue();//此方法会自动更新可用最大值的计数
 
-        fillAvailableIndexList();
-        //当输入的值比原
+        int newValue = checkCodeValue(newCode);//原则上，newCode一定是大于零的。
+
+        ArrayList<Byte> currentSectionCodes = codesInSections.get(currentSectionIndex);
+        if(newValue == valueOfCodeInsideBox){
+            //新时值与框内旧时值一致，直接改该位置上的编码
+            currentSectionCodes.set(currentUnitIndexInSection, newCode);
+
+        }else if(newValue<valueOfCodeInsideBox){
+            //新码时值更短，旧码改新码后，将旧码剩余时值生成第二新码（字符同旧码），置于其后
+            //先将旧值改为新编码
+            currentSectionCodes.set(currentUnitIndexInSection, newCode);
+            if(currentCode>0){
+                //确定旧符是空拍还是实际拍
+                //实际
+                //在后面添加一个剩余时值的拍子
+                currentSectionCodes.add(currentUnitIndexInSection+1,(byte)(valueOfCodeInsideBox-newValue));
+                //指定索引+1位置上（即cUIIS+2）开始的元素都会右移。（添加到指定的索引位置上，即cUIIS+1）
+
+            }else if(currentCode<0){
+                //空拍子，在后面添加一个剩余时值的空拍
+                currentSectionCodes.add(currentUnitIndexInSection+1,(byte)-(valueOfCodeInsideBox-newValue));
+
+            }
+
+        }else if(newValue<availableValue){
+            //由于前一条件的存在，本处暗含了新码要大于框内旧码
+            //需将后续需要的额外时值对应的编码删去，改写为相应编码，如需要，还应拆分。
+            //【待改，这里逻辑比较复杂！！】
+            //①框内旧码改变
+            currentSectionCodes.set(currentUnitIndexInSection, newCode);
+
+            //②计算要占用多少额外时值
+            int extraValue = newValue-valueOfCodeInsideBox;
+            //按后续音符的时值单位处理
+
+
+
+        }else if(newValue>availableValue){
+            Toast.makeText(getContext(), "剩余空时值不足，请考虑删除后续临近的既有音符", Toast.LENGTH_SHORT).show();
+        }
+
+
         //确定剩余的可用时值值
         ArrayList<Byte> currentSectionCodes = codesInSections.get(currentSectionIndex);
         int emptyValueInSection = 0;
@@ -391,7 +433,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
             }
         }
 
-        //判断新编码的时值是否符号条件
+        //判断新编码的时值是否符合条件
         int newValue = valueOfBeat;
         if(newCode < 73 && newCode>0){
             newValue = newCode;
@@ -426,18 +468,15 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
 
     }
 
-    void fillAvailableIndexList(){
+    /* 本拍时值+本拍后续的所有次第紧邻的空拍时值之和*/
+    void checkCurrentAvailableSpan(){
+
 
 
     }
 
-    /* 本拍时值+本拍后续的所有次第紧邻的空拍时值之和*/
-    void checkCurrentAvailableSpan(){
-        span = 1;//自己是要包括在内的（这个1就是自己）
-        availableValue = 0;
-        checkCurrentCodeValue(codesInSections.get(currentSectionIndex).get(currentUnitIndexInSection));
-
-        //spanToFirstUnAvailablePlace();
+    int availableSpanAndValue(){
+        int temp_span = 1;//至少自己是要包括在内的（这个1就是自己的跨度）
         for(int i=currentSectionIndex; i<codesInSections.size();i++){
             ArrayList<Byte> codeInsideSection = codesInSections.get(i);
             if(i==currentSectionIndex) {
@@ -448,14 +487,14 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
                         continue;
                     }else if(currentCode>0){
                         //此时必然小于112，包括：有时值的音符、均分多连音两类，都是“不再可用”，要停止
-                        return ;
+                        return temp_span ;
                     }else if(currentCode==0) {
                         //空拍、延长符，都是可用的
-                        span++;
+                        temp_span++;
                         availableValue+=valueOfBeat;
                     }else {
                         //只剩小于0
-                        span++;
+                        temp_span++;
                         availableValue-=currentCode;
 
                     }
@@ -467,26 +506,23 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
                         continue;
                     }else if(code>0){
                         //此时必然小于112，包括：有时值的音符、均分多连音两类，都是“不再可用”，要停止
-                        return;
+                        return temp_span;
                     }else if(code==0) {
                         //空拍、延长符，都是可用的
-                        span++;
+                        temp_span++;
                         availableValue+=valueOfBeat;
                     }else {
                         //只剩小于0
-                        span++;
+                        temp_span++;
                         availableValue-=code;
-
-                    } {
-                        //这时是空拍、延长符，都是可用的
-                        span++;
                     }
                 }
             }
         }
+        return temp_span;
     }
 
-    int checkCurrentCodeValue(byte code) {
+    int checkCodeValue(byte code) {
         if (code > 112) {
             //上弧连音专用符号，不记时值
             return 0;//但是由于实际上不会选中结束符，因而这种状态是错误的
