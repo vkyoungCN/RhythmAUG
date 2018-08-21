@@ -373,128 +373,183 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
         //新值>原值，但小于等于总可用值，按所占用的空间生成若干个音符（如果与整拍值不对等，则还要拆分）
         //新值>总可用值，提示先删除。
 
-        span = 1;
         byte currentCode = codesInSections.get(currentSectionIndex).get(currentUnitIndexInSection);
-        int valueOfCodeInsideBox = checkCodeValue(currentCode);
-        availableValue = valueOfCodeInsideBox;
-        //可用值最少会等于当前选定音符的值(先把当前的音符时值加上)
-        span = availableSpanAndValue();//此方法会自动更新可用最大值的计数
-
+//        int valueOfCodeInsideBox =checkCodeValue(currentCode);
         int newValue = checkCodeValue(newCode);//原则上，newCode一定是大于零的。
+        availableSpanAndValue();//此方法会自动更新availableValue和span
 
-        ArrayList<Byte> currentSectionCodes = codesInSections.get(currentSectionIndex);
-        if(newValue == valueOfCodeInsideBox){
-            //新时值与框内旧时值一致，直接改该位置上的编码
-            currentSectionCodes.set(currentUnitIndexInSection, newCode);
+        if(newValue>availableValue){
+            //所需空间比总可用都大，不改变编码
+            Toast.makeText(getContext(), "剩余空时值不足，请考虑删除后续临近的既有音符", Toast.LENGTH_SHORT).show();
+        }else {
+            //可以改变编码
+            changeCodeAndNext(newCode,currentSectionIndex,currentUnitIndexInSection,false,0);
 
-        }else if(newValue<valueOfCodeInsideBox){
-            //新码时值更短，旧码改新码后，将旧码剩余时值生成第二新码（字符同旧码），置于其后
-            //先将旧值改为新编码
-            currentSectionCodes.set(currentUnitIndexInSection, newCode);
-            if(currentCode>0){
-                //确定旧符是空拍还是实际拍
-                //实际
+            //通知到UI改变
+            rh_editor_ER.codeChangedReDraw();
+
+        }
+    }
+
+
+    /* 改变当前位置上的编码，根据新旧时值的不同，产生多种不同的处理情况；可能涉及对后续空拍位置的处理
+    * 需要提前判断好后面有多少空余可用值，只要是调用到本方法的情形需要都是在可用可改动的时值总值内的*/
+    void changeCodeAndNext(byte toCode,int sectionIndex, int unitIndex,boolean isRecursive,int recursiveTime){
+        //一般：需要改成的编码和该位置上编码的情况（仅考虑该位置上的情况）
+        byte oldCode = codesInSections.get(sectionIndex).get(unitIndex);
+        int toValue = checkCodeValue(toCode);
+        int oldValue = checkCodeValue(oldCode);
+        //递归标记置真时，一般会产生连音、延音，需要处理。【只在新值小于或等于旧值的情况下，后方才会添加连音结束标记，
+        // 而大于时仍然会继续递归，若添加连音结束符会产生错误的多层连音（注：多层连音本身在记谱中并不错误，但此递归中的是另外情形。）】
+        //首次调用时，应当手动传入值为0的递归次数
+
+        //如果当前的改变位于旧有连音线内且递归产生新连音线【上递归必然大于一个位置的时值，而如果递归则后面必有空拍或-，理论上这种情形下没有旧连音线】
+
+        int tempCursor = unitIndex;
+
+        if(toValue==oldValue){
+            //等时值，直接替换
+            codesInSections.get(sectionIndex).set(unitIndex, toCode);
+            if(isRecursive){
+                //递归调用要在后面添加连音线
+                //（但是如果连音的开头一个音符是完整的，则似乎要将中间的完整音符改为-，但逻辑较复杂且并不是很确定乐谱记法暂略，
+                // 毕竟不影响谱子的视唱。）
+                codesInSections.get(sectionIndex).add(unitIndex+1,(byte)(111+recursiveTime));
+            }
+
+        }else if(toValue<oldValue){
+            //新值小于旧值
+            //又分两种情况（旧值如果是大附点（唯一大于基本节拍的允许编码）则改成一个）
+            // 【但是好像没区别，都是改一个，然后剩余部分生成新的（只是大附点下，后续的音符会呈现为至少两半的
+            // 但是可以另行手动合并，而不必直接自动合并之。也不应自动合并）】
+
+            //当前位置改变
+            codesInSections.get(sectionIndex).set(unitIndex, toCode);
+            if(isRecursive){
+                tempCursor++;
+                //递归调用要在后面添加连音线
+                codesInSections.get(sectionIndex).add(tempCursor,(byte)(111+recursiveTime));
+            }
+            //根据旧值是空拍还是实拍填充不同的新编码（实际为原旧拍剩余）
+            if(oldCode>0){
+                tempCursor++;
+                //后面是实际拍子
                 //在后面添加一个剩余时值的拍子
-                currentSectionCodes.add(currentUnitIndexInSection+1,(byte)(valueOfCodeInsideBox-newValue));
+                codesInSections.get(sectionIndex).add(tempCursor,(byte)(oldValue-toValue));
                 //指定索引+1位置上（即cUIIS+2）开始的元素都会右移。（添加到指定的索引位置上，即cUIIS+1）
 
-            }else if(currentCode<0){
+            }else {
+                tempCursor++;
+                //oldCode<0||oldCode==0都填空拍
                 //空拍子，在后面添加一个剩余时值的空拍
-                currentSectionCodes.add(currentUnitIndexInSection+1,(byte)-(valueOfCodeInsideBox-newValue));
-
+                codesInSections.get(sectionIndex).add(tempCursor,(byte)-(oldValue-toValue));
+                //【如果进入过递归if分支，则在此临时游标实际=+2】
             }
-
-        }else if(newValue<availableValue){
-            //由于前一条件的存在，本处暗含了新码要大于框内旧码
-            //需将后续需要的额外时值对应的编码删去，改写为相应编码，如需要，还应拆分。
-            //【待改，这里逻辑比较复杂！！】
-            //①框内旧码改变
-            currentSectionCodes.set(currentUnitIndexInSection, newCode);
-
-            //②计算要占用多少额外时值
-            int extraValue = newValue-valueOfCodeInsideBox;
-            //按后续音符的时值单位处理
-
-
-
-        }else if(newValue>availableValue){
-            Toast.makeText(getContext(), "剩余空时值不足，请考虑删除后续临近的既有音符", Toast.LENGTH_SHORT).show();
-        }
-
-
-        //确定剩余的可用时值值
-        ArrayList<Byte> currentSectionCodes = codesInSections.get(currentSectionIndex);
-        int emptyValueInSection = 0;
-        for(int i=currentUnitIndexInSection;i<currentSectionCodes.size();i++){
-            //只计算本位置后尚余多少时值的空拍
-            byte code =currentSectionCodes.get(i);
-            if(code< 0 ){
-                emptyValueInSection-=code;
-            }
-        }
-
-        //判断新编码的时值是否符合条件
-        int newValue = valueOfBeat;
-        if(newCode < 73 && newCode>0){
-            newValue = newCode;
-        }
-        if(emptyValueInSection<newValue){
-            Toast.makeText(getContext(), "小节内剩余空时值不足，请考虑删除其他已有音符", Toast.LENGTH_SHORT).show();
         }else {
-            if(newCode<=(valueOfBeat+valueOfBeat/2)) {
-                //只涉及一位编码
-                currentSectionCodes.set(currentUnitIndexInSection, newCode);
-            }else if(newCode<valueOfBeat*4) {
-                //可能涉及多位编码
-                int numbersNeeded = (newCode/valueOfBeat)-1;//影响到几个字符（通常是X---形式，第一个除去，剩余还需几个位置。结果应在1~3）
-                //先修改当前音符
-                currentSectionCodes.set(currentUnitIndexInSection,(byte)valueOfBeat);
+            //新大于旧
+            //【原则上，位置上原来是什么时值，新值只能小于或等于原值。即使后方可用总空间大，但由多个小空拍组成也只能拆成“按萝卜坑填入”形式，
+            // 若要安排一个更整体的音符，只能先删除后方细分音符（即合并成空拍）】
 
-                for(int j=1;j<=numbersNeeded;j++){
-                    if(currentSectionCodes.get(currentUnitIndexInSection+j)>0){
-                        Toast.makeText(getContext(), "空间不足以安置整个目标时值，截断处理。", Toast.LENGTH_SHORT).show();
-                        break;//后面遇到非空位置，退出，且提示。
-                    }
-                    //只有在后面是空拍或延长音时才能如是设置。
-                    currentSectionCodes.set(currentUnitIndexInSection+j,(byte)0);//后面都是-，设为code=0即可.
+            if(oldValue==valueOfBeat){
+                //旧拍子占整拍
+                codesInSections.get(sectionIndex).set(unitIndex, (byte)valueOfBeat);
+                //剩余的待填入部分递归调用
+                unitIndex++;
+                recursiveTime++;//准备递归，递归次数+1。
 
+                if(unitIndex<codesInSections.get(sectionIndex).size()) {
+                    changeCodeAndNext((byte) (toCode - valueOfBeat), sectionIndex, unitIndex,true,recursiveTime);
+                }else {
+                    //跨节
+                    unitIndex=0;
+                    sectionIndex++;
+                    changeCodeAndNext((byte) (toCode - valueOfBeat), sectionIndex, unitIndex,true,recursiveTime);
+                }
+            }else if(oldValue == valueOfBeat+valueOfBeat/2){
+                //旧拍子是大附点
+                // 原位置改为整拍
+                codesInSections.get(sectionIndex).set(unitIndex, (byte)valueOfBeat);
+
+                //后半按旧值是空拍还是实拍填充不同新编码（实际为新拍子的一部分的后一部分）
+                if(oldCode>0){
+                    tempCursor++;
+                    //后面是实际拍子
+                    //在后面添加一个剩余时值(附点部分)的拍子
+                    codesInSections.get(sectionIndex).add(tempCursor,(byte)(valueOfBeat/2));
+                    //指定索引+1位置上（即cUIIS+2）开始的元素都会右移。（添加到指定的索引位置上，即cUIIS+1）
+
+                }else {
+                    tempCursor++;
+                    //oldCode<0||oldCode==0都填空拍
+                    //空拍子，在后面添加一个剩余时值的空拍
+                    codesInSections.get(sectionIndex).add(tempCursor,(byte)-(valueOfBeat/2));
+                    //【如果进入过递归if分支，则在此临时游标实际=+2】
+                }
+
+                //剩余的新时值，递归处理
+                tempCursor++;
+                recursiveTime++;//准备递归，递归次数+1。
+                if(tempCursor<codesInSections.get(sectionIndex).size()) {
+                    changeCodeAndNext((byte) (toCode - oldValue), sectionIndex, tempCursor,true,recursiveTime);
+                }else {
+                    //跨节
+                    tempCursor=0;
+                    sectionIndex++;
+                    changeCodeAndNext((byte) (toCode - oldValue), sectionIndex, tempCursor,true,recursiveTime);
+                }
+
+            }else {
+                //旧符一定小于一整拍了
+                // 原位置改为可用时值（根据旧值的大小）
+                if(oldCode>0){
+                    //后面是实际拍子
+                    //占据该时值的拍子（相当于不动）
+                }else {
+                    //空拍子，以和原码相反（等于原码的值）的编码填充
+                    codesInSections.get(sectionIndex).set(tempCursor,(byte)oldValue);
+                }
+                //大于旧值时还没结束，不添加连音弧线。
+
+                //剩余时值到下一个拍子处理
+                //剩余的新时值，递归处理
+                tempCursor++;
+                recursiveTime++;//准备递归，递归次数+1。
+                if(tempCursor<codesInSections.get(sectionIndex).size()) {
+                    changeCodeAndNext((byte) (toCode - oldValue), sectionIndex, tempCursor,true,recursiveTime);
+                }else {
+                    //跨节
+                    tempCursor=0;
+                    sectionIndex++;
+                    changeCodeAndNext((byte) (toCode - oldValue), sectionIndex, tempCursor,true,recursiveTime);
                 }
             }
         }
-
-        //通知到UI改变
-        rh_editor_ER.codeChangedReDraw();
-
-
     }
 
-    /* 本拍时值+本拍后续的所有次第紧邻的空拍时值之和*/
-    void checkCurrentAvailableSpan(){
+    void availableSpanAndValue(){
+        //span至少要包括自己在内的（也即至少=1）
+        //availableValue从0初始为首位的值
+        availableValue+=checkCodeValue(codesInSections.get(currentSectionIndex).get(currentUnitIndexInSection));
 
-
-
-    }
-
-    int availableSpanAndValue(){
-        int temp_span = 1;//至少自己是要包括在内的（这个1就是自己的跨度）
         for(int i=currentSectionIndex; i<codesInSections.size();i++){
             ArrayList<Byte> codeInsideSection = codesInSections.get(i);
             if(i==currentSectionIndex) {
                 for (int j=currentUnitIndexInSection+1;j<codeInsideSection.size();j++){
+                    //从第二个开始计算的
                     byte currentCode = codeInsideSection.get(j);
                     if(currentCode>112){
                         //延音弧线结束标记，不作数
-                        continue;
+                        continue;//【这里待增加删线逻辑！！！】
                     }else if(currentCode>0){
                         //此时必然小于112，包括：有时值的音符、均分多连音两类，都是“不再可用”，要停止
-                        return temp_span ;
+                        return ;
                     }else if(currentCode==0) {
                         //空拍、延长符，都是可用的
-                        temp_span++;
+                        span++;
                         availableValue+=valueOfBeat;
                     }else {
                         //只剩小于0
-                        temp_span++;
+                        span++;
                         availableValue-=currentCode;
 
                     }
@@ -506,20 +561,19 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
                         continue;
                     }else if(code>0){
                         //此时必然小于112，包括：有时值的音符、均分多连音两类，都是“不再可用”，要停止
-                        return temp_span;
+                        return;
                     }else if(code==0) {
                         //空拍、延长符，都是可用的
-                        temp_span++;
+                        span++;
                         availableValue+=valueOfBeat;
                     }else {
                         //只剩小于0
-                        temp_span++;
+                        span++;
                         availableValue-=code;
                     }
                 }
             }
         }
-        return temp_span;
     }
 
     int checkCodeValue(byte code) {
