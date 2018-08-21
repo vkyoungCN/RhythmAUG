@@ -11,7 +11,7 @@ import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
 import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
 
 public class RhythmHelper {
-//    private static final String TAG = "RhythmHelper";
+    private static final String TAG = "RhythmHelper";
     public static int calculateValueBeat(int rhythmType) {
         //根据节拍形式确定一拍的时值、一节的时值总量。
         int valueOfBeat = 16;
@@ -51,7 +51,8 @@ public class RhythmHelper {
 
     public static ArrayList<ArrayList<Byte>> codeParseIntoSections(ArrayList<Byte> rhythmCodes,int rhythmType){
         //将节奏编码序列按小节组织起来
-
+//        Log.i(TAG, "codeParseIntoSections: size:"+rhythmCodes.size());
+//        Log.i(TAG, "codeParseIntoSections: rhyCodes="+rhythmCodes.toString());
         int valueOfBeat = calculateValueBeat(rhythmType);
         int valueOfSection = calculateValueSection(rhythmType);
 
@@ -60,16 +61,23 @@ public class RhythmHelper {
         int startIndex = 0;//用于记录上次添加的末尾索引+1，即本节应添加的音符序列的索引起始值。
 
         for (int i=0; i<rhythmCodes.size();i++){
-            byte b = rhythmCodes.get(i);
+            int b = (int)(rhythmCodes.get(i));
+//            Log.i(TAG, "codeParseIntoSections: b="+String.valueOf(b));
             if(b>112){
                 //上弧连音专用符号，不记时值
                 totalValue += 0;
-            }else if(b>77 || b==0){
+            }else if(b>92){
+                totalValue += 4;//三类均分多连音的时值的定值，不随内容数量改变，也与vb无关。
+            }else if(b>82){
+                totalValue += 8;
+            }else if (b>72) {
                 //时值计算
-                totalValue += valueOfBeat;
+                totalValue += 16;
             }else if(b>0) {
                 //时值计算
                 totalValue+=b;
+            }else if(b==0){
+                totalValue+=valueOfBeat;
             }else {//b<0
                 //时值计算：空拍带时值，时值绝对值与普通音符相同
                 totalValue-=b;
@@ -96,7 +104,7 @@ public class RhythmHelper {
 
         for (byte b : codesInSingleSection) {
             //大于112的是特殊记号，不绘制为实体单元，不记录长度
-            if(b>73&&b<112){
+            if(b>72&&b<112){
                 //均分多连音
                 requiredSectionLength += (unitStandardWidth /2)*(b%10);
                 //时值计算

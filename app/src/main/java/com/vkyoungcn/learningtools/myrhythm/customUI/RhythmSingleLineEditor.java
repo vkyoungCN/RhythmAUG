@@ -6,6 +6,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.widget.Toast;
 
@@ -191,7 +192,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
     @Override
     protected void onDraw(Canvas canvas) {
-//        Log.i(TAG, "onDraw: characters="+characters.toString());
+        Log.i(TAG, "onDraw: 1st DU.code="+drawingUnits.get(0).get(0).code);
         super.onDraw(canvas);
 
         //本类特有：蓝框
@@ -208,7 +209,8 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
     因为特有的蓝框特征不需在du中存储，只是额外持有两个索引坐标而已。*/
 
     //编码数据改变，但位置不改变
-    public void codeChangedReDraw(){
+    public void codeChangedReDraw(ArrayList<ArrayList<Byte>> newCodes2Dimension){
+        codesInSections =newCodes2Dimension;//不传不行啊……并不能更新绘制结果（测试发现dus还改变了）
         initDrawingUnits(false);
     }
 

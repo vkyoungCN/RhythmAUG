@@ -144,7 +144,7 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
 
     }
 
-    public void toAllRhythms(){
+    public void toAllRhythms(View view){
         Intent intentToAllRhs = new Intent(this,AllRhythmsActivity.class);
         this.startActivity(intentToAllRhs);
     }

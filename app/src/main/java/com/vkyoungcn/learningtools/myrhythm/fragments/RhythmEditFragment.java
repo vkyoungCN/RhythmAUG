@@ -2,10 +2,12 @@ package com.vkyoungcn.learningtools.myrhythm.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmHelper;
 import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
 
 import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.RHYTHM_PURE_EDIT_DONE;
@@ -13,7 +15,7 @@ import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInterac
 
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
 public class RhythmEditFragment extends RhythmBaseEditFragment {
-
+    private static final String TAG = "RhythmEditFragment";
 
     public RhythmEditFragment() {
         // Required empty public constructor
@@ -33,6 +35,8 @@ public class RhythmEditFragment extends RhythmBaseEditFragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             compoundRhythm = getArguments().getParcelable("RHYTHM");
+//            Log.i(TAG, "onCreate: comRh="+compoundRhythm.toString());
+            codesInSections = RhythmHelper.codeParseIntoSections(compoundRhythm.getRhythmCodeSerial(),compoundRhythm.getRhythmType());
         }
     }
 

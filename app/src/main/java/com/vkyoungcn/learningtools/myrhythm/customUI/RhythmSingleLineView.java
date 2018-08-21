@@ -202,7 +202,7 @@ public class RhythmSingleLineView extends RhythmView {
         //装载绘制信息的总列表（按小节区分子列表管理）
         drawingUnits = new ArrayList<ArrayList<DrawingUnit>>();//初步初始（后面采用add方式，因而不需彻底初始）
 
-        float bottomDrawing_Y = (sizeChangedHeight/3)*2;
+        float bottomDrawing_Y = (sizeChangedHeight/5)*3;
 
         //开始计算绘制信息。以小节为单位进行。
         //如果有歌词信息，则要（将各字）附加在各Du中。
@@ -231,7 +231,7 @@ public class RhythmSingleLineView extends RhythmView {
         }
 
         if(!isTriggerFromOnSC){
-            Log.i(TAG, "initDrawingUnits: going to INVALIDATE");
+//            Log.i(TAG, "initDrawingUnits: going to INVALIDATE");
             invalidate();
 
         }//onSC方法返回后会自动调用onD因而没必要调用invalidate方法。

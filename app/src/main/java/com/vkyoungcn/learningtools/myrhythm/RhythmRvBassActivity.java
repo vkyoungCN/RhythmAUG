@@ -6,6 +6,7 @@ import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -20,7 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class RhythmRvBassActivity extends RvBassActivity implements OnGeneralDfgInteraction {
-
+    private static final String TAG = "RhythmRvBassActivity";
     /* 基类的部分字段实现为具体类型的字段*/
     RhythmRvAdapter adapter;
     ArrayList<CompoundRhythm> dataFetched;
@@ -72,6 +73,7 @@ public class RhythmRvBassActivity extends RvBassActivity implements OnGeneralDfg
                 }
                 //初始化Rv构造器，令UI加载Rv控件……
                 adapter = new RhythmRvAdapter(dataFetched,this) ;
+//                Log.i(TAG, "handleMessage:dataFetched="+dataFetched.toString());
                 mRv.setLayoutManager(new LinearLayoutManager(this));
                 mRv.setAdapter(adapter);
 

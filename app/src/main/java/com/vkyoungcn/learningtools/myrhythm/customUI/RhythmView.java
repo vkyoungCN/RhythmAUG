@@ -250,6 +250,7 @@ public class RhythmView extends View {
             //是空的，绘制一个空占位线条然后直接退出绘制即可。
         }
 
+//        Log.i(TAG, "onDraw: dUs="+drawingUnits.toString());
         //未退出则继续绘制主体内容
         //逐小节逐音符绘制(主体部分：各乐符、下划线、乐符间隔、拍子间隔、小节间隔、节间小节线、均分多连音、跨音符的上方连音弧线)
         drawByEachUnit(canvas);
@@ -388,6 +389,7 @@ public class RhythmView extends View {
 
 
     public void setRhythmViewData(CompoundRhythm compoundRhythm){
+//        Log.i(TAG, "setRhythmViewData: cRh="+compoundRhythm.toString());
         setRhythmViewData(RhythmHelper.codeParseIntoSections(compoundRhythm.getRhythmCodeSerial(),compoundRhythm.getRhythmType()),
                 compoundRhythm.getRhythmType(),compoundRhythm.getPrimaryLyricSerial(),compoundRhythm.getSecondLyricSerial(),
                 18,20,20);
@@ -411,6 +413,7 @@ public class RhythmView extends View {
      * */
     public void setRhythmViewData(ArrayList<ArrayList<Byte>> codesInSections, int rhythmType, String primaryLyricString, String secondLyricString, int codeSize, int unitWidth, int unithHeight){
         this.codesInSections = codesInSections;
+//        Log.i(TAG, "setRhythmViewData: codeInSection(MainData)="+codesInSections.toString());
         this.rhythmType = rhythmType;
         this.strLyric_1 = primaryLyricString;
         this.strLyric_2 = secondLyricString;
