@@ -1,16 +1,17 @@
-package com.vkyoungcn.learningtools.myrhythm.customUI;
+package com.vkyoungcn.learningtools.myrhythm.models;
 
 import android.util.Log;
 
 import java.util.ArrayList;
 
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_24;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_34;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
-
 public class RhythmHelper {
+
+    public static final int RHYTHM_TYPE_24 = 24;
+    public static final int RHYTHM_TYPE_34 = 34;
+    public static final int RHYTHM_TYPE_44 = 44;
+    public static final int RHYTHM_TYPE_38 = 38;
+    public static final int RHYTHM_TYPE_68 = 68;
+
     private static final String TAG = "RhythmHelper";
     public static int calculateValueBeat(int rhythmType) {
         //根据节拍形式确定一拍的时值、一节的时值总量。

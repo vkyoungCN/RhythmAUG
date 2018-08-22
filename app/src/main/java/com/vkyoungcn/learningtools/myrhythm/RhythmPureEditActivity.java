@@ -9,7 +9,7 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
 import com.vkyoungcn.learningtools.myrhythm.fragments.RhythmEditFragment;
-import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
 
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_PURE_EDIT_DONE;
 
@@ -20,7 +20,7 @@ public class RhythmPureEditActivity extends AppCompatActivity implements OnGener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_pure_rhythm);
 
-        CompoundRhythm compoundRhythm = getIntent().getParcelableExtra("COMPOUND_RHYTHM");
+        RhythmBasedCompounds rhythmBasedCompounds = getIntent().getParcelableExtra("COMPOUND_RHYTHM");
 
         FragmentTransaction transaction = (getFragmentManager().beginTransaction());
         Fragment prev = (getFragmentManager().findFragmentByTag("EDIT_TEXT"));
@@ -30,7 +30,7 @@ public class RhythmPureEditActivity extends AppCompatActivity implements OnGener
             transaction.remove(prev);
         }
 
-        Fragment editFragment = RhythmEditFragment.newInstance(compoundRhythm);
+        Fragment editFragment = RhythmEditFragment.newInstance(rhythmBasedCompounds);
         transaction.add(R.id.flt_fgContainer_ERA,editFragment,"EDIT_TEXT").commit();
 
     }

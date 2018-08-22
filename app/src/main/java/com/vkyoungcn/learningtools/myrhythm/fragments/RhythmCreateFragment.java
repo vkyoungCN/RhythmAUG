@@ -1,14 +1,11 @@
 package com.vkyoungcn.learningtools.myrhythm.fragments;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
-import com.vkyoungcn.learningtools.myrhythm.AddRhythmFinalActivity;
-import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
 
 import java.util.ArrayList;
 
@@ -46,7 +43,7 @@ public class RhythmCreateFragment extends RhythmBaseEditFragment {
         if (getArguments() != null) {
             rhythmType = getArguments().getInt("RHYTHM_TYPE",44);
 
-            switch (compoundRhythm.getRhythmType()) {
+            switch (rhythmBasedCompounds.getRhythmType()) {
                 case RHYTHM_TYPE_24:
                     //此时beat值==16无需修改
                     valueOfSection =32;
@@ -82,9 +79,9 @@ public class RhythmCreateFragment extends RhythmBaseEditFragment {
             }
             codesInSections.add(firstSection);
 
-            compoundRhythm = new CompoundRhythm();
+            rhythmBasedCompounds = new RhythmBasedCompounds();
             //暂时只需要节奏欧的两项数据。(其中序列数据等最后编辑完成后再添加，而向RHV传递的编码按列表传递即可)
-            compoundRhythm.setRhythmType(rhythmType);
+            rhythmBasedCompounds.setRhythmType(rhythmType);
 
         }
     }
@@ -103,10 +100,10 @@ public class RhythmCreateFragment extends RhythmBaseEditFragment {
                 for (ArrayList<Byte> codes_section:codesInSections) {
                     codes.addAll(codes_section);
                 }
-                compoundRhythm.setRhythmCodeSerial(codes);
+                rhythmBasedCompounds.setCodeSerialByte(codes);
 
                 Bundle data = new Bundle();
-                data.putParcelable("COMPOUND_RHYTHM",compoundRhythm);
+                data.putParcelable("COMPOUND_RHYTHM", rhythmBasedCompounds);
 
                 mListener.onButtonClickingDfgInteraction(RHYTHM_CREATE_EDITED,data);
 

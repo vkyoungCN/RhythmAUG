@@ -15,7 +15,7 @@ import android.widget.Toast;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
 import com.vkyoungcn.learningtools.myrhythm.fragments.FinalAddRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
-import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
 import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_DONE;
@@ -36,7 +36,7 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
     private EditText edt_description;
     private TextView tv_confirm;
 
-    private CompoundRhythm compoundRhythm;
+    private RhythmBasedCompounds rhythmBasedCompounds;
 
 
     //操作结果，是否成功（根据DB返回确定）
@@ -58,17 +58,17 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
         tv_confirm = findViewById(R.id.tv_confirm_ARFA);
 
         Bundle bundle = getIntent().getBundleExtra("COMPOUND_RHYTHM_BUNDLE");
-        compoundRhythm = bundle.getParcelable("COMPOUND_RHYTHM");
+        rhythmBasedCompounds = bundle.getParcelable("COMPOUND_RHYTHM");
 
-        if(compoundRhythm == null){
+        if(rhythmBasedCompounds == null){
             Toast.makeText(this, "出错，节奏数据传递为空", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        rhythmView.setRhythmViewData(compoundRhythm);
+        rhythmView.setRhythmViewData(rhythmBasedCompounds);
 
         String strRhythmType = "";
-        switch (compoundRhythm.getRhythmType()){
+        switch (rhythmBasedCompounds.getRhythmType()){
             case RHYTHM_TYPE_24:
                 strRhythmType = "2/4";
                 break;
@@ -91,18 +91,18 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
         tv_confirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                compoundRhythm.setSelfDesign(ckb_selfDesign.isChecked());
-                compoundRhythm.setKeepTop(ckb_keepTop.isChecked());
-                compoundRhythm.setStars(Integer.parseInt((String)(spinner.getSelectedItem())));
-                compoundRhythm.setDescription(edt_description.getText().toString());//一定非null
+                rhythmBasedCompounds.setSelfDesign(ckb_selfDesign.isChecked());
+                rhythmBasedCompounds.setKeepTop(ckb_keepTop.isChecked());
+                rhythmBasedCompounds.setStars(Integer.parseInt((String)(spinner.getSelectedItem())));
+                rhythmBasedCompounds.setDescription(edt_description.getText().toString());//一定非null
 
                 long currentTime = System.currentTimeMillis();
-                compoundRhythm.setCreateTime(currentTime);
-                compoundRhythm.setLastModifyTime(currentTime);//二者严格一致
+                rhythmBasedCompounds.setCreateTime(currentTime);
+                rhythmBasedCompounds.setLastModifyTime(currentTime);//二者严格一致
 
                 //向DB填入
                 MyRhythmDbHelper dbHelper = MyRhythmDbHelper.getInstance(getApplicationContext());
-                long l = dbHelper.createRhythm(compoundRhythm);
+                long l = dbHelper.createRhythm(rhythmBasedCompounds);
                 //根据返回的结果（布尔值——成败。），向dfg传递成功或失败。
                 if(l<0){
                     //失败

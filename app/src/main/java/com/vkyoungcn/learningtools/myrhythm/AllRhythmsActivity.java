@@ -1,25 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
-import android.content.Intent;
-import android.os.Handler;
-import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.view.View;
-import android.widget.EditText;
-import android.widget.TextView;
-
-import com.vkyoungcn.learningtools.myrhythm.adapter.RhythmRvAdapter;
-import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
-import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
-import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
-
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
 public class AllRhythmsActivity extends RhythmRvBassActivity {
 

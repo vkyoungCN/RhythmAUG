@@ -9,8 +9,6 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
 import com.vkyoungcn.learningtools.myrhythm.fragments.RhythmCreateFragment;
-import com.vkyoungcn.learningtools.myrhythm.fragments.RhythmEditFragment;
-import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
 
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_CREATE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_DONE;

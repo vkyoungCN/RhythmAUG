@@ -10,7 +10,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
-import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
 import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_EDIT;
@@ -23,7 +23,7 @@ public class RhythmOverallEditActivity extends AppCompatActivity {
 * 其实这种互相关联的功能已经涉及到了创作的部分，暂时先实现记录，再谋求创作。
 * 【后期考虑增加分组（节奏和旋律是一起的，词也是主要以挂载在节奏下啊的方式存在），然后有关联的节奏、旋律等可以分在一个组内管理】
 * */
-    CompoundRhythm compoundRhythm = new CompoundRhythm();
+    RhythmBasedCompounds rhythmBasedCompounds = new RhythmBasedCompounds();
 
     /* 多线程*/
 //    private Handler handler = new RhythmDetailActivityHandler(this);//涉及弱引用，通过其发送消息。
@@ -57,9 +57,9 @@ public class RhythmOverallEditActivity extends AppCompatActivity {
 
 
         if(savedInstanceState!=null){
-            compoundRhythm = savedInstanceState.getParcelable("COMPOUND_RHYTHM");
+            rhythmBasedCompounds = savedInstanceState.getParcelable("COMPOUND_RHYTHM");
         }else {
-            compoundRhythm = getIntent().getParcelableExtra("COMPOUND_RHYTHM");
+            rhythmBasedCompounds = getIntent().getParcelableExtra("COMPOUND_RHYTHM");
         }
         
         tv_id = findViewById(R.id.tv_rhId_RODA);
@@ -73,10 +73,10 @@ public class RhythmOverallEditActivity extends AppCompatActivity {
             public void onFocusChange(View v, boolean hasFocus) {
                 if(v.getId()==R.id.edt_description_RODA||!hasFocus){
                     //失去焦点
-                    compoundRhythm.setDescription(edt_descriptions.getText().toString());
+                    rhythmBasedCompounds.setDescription(edt_descriptions.getText().toString());
                     edt_descriptions.setVisibility(View.GONE);
                     edt_descriptions.setVisibility(View.VISIBLE);
-                    edt_descriptions.setText(compoundRhythm.getDescription());
+                    edt_descriptions.setText(rhythmBasedCompounds.getDescription());
                 }
             }
         });
@@ -92,15 +92,15 @@ public class RhythmOverallEditActivity extends AppCompatActivity {
         rhythmView = findViewById(R.id.rhView_singleLine_RODA);
 
 
-        tv_id.setText(String.format(this.getResources().getString(R.string.plh_sharp_id), compoundRhythm.getId()));
-        edt_title.setText(compoundRhythm.getTitle());
+        tv_id.setText(String.format(this.getResources().getString(R.string.plh_sharp_id), rhythmBasedCompounds.getId()));
+        edt_title.setText(rhythmBasedCompounds.getTitle());
 
-        edt_descriptions.setText(compoundRhythm.getDescription());
-        spinner.setSelection(compoundRhythm.getStars()-1);//数据数组的值和索引间只相差1.（简便设置方式）【要求cRh内的值在合理范围】
-        ckb_selfDesign.setChecked(compoundRhythm.isSelfDesign());
-        ckb_keepTop.setChecked(compoundRhythm.isKeepTop());
+        edt_descriptions.setText(rhythmBasedCompounds.getDescription());
+        spinner.setSelection(rhythmBasedCompounds.getStars()-1);//数据数组的值和索引间只相差1.（简便设置方式）【要求cRh内的值在合理范围】
+        ckb_selfDesign.setChecked(rhythmBasedCompounds.isSelfDesign());
+        ckb_keepTop.setChecked(rhythmBasedCompounds.isKeepTop());
 
-        rhythmView.setRhythmViewData(compoundRhythm,22,24,24);//比默认的尺寸（18/20/20）稍大
+        rhythmView.setRhythmViewData(rhythmBasedCompounds,22,24,24);//比默认的尺寸（18/20/20）稍大
 
     }
 
@@ -110,7 +110,7 @@ public class RhythmOverallEditActivity extends AppCompatActivity {
     public void goEditRhythm(View view){
         //需要跳转到专用的页面进行修改
         Intent intentToRhEditor = new Intent(this,RhythmPureEditActivity.class);
-        intentToRhEditor.putExtra("COMPOUND_RHYTHM",compoundRhythm);
+        intentToRhEditor.putExtra("COMPOUND_RHYTHM", rhythmBasedCompounds);
         intentToRhEditor.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
 
         startActivityForResult(intentToRhEditor,REQUEST_CODE_RH_EDIT);
@@ -122,7 +122,7 @@ public class RhythmOverallEditActivity extends AppCompatActivity {
             //尽在edt尚未打卡时起作用
             edt_descriptions.setVisibility(View.GONE);
             edt_descriptions.setVisibility(View.VISIBLE);
-            edt_descriptions.setText(compoundRhythm.getDescription());
+            edt_descriptions.setText(rhythmBasedCompounds.getDescription());
         }
 
     }*/
@@ -134,8 +134,8 @@ public class RhythmOverallEditActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         //返回之后，就是编码数据有所改变，从新加载rhV的显示
         if(resultCode == RESULT_CODE_RH_PURE_EDIT_DONE){
-            compoundRhythm = data.getParcelableExtra("COMPOUND_RHYTHM");
-            rhythmView.setRhythmViewData(compoundRhythm);//重新设置后会随即刷新。
+            rhythmBasedCompounds = data.getParcelableExtra("COMPOUND_RHYTHM");
+            rhythmView.setRhythmViewData(rhythmBasedCompounds);//重新设置后会随即刷新。
 
         }
         //其他控件应当不需要改变。
@@ -147,10 +147,10 @@ public class RhythmOverallEditActivity extends AppCompatActivity {
     public void editFinish(View view){
         //点击后，①保存到DB；②返回到前一页（应该是详情页）
         MyRhythmDbHelper myRhythmDbHelper = MyRhythmDbHelper.getInstance(this);
-        int affectedRows = myRhythmDbHelper.updateRhythm(compoundRhythm);
+        int affectedRows = myRhythmDbHelper.updateRhythm(rhythmBasedCompounds);
 //【如果未做出实质修改，如何避免向DB写入数据】
         Intent intentBack = new Intent();
-        intentBack.putExtra("COMPOUND_RHYTHM",compoundRhythm);
+        intentBack.putExtra("COMPOUND_RHYTHM", rhythmBasedCompounds);
         setResult(RESULT_CODE_RH_OVERALL_EDIT_DONE,intentBack);
         this.finish();
 
@@ -168,7 +168,7 @@ public class RhythmOverallEditActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        outState.putParcelable("COMPOUND_RHYTHM",compoundRhythm);
+        outState.putParcelable("COMPOUND_RHYTHM", rhythmBasedCompounds);
 
     }
     

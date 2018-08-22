@@ -16,7 +16,7 @@ import android.widget.Toast;
 import com.vkyoungcn.learningtools.myrhythm.RhythmDetailActivity;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
 import com.vkyoungcn.learningtools.myrhythm.fragments.DeleteRhythmDiaFragment;
-import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
 import com.vkyoungcn.learningtools.myrhythm.R;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
 // 采用纵向列表形式。
     private static final String TAG = "GroupsOfMissionRvAdapter";
 
-    private ArrayList<CompoundRhythm> compoundRhythms;
+    private ArrayList<RhythmBasedCompounds> compounds;
 //    private ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections;//数据源
 //    private ArrayList<Lyric> lyrics_1;//数据源-词1
 //    private ArrayList<Lyric> lyrics_2;//数据源-词2
@@ -68,7 +68,7 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
                     //进入详情页
 //                    Toast.makeText(context, "详情页施工中", Toast.LENGTH_SHORT).show();
                     Intent intentToRDA = new Intent(context, RhythmDetailActivity.class);
-                        intentToRDA.putExtra("COMPOUND_RHYTHM",compoundRhythms.get(getAdapterPosition()));
+                        intentToRDA.putExtra("COMPOUND_RHYTHM", compounds.get(getAdapterPosition()));
                     context.startActivity(intentToRDA);
                     break;
 
@@ -88,7 +88,7 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
                         Toast.makeText(context, "Old DialogFg still there, removing first...", Toast.LENGTH_SHORT).show();
                         transaction.remove(prev);
                     }
-                    DialogFragment dfg = DeleteRhythmDiaFragment.newInstance(compoundRhythms.get(getAdapterPosition()).getId());
+                    DialogFragment dfg = DeleteRhythmDiaFragment.newInstance(compounds.get(getAdapterPosition()).getId());
                     dfg.show(transaction, "DELETE_RHYTHM");
 
                     break;
@@ -115,8 +115,8 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
         }
     }
 
-    public RhythmRvAdapter(ArrayList<CompoundRhythm> compoundRhythms, Context context){
-        this.compoundRhythms = compoundRhythms;
+    public RhythmRvAdapter(ArrayList<RhythmBasedCompounds> compounds, Context context){
+        this.compounds = compounds;
         this.context = context;
     }
     /*public RhythmRvAdapter(ArrayList<ArrayList<ArrayList<Byte>>> rhythmCodesInSections, ArrayList<Lyric> lyrics_1,ArrayList<Lyric> lyrics_2,ArrayList<Integer> rhythmType, Context context) {
@@ -136,17 +136,17 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(RhythmRvAdapter.ViewHolder holder, int position) {
-        CompoundRhythm compoundRhythm = compoundRhythms.get(position);
+        RhythmBasedCompounds rhythmBasedCompounds = this.compounds.get(position);
 
-        holder.getRhv_singleLV().setRhythmViewData(compoundRhythm);
-        holder.getTv_id().setText(String.format(context.getResources().getString(R.string.plh_sharp_id),compoundRhythm.getId()));
-        holder.getTv_title().setText(compoundRhythm.getTitle());
-        holder.getTv_createTime().setText(compoundRhythm.getCreateTimeStr());
+        holder.getRhv_singleLV().setRhythmViewData(rhythmBasedCompounds);
+        holder.getTv_id().setText(String.format(context.getResources().getString(R.string.plh_sharp_id), rhythmBasedCompounds.getId()));
+        holder.getTv_title().setText(rhythmBasedCompounds.getTitle());
+        holder.getTv_createTime().setText(rhythmBasedCompounds.getCreateTimeStr());
 
     }
 
     @Override
     public int getItemCount() {
-        return compoundRhythms.size();
+        return compounds.size();
     }
 }

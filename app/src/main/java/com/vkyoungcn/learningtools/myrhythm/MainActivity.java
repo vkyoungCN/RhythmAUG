@@ -4,29 +4,20 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
-import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vkyoungcn.learningtools.myrhythm.adapter.RhythmRvAdapter;
 import com.vkyoungcn.learningtools.myrhythm.fragments.AddRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
-import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
-import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 
 /*
  * 作者：杨胜 @中国海洋大学
@@ -211,24 +202,24 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
         }
     }
 
-    private void shaftRhythms(ArrayList<CompoundRhythm> compoundRhythms){
+    private void shaftRhythms(ArrayList<RhythmBasedCompounds> compounds){
         //暂定让置顶在最前（且均按时间先后排序）
 
         //拆分两列
-        ArrayList<CompoundRhythm> tempCodes_keepTop = new ArrayList<>();
-        ArrayList<CompoundRhythm> tempCodes_UnKeepTop = new ArrayList<>();
-        for (CompoundRhythm compoundRhythm :compoundRhythms) {
-            if(compoundRhythm.isKeepTop()){tempCodes_keepTop.add(compoundRhythm);}
-            else {tempCodes_UnKeepTop.add(compoundRhythm);}
+        ArrayList<RhythmBasedCompounds> tempCodes_keepTop = new ArrayList<>();
+        ArrayList<RhythmBasedCompounds> tempCodes_UnKeepTop = new ArrayList<>();
+        for (RhythmBasedCompounds rhythmBasedCompounds : compounds) {
+            if(rhythmBasedCompounds.isKeepTop()){tempCodes_keepTop.add(rhythmBasedCompounds);}
+            else {tempCodes_UnKeepTop.add(rhythmBasedCompounds);}
         }
 
         //分别按时间排序
         Collections.sort(tempCodes_UnKeepTop,new SortByModifyTime());
         Collections.sort(tempCodes_keepTop,new SortByModifyTime());
         //然后合并
-        compoundRhythms.clear();
-        compoundRhythms.addAll(tempCodes_keepTop);
-        compoundRhythms.addAll(tempCodes_UnKeepTop);
+        compounds.clear();
+        compounds.addAll(tempCodes_keepTop);
+        compounds.addAll(tempCodes_UnKeepTop);
     }
 
 

@@ -2,13 +2,12 @@ package com.vkyoungcn.learningtools.myrhythm.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmHelper;
-import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
 
 import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.RHYTHM_PURE_EDIT_DONE;
 
@@ -21,10 +20,10 @@ public class RhythmEditFragment extends RhythmBaseEditFragment {
         // Required empty public constructor
     }
 
-    public static RhythmEditFragment newInstance(CompoundRhythm compoundRhythm) {
+    public static RhythmEditFragment newInstance(RhythmBasedCompounds rhythmBasedCompounds) {
         RhythmEditFragment fragment = new RhythmEditFragment();
         Bundle bundle = new Bundle();
-        bundle.putParcelable("RHYTHM",compoundRhythm);
+        bundle.putParcelable("RHYTHM", rhythmBasedCompounds);
         fragment.setArguments(bundle);
 
         return fragment;
@@ -34,9 +33,9 @@ public class RhythmEditFragment extends RhythmBaseEditFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            compoundRhythm = getArguments().getParcelable("RHYTHM");
-//            Log.i(TAG, "onCreate: comRh="+compoundRhythm.toString());
-            codesInSections = RhythmHelper.codeParseIntoSections(compoundRhythm.getRhythmCodeSerial(),compoundRhythm.getRhythmType());
+            rhythmBasedCompounds = getArguments().getParcelable("RHYTHM");
+//            Log.i(TAG, "onCreate: comRh="+rhythmBasedCompounds.toString());
+            codesInSections = RhythmHelper.codeParseIntoSections(rhythmBasedCompounds.getCodeSerialByte(), rhythmBasedCompounds.getRhythmType());
         }
     }
 
@@ -44,7 +43,7 @@ public class RhythmEditFragment extends RhythmBaseEditFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
 
-        rh_editor_ER.setRhythmViewData(compoundRhythm);
+        rh_editor_ER.setRhythmViewData(rhythmBasedCompounds);
 
         //设监听(只有确定是特别的)
         tv_allConfirm.setOnClickListener(new View.OnClickListener() {
@@ -53,12 +52,12 @@ public class RhythmEditFragment extends RhythmBaseEditFragment {
                 //编辑模式下，确定后，将修改完毕的ComRh发回
 
                 Bundle data = new Bundle();
-                data.putParcelable("COMPOUND_RHYTHM",compoundRhythm);
+                data.putParcelable("COMPOUND_RHYTHM", rhythmBasedCompounds);
 
                 mListener.onButtonClickingDfgInteraction(RHYTHM_PURE_EDIT_DONE,data);
 
                 Intent intentForResult = new Intent();
-                intentForResult.putExtra("COMPOUND_RHYTHM_RESULT", compoundRhythm);
+                intentForResult.putExtra("COMPOUND_RHYTHM_RESULT", rhythmBasedCompounds);
                 getActivity().setResult(701, intentForResult);
                 getActivity().finish();
             }

@@ -9,7 +9,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
-import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
 
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_EDIT;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_OVERALL_EDIT;
@@ -21,7 +21,7 @@ public class RhythmDetailActivity extends AppCompatActivity {
 * 其实这种互相关联的功能已经涉及到了创作的部分，暂时先实现记录，再谋求创作。
 * */
 
-    CompoundRhythm compoundRhythm = new CompoundRhythm();
+    RhythmBasedCompounds rhythmBasedCompounds = new RhythmBasedCompounds();
 
     /* 多线程*/
 //    private Handler handler = new RhythmDetailActivityHandler(this);//涉及弱引用，通过其发送消息。
@@ -56,9 +56,9 @@ public class RhythmDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail_rhythm);
 
         if(savedInstanceState!=null){
-            compoundRhythm = savedInstanceState.getParcelable("COMPOUND_RHYTHM");
+            rhythmBasedCompounds = savedInstanceState.getParcelable("COMPOUND_RHYTHM");
         }else {
-            compoundRhythm = getIntent().getParcelableExtra("COMPOUND_RHYTHM");
+            rhythmBasedCompounds = getIntent().getParcelableExtra("COMPOUND_RHYTHM");
         }
 
         tv_id = findViewById(R.id.tv_rhId_RDA);
@@ -85,7 +85,7 @@ public class RhythmDetailActivity extends AppCompatActivity {
     public void goEditRhythm(View view){
         //需要跳转到专用的页面进行修改【注意，这个是直接跳到对节奏编码修改的页面】
         Intent intentToRhEditor = new Intent(this,RhythmPureEditActivity.class);
-        intentToRhEditor.putExtra("COMPOUND_RHYTHM",compoundRhythm);
+        intentToRhEditor.putExtra("COMPOUND_RHYTHM", rhythmBasedCompounds);
         intentToRhEditor.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
 
         startActivityForResult(intentToRhEditor,REQUEST_CODE_RH_EDIT);
@@ -96,7 +96,7 @@ public class RhythmDetailActivity extends AppCompatActivity {
         //这个是跳到全修改页面（但是其中编码仍是展示而非修改，因为编码的修改必须要开启专用页面）
 
         Intent intentToOverallEditor = new Intent(this,RhythmOverallEditActivity.class);
-        intentToOverallEditor.putExtra("COMPOUND_RHYTHM",compoundRhythm);
+        intentToOverallEditor.putExtra("COMPOUND_RHYTHM", rhythmBasedCompounds);
         intentToOverallEditor.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
 
         startActivityForResult(intentToOverallEditor,REQUEST_CODE_RH_OVERALL_EDIT);
@@ -109,7 +109,7 @@ public class RhythmDetailActivity extends AppCompatActivity {
             //尽在edt尚未打卡时起作用
             tv_descriptions.setVisibility(View.GONE);
             edt_descriptions.setVisibility(View.VISIBLE);
-            edt_descriptions.setText(compoundRhythm.getDescription());
+            edt_descriptions.setText(rhythmBasedCompounds.getDescription());
         }
 
     }*/
@@ -121,11 +121,11 @@ public class RhythmDetailActivity extends AppCompatActivity {
         switch (resultCode){
             case RESULT_CODE_RH_OVERALL_EDIT_DONE:
                 //这个数据是传递回来的，因为本页在进入伊始就没有涉及DB
-                compoundRhythm = data.getParcelableExtra("COMPOUND_RHYTHM");
+                rhythmBasedCompounds = data.getParcelableExtra("COMPOUND_RHYTHM");
                 initUiData();//重新设置UI数据。
 
                 case RESULT_CODE_RH_PURE_EDIT_DONE:
-                rhythmView.setRhythmViewData(compoundRhythm);//只重新设置rhv的，重新设置后会随即刷新。
+                rhythmView.setRhythmViewData(rhythmBasedCompounds);//只重新设置rhv的，重新设置后会随即刷新。
 
         }
     }
@@ -134,22 +134,22 @@ public class RhythmDetailActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        outState.putParcelable("COMPOUND_RHYTHM",compoundRhythm);
+        outState.putParcelable("COMPOUND_RHYTHM", rhythmBasedCompounds);
 
     }
 
 
     private void initUiData(){
-        tv_id.setText(String.format(this.getResources().getString(R.string.plh_sharp_id), compoundRhythm.getId()));
-        tv_title.setText(compoundRhythm.getTitle());
-        tv_lastModifyTime.setText(compoundRhythm.getLastModifyTimeStr());
+        tv_id.setText(String.format(this.getResources().getString(R.string.plh_sharp_id), rhythmBasedCompounds.getId()));
+        tv_title.setText(rhythmBasedCompounds.getTitle());
+        tv_lastModifyTime.setText(rhythmBasedCompounds.getLastModifyTimeStr());
 
-        tv_descriptions.setText(compoundRhythm.getDescription());
-        tv_stars.setText(String.format(getResources().getString(R.string.plh_stars_num),compoundRhythm.getStars()));
-        ckb_selfDesign.setChecked(compoundRhythm.isSelfDesign());
-        ckb_keepTop.setChecked(compoundRhythm.isKeepTop());
+        tv_descriptions.setText(rhythmBasedCompounds.getDescription());
+        tv_stars.setText(String.format(getResources().getString(R.string.plh_stars_num), rhythmBasedCompounds.getStars()));
+        ckb_selfDesign.setChecked(rhythmBasedCompounds.isSelfDesign());
+        ckb_keepTop.setChecked(rhythmBasedCompounds.isKeepTop());
 
-        rhythmView.setRhythmViewData(compoundRhythm,22,24,24);//比默认的尺寸（18/20/20）稍大
+        rhythmView.setRhythmViewData(rhythmBasedCompounds,22,24,24);//比默认的尺寸（18/20/20）稍大
     }
 
 }

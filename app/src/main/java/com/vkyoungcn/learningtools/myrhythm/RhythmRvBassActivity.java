@@ -3,19 +3,13 @@ package com.vkyoungcn.learningtools.myrhythm;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 
 import com.vkyoungcn.learningtools.myrhythm.adapter.RhythmRvAdapter;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
-import com.vkyoungcn.learningtools.myrhythm.models.CompoundRhythm;
-import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -24,7 +18,7 @@ public class RhythmRvBassActivity extends RvBassActivity implements OnGeneralDfg
     private static final String TAG = "RhythmRvBassActivity";
     /* 基类的部分字段实现为具体类型的字段*/
     RhythmRvAdapter adapter;
-    ArrayList<CompoundRhythm> dataFetched;
+    ArrayList<RhythmBasedCompounds> dataFetched;
 
     Handler handler = new RvBassActivityHandler(this);
 
@@ -55,8 +49,8 @@ public class RhythmRvBassActivity extends RvBassActivity implements OnGeneralDfg
 
     class SortByModifyTime implements Comparator {
         public int compare(Object o1, Object o2) {
-            CompoundRhythm s1 = (CompoundRhythm) o1;
-            CompoundRhythm s2 = (CompoundRhythm) o2;
+            RhythmBasedCompounds s1 = (RhythmBasedCompounds) o1;
+            RhythmBasedCompounds s2 = (RhythmBasedCompounds) o2;
             return -Long.compare(s1.getLastModifyTime(), s2.getLastModifyTime());
             //降序
         }
