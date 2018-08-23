@@ -14,7 +14,7 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.fragments.AddRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -69,28 +69,17 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
     }
 
 
-    //在本实现类中对获取数据线程进行功能特化
-    private class FetchDataRunnable implements Runnable{
-        @Override
-        public void run() {
-            //获取数据
-            dataFetched = rhythmDbHelper.getTopKeepCompoundRhythmsOrModifiedLaterThan(timeThreshold) ;
-
-            //对返回的节奏进行排序（置顶的在最上，其余按时间，越近越先）
-            shaftRhythms(dataFetched);
-
-            //获取总量数字
-            rhythmsAllAmount = rhythmDbHelper.getAmountOfRhythms();//有一个控件需要使用节奏总数量
-
-            //然后封装消息
-            Message message = new Message();
-            message.what = MESSAGE_PRE_DB_FETCHED;
-            //数据通过全局变量直接传递。
-
-            handler.sendMessage(message);
-        }
+    void fetchAndSort() {
+        //获取数据
+        dataFetched = rhythmDbHelper.getTopKeepCompoundRhythmsOrModifiedLaterThan(timeThreshold) ;
+        //对返回的节奏进行排序（置顶的在最上，其余按时间，越近越先）
+        shaftRhythms(dataFetched);
+        //获取总量数字
+        rhythmsAllAmount = rhythmDbHelper.getAmountOfRhythms();//有一个控件需要使用节奏总数量
     }
-    /*
+
+
+        /*
      * 当Fab按键系统的主按钮点击时调用
      *
      * ①根据标志变量判定Fab组是否处于展开状态（未展开则展开）
@@ -138,6 +127,11 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
     public void toAllRhythms(View view){
         Intent intentToAllRhs = new Intent(this,AllRhythmsActivity.class);
         this.startActivity(intentToAllRhs);
+    }
+
+    public void toGroups(View view){
+        Intent intentToAllGroups = new Intent(this,AllGroupsActivity.class);
+        this.startActivity(intentToAllGroups);
     }
 
 
@@ -202,15 +196,15 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
         }
     }
 
-    private void shaftRhythms(ArrayList<RhythmBasedCompounds> compounds){
+    private void shaftRhythms(ArrayList<RhythmBasedCompound> compounds){
         //暂定让置顶在最前（且均按时间先后排序）
 
         //拆分两列
-        ArrayList<RhythmBasedCompounds> tempCodes_keepTop = new ArrayList<>();
-        ArrayList<RhythmBasedCompounds> tempCodes_UnKeepTop = new ArrayList<>();
-        for (RhythmBasedCompounds rhythmBasedCompounds : compounds) {
-            if(rhythmBasedCompounds.isKeepTop()){tempCodes_keepTop.add(rhythmBasedCompounds);}
-            else {tempCodes_UnKeepTop.add(rhythmBasedCompounds);}
+        ArrayList<RhythmBasedCompound> tempCodes_keepTop = new ArrayList<>();
+        ArrayList<RhythmBasedCompound> tempCodes_UnKeepTop = new ArrayList<>();
+        for (RhythmBasedCompound rhythmBasedCompound : compounds) {
+            if(rhythmBasedCompound.isKeepTop()){tempCodes_keepTop.add(rhythmBasedCompound);}
+            else {tempCodes_UnKeepTop.add(rhythmBasedCompound);}
         }
 
         //分别按时间排序

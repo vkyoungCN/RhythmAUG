@@ -75,5 +75,8 @@
     <string name="plh_beat_value">基本拍子(X)值=%1$d</string>
     <string name="plh_section_value">小节总值=%1$d</string>
     <string name="plh_currentPlaceRest_value">当前位置可用总值=%1$d</string>
+    <string name="str_toAllGroups">所有分组</string>
+    <string name="all_groups">所有分组</string>
+    <string name="all_resources">所有资源（通用标题）</string>
 
 </resources>

@@ -138,13 +138,23 @@
                 android:text="@string/psh_totalRhythmAmount"
                 />
             <TextView
-                android:layout_width="96dp"
+                android:layout_width="86dp"
                 android:layout_height="match_parent"
                 android:layout_gravity="end"
+                android:layout_marginEnd="87dp"
                 android:gravity="center"
                 android:text="@string/str_toAllRhythms"
                 android:background="@color/myRhythm_teal"
                 android:onClick="toAllRhythms"
+                />
+            <TextView
+                android:layout_width="86dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:gravity="center"
+                android:text="@string/str_toAllGroups"
+                android:background="@color/myRhythm_orange"
+                android:onClick="toGroups"
                 />
             <TextView
                 android:layout_width="match_parent"

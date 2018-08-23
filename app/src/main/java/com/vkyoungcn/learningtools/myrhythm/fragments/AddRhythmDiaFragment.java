@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
 
 /*
  * 作者：杨胜 @中国海洋大学
@@ -90,22 +91,22 @@ public class AddRhythmDiaFragment extends DialogFragment
                 Bundle data = new Bundle();
 
                 //获取设置的节奏类型
-                int rhythmType = Rhythm.RHYTHM_TYPE_44;//默认四四拍
+                int rhythmType = RhythmHelper.RHYTHM_TYPE_44;//默认四四拍
                 switch(rgp_rhythmType.getCheckedRadioButtonId()){
                     case R.id.rb_24_addRhDfg:
-                        rhythmType = Rhythm.RHYTHM_TYPE_24;
+                        rhythmType = RhythmHelper.RHYTHM_TYPE_24;
                         break;
                     case R.id.rb_34_addRhDfg:
-                        rhythmType = Rhythm.RHYTHM_TYPE_34;
+                        rhythmType = RhythmHelper.RHYTHM_TYPE_34;
                         break;
                     case R.id.rb_44_addRhDfg:
-                        rhythmType = Rhythm.RHYTHM_TYPE_44;
+                        rhythmType = RhythmHelper.RHYTHM_TYPE_44;
                         break;
                     case R.id.rb_38_addRhDfg:
-                        rhythmType = Rhythm.RHYTHM_TYPE_38;
+                        rhythmType = RhythmHelper.RHYTHM_TYPE_38;
                         break;
                     case R.id.rb_68_addRhDfg:
-                        rhythmType = Rhythm.RHYTHM_TYPE_68;
+                        rhythmType = RhythmHelper.RHYTHM_TYPE_68;
                         break;
                 }
 

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:id="@+id/llt_overall_generalRv"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp"
+        >
+        <TextView
+            android:id="@+id/tv_rhId_generalRv"
+            android:layout_width="32dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/str_sharp2"
+            />
+        <TextView
+            android:id="@+id/tv_title_generalRv"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:textSize="16sp"
+            android:gravity="start|center_vertical"
+            android:textColor="@color/myRhythm_orange"
+            android:text="@string/str_sharp8"
+            />
+
+        <TextView
+            android:id="@+id/tv_createTime_generalRv"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/str_sharp8"
+            />
+
+    </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#f5f5f5"
+        />
+   <View
+       android:id="@+id/rhView_mainModel_generalRv"
+       android:layout_width="match_parent"
+       android:layout_height="92dp"
+       />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
+        android:background="#e0e0e0"
+        />
+
+
+
+</LinearLayout>

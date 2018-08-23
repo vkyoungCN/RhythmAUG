@@ -5,16 +5,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import java.util.ArrayList;
 
 import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.RHYTHM_CREATE_EDITED;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_24;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_34;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_24;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_34;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_38;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_44;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_68;
 
 
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
@@ -43,7 +43,7 @@ public class RhythmCreateFragment extends RhythmBaseEditFragment {
         if (getArguments() != null) {
             rhythmType = getArguments().getInt("RHYTHM_TYPE",44);
 
-            switch (rhythmBasedCompounds.getRhythmType()) {
+            switch (rhythmBasedCompound.getRhythmType()) {
                 case RHYTHM_TYPE_24:
                     //此时beat值==16无需修改
                     valueOfSection =32;
@@ -79,9 +79,9 @@ public class RhythmCreateFragment extends RhythmBaseEditFragment {
             }
             codesInSections.add(firstSection);
 
-            rhythmBasedCompounds = new RhythmBasedCompounds();
+            rhythmBasedCompound = new RhythmBasedCompound();
             //暂时只需要节奏欧的两项数据。(其中序列数据等最后编辑完成后再添加，而向RHV传递的编码按列表传递即可)
-            rhythmBasedCompounds.setRhythmType(rhythmType);
+            rhythmBasedCompound.setRhythmType(rhythmType);
 
         }
     }
@@ -100,10 +100,10 @@ public class RhythmCreateFragment extends RhythmBaseEditFragment {
                 for (ArrayList<Byte> codes_section:codesInSections) {
                     codes.addAll(codes_section);
                 }
-                rhythmBasedCompounds.setCodeSerialByte(codes);
+                rhythmBasedCompound.setCodeSerialByte(codes);
 
                 Bundle data = new Bundle();
-                data.putParcelable("COMPOUND_RHYTHM", rhythmBasedCompounds);
+                data.putParcelable("COMPOUND_RHYTHM", rhythmBasedCompound);
 
                 mListener.onButtonClickingDfgInteraction(RHYTHM_CREATE_EDITED,data);
 

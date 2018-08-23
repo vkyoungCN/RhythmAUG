@@ -6,7 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
 
 import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.RHYTHM_PURE_EDIT_DONE;
@@ -20,10 +20,10 @@ public class RhythmEditFragment extends RhythmBaseEditFragment {
         // Required empty public constructor
     }
 
-    public static RhythmEditFragment newInstance(RhythmBasedCompounds rhythmBasedCompounds) {
+    public static RhythmEditFragment newInstance(RhythmBasedCompound rhythmBasedCompound) {
         RhythmEditFragment fragment = new RhythmEditFragment();
         Bundle bundle = new Bundle();
-        bundle.putParcelable("RHYTHM", rhythmBasedCompounds);
+        bundle.putParcelable("RHYTHM", rhythmBasedCompound);
         fragment.setArguments(bundle);
 
         return fragment;
@@ -33,9 +33,9 @@ public class RhythmEditFragment extends RhythmBaseEditFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            rhythmBasedCompounds = getArguments().getParcelable("RHYTHM");
-//            Log.i(TAG, "onCreate: comRh="+rhythmBasedCompounds.toString());
-            codesInSections = RhythmHelper.codeParseIntoSections(rhythmBasedCompounds.getCodeSerialByte(), rhythmBasedCompounds.getRhythmType());
+            rhythmBasedCompound = getArguments().getParcelable("RHYTHM");
+//            Log.i(TAG, "onCreate: comRh="+rhythmBasedCompound.toString());
+            codesInSections = RhythmHelper.codeParseIntoSections(rhythmBasedCompound.getCodeSerialByte(), rhythmBasedCompound.getRhythmType());
         }
     }
 
@@ -43,7 +43,7 @@ public class RhythmEditFragment extends RhythmBaseEditFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
 
-        rh_editor_ER.setRhythmViewData(rhythmBasedCompounds);
+        rh_editor_ER.setRhythmViewData(rhythmBasedCompound);
 
         //设监听(只有确定是特别的)
         tv_allConfirm.setOnClickListener(new View.OnClickListener() {
@@ -52,12 +52,12 @@ public class RhythmEditFragment extends RhythmBaseEditFragment {
                 //编辑模式下，确定后，将修改完毕的ComRh发回
 
                 Bundle data = new Bundle();
-                data.putParcelable("COMPOUND_RHYTHM", rhythmBasedCompounds);
+                data.putParcelable("COMPOUND_RHYTHM", rhythmBasedCompound);
 
                 mListener.onButtonClickingDfgInteraction(RHYTHM_PURE_EDIT_DONE,data);
 
                 Intent intentForResult = new Intent();
-                intentForResult.putExtra("COMPOUND_RHYTHM_RESULT", rhythmBasedCompounds);
+                intentForResult.putExtra("COMPOUND_RHYTHM_RESULT", rhythmBasedCompound);
                 getActivity().setResult(701, intentForResult);
                 getActivity().finish();
             }

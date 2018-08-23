@@ -14,7 +14,7 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor;
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +43,7 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
     OnGeneralDfgInteraction mListener;
 
 
-    RhythmBasedCompounds rhythmBasedCompounds;//【新建不需传递cr但会通过rhythmType构建一个新的comRh；
+    RhythmBasedCompound rhythmBasedCompound;//【新建不需传递cr但会通过rhythmType构建一个新的comRh；
     // 编辑需要传递comRh。无论如何，都需要将comRh提交给editor】
 //    int rhythmType;
     ArrayList<Byte> codes = new ArrayList<>();//都需要对comRh的编码序列进行编辑
@@ -121,10 +121,10 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
         // Required empty public constructor
     }
 
-    public static RhythmBaseEditFragment newInstance(RhythmBasedCompounds rhythmBasedCompounds) {
+    public static RhythmBaseEditFragment newInstance(RhythmBasedCompound rhythmBasedCompound) {
         RhythmBaseEditFragment fragment = new RhythmBaseEditFragment();
         Bundle bundle = new Bundle();
-        bundle.putParcelable("RHYTHM", rhythmBasedCompounds);
+        bundle.putParcelable("RHYTHM", rhythmBasedCompound);
         fragment.setArguments(bundle);
 
         return fragment;
@@ -255,16 +255,16 @@ public class RhythmBaseEditFragment extends Fragment implements View.OnClickList
         tv_xm1.setText(String.valueOf(valueOfBeat/2));
         tv_xm2.setText(String.valueOf(valueOfBeat/4));
 
-        tv_InfoRhType.setText(String.format(getContext().getResources().getString(R.string.plh_rh_type), rhythmBasedCompounds.getRhythmType()));
+        tv_InfoRhType.setText(String.format(getContext().getResources().getString(R.string.plh_rh_type), rhythmBasedCompound.getRhythmType()));
         tv_InfoBV.setText(String.format(getContext().getResources().getString(R.string.plh_beat_value),valueOfBeat));
         //onCV在onC之后(在实现类中，onC之后就已经初始化了cRh和编码因而可以设置下列值)
-//        Log.i(TAG, "onCreateView: comRh="+rhythmBasedCompounds.toString());
+//        Log.i(TAG, "onCreateView: comRh="+rhythmBasedCompound.toString());
         checkCodeValue(codesInSections.get(0).get(0));
         tv_InfoSV.setText(String.format(getContext().getResources().getString(R.string.plh_section_value),valueOfSection));
         tv_InfoCPRV.setText(String.format(getContext().getResources().getString(R.string.plh_currentPlaceRest_value),availableValue));
 
 
-//        rh_editor_ER.setRhythm(rhythmBasedCompounds);rh编辑器的设置由实现类负责
+//        rh_editor_ER.setRhythm(rhythmBasedCompound);rh编辑器的设置由实现类负责
 
         return rootView;
 

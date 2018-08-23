@@ -15,11 +15,11 @@ import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 
 import java.util.ArrayList;
 
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_24;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_34;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_24;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_34;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_38;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_44;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_68;
 
 public class RhythmSingleLineEditor extends RhythmSingleLineView{
 //* 如果数据源为空，自动显示一个空的小节；如果有数据显示数据，并将第一音符标蓝框；

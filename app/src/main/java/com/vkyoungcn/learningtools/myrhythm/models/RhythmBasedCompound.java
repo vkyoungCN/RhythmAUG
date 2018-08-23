@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class RhythmBasedCompounds extends Rhythm {
+public class RhythmBasedCompound extends Rhythm {
 // ①是同时包含节奏所有字段，以及两行歌词（的字串字段，可空）、一列音调序列（的编码字段，可空）的
 // 混合体资源的简化版（毕竟不是把三种资源类所有字段都包含进来）。
 // 基于节奏进行扩展是因为程序在业务设计上仍然是围绕“节奏”为中心展开的，节奏暂时作为主要资源，
@@ -17,7 +17,7 @@ public class RhythmBasedCompounds extends Rhythm {
     /* */
     SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    /* 以下5个特有字段（只有getter，没有setter）*/
+    /* 以下5个特有字段（具备自动联动能力的字段可以没有setter；但其他三个字段要有setter，否则无法设置值）*/
     private String primaryLyricSerial = "";
     private String secondLyricSerial = "";
 
@@ -27,11 +27,11 @@ public class RhythmBasedCompounds extends Rhythm {
     private String lastModifyTimeStr = "";
 
 
-    public RhythmBasedCompounds() {
+    public RhythmBasedCompound() {
     }
 
     /* byte编码留空，通过string编码设置后自动生成的构造器*/
-    public RhythmBasedCompounds(int id, String title, String codeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int stars, int rhythmType, int primaryLyricId, int secondLyricId, int pitchesId, String primaryLyricSerial, String secondLyricSerial, ArrayList<Byte> pitchesSequence) {
+    public RhythmBasedCompound(int id, String title, String codeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int stars, int rhythmType, int primaryLyricId, int secondLyricId, int pitchesId, String primaryLyricSerial, String secondLyricSerial, ArrayList<Byte> pitchesSequence) {
         super(id, title, codeSerial, description, isSelfDesign, keepTop, createTime, lastModifyTime, stars, rhythmType, primaryLyricId, secondLyricId, pitchesId);
         this.primaryLyricSerial = primaryLyricSerial;
         this.secondLyricSerial = secondLyricSerial;
@@ -41,7 +41,7 @@ public class RhythmBasedCompounds extends Rhythm {
     }
 
     /* 完全字段构造器*/
-    public RhythmBasedCompounds(int id, String title, String codeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int stars, ArrayList<Byte> codeSerialByte, int rhythmType, int primaryLyricId, int secondLyricId, int pitchesId, String primaryLyricSerial, String secondLyricSerial, ArrayList<Byte> pitchesSequence, String createTimeStr, String lastModifyTimeStr) {
+    public RhythmBasedCompound(int id, String title, String codeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int stars, ArrayList<Byte> codeSerialByte, int rhythmType, int primaryLyricId, int secondLyricId, int pitchesId, String primaryLyricSerial, String secondLyricSerial, ArrayList<Byte> pitchesSequence, String createTimeStr, String lastModifyTimeStr) {
         super(id, title, codeSerial, description, isSelfDesign, keepTop, createTime, lastModifyTime, stars, codeSerialByte, rhythmType, primaryLyricId, secondLyricId, pitchesId);
         this.primaryLyricSerial = primaryLyricSerial;
         this.secondLyricSerial = secondLyricSerial;
@@ -50,6 +50,17 @@ public class RhythmBasedCompounds extends Rhythm {
         setLastModifyTimeStrFromLong(lastModifyTime);
     }
 
+    public void setPrimaryLyricSerial(String primaryLyricSerial) {
+        this.primaryLyricSerial = primaryLyricSerial;
+    }
+
+    public void setSecondLyricSerial(String secondLyricSerial) {
+        this.secondLyricSerial = secondLyricSerial;
+    }
+
+    public void setLinkingPitches(ArrayList<Byte> linkingPitches) {
+        this.linkingPitches = linkingPitches;
+    }
 
     public String getPrimaryLyricSerial() {
         return primaryLyricSerial;
@@ -116,19 +127,19 @@ public class RhythmBasedCompounds extends Rhythm {
 
     }
 
-    public static final Creator<RhythmBasedCompounds> CREATOR = new Creator<RhythmBasedCompounds>(){
+    public static final Creator<RhythmBasedCompound> CREATOR = new Creator<RhythmBasedCompound>(){
         @Override
-        public RhythmBasedCompounds createFromParcel(Parcel parcel) {
-            return new RhythmBasedCompounds(parcel);
+        public RhythmBasedCompound createFromParcel(Parcel parcel) {
+            return new RhythmBasedCompound(parcel);
         }
 
         @Override
-        public RhythmBasedCompounds[] newArray(int size) {
-            return new RhythmBasedCompounds[size];
+        public RhythmBasedCompound[] newArray(int size) {
+            return new RhythmBasedCompound[size];
         }
     };
 
-    private RhythmBasedCompounds(Parcel in){
+    private RhythmBasedCompound(Parcel in){
         super(in);
 
         primaryLyricSerial = in.readString();

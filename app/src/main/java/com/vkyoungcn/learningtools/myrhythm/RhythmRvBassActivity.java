@@ -2,24 +2,17 @@ package com.vkyoungcn.learningtools.myrhythm;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.support.v7.widget.LinearLayoutManager;
-import android.view.View;
 
-import com.vkyoungcn.learningtools.myrhythm.adapter.RhythmRvAdapter;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
 public class RhythmRvBassActivity extends RvBassActivity implements OnGeneralDfgInteraction {
     private static final String TAG = "RhythmRvBassActivity";
     /* 基类的部分字段实现为具体类型的字段*/
-    RhythmRvAdapter adapter;
-    ArrayList<RhythmBasedCompounds> dataFetched;
-
     Handler handler = new RvBassActivityHandler(this);
 
 
@@ -30,57 +23,34 @@ public class RhythmRvBassActivity extends RvBassActivity implements OnGeneralDfg
 
     }
 
-    class FetchDataRunnable implements Runnable{
-        @Override
-        public void run() {
-            dataFetched = rhythmDbHelper.getAllCompoundRhythms() ;
 
-            //对返回的节奏进行排序（按修改时间降序？）
-            Collections.sort(dataFetched,new SortByModifyTime());
-
-            //然后封装消息
-            Message message = new Message();
-            message.what = MESSAGE_PRE_DB_FETCHED;
-            //数据通过全局变量直接传递。
-
-            handler.sendMessage(message);
-        }
+    void fetchAndSort(){
+        //获取节奏数据
+        dataFetched = rhythmDbHelper.getAllCompoundRhythms() ;
+        //对返回的节奏进行排序（按修改时间降序？）
+        Collections.sort(dataFetched,new SortByModifyTime());
     }
+
 
     class SortByModifyTime implements Comparator {
         public int compare(Object o1, Object o2) {
-            RhythmBasedCompounds s1 = (RhythmBasedCompounds) o1;
-            RhythmBasedCompounds s2 = (RhythmBasedCompounds) o2;
+            RhythmBasedCompound s1 = (RhythmBasedCompound) o1;
+            RhythmBasedCompound s2 = (RhythmBasedCompound) o2;
             return -Long.compare(s1.getLastModifyTime(), s2.getLastModifyTime());
             //降序
         }
     }
 
 
-
-    void handleMessage(Message message) {
-        switch (message.what){
-            case MESSAGE_PRE_DB_FETCHED:
-                //取消上方遮罩
-                if(maskView.getVisibility() == View.VISIBLE) {
-                    maskView.setVisibility(View.GONE);
-                }
-                //初始化Rv构造器，令UI加载Rv控件……
-                adapter = new RhythmRvAdapter(dataFetched,this) ;
+    @Override
+    void loadAdapter() {
+        //初始化Rv构造器，令UI加载Rv控件……
+        adapter = new RhythmRvAdapter(dataFetched,this) ;
 //                Log.i(TAG, "handleMessage:dataFetched="+dataFetched.toString());
-                mRv.setLayoutManager(new LinearLayoutManager(this));
-                mRv.setAdapter(adapter);
-
-                break;
-            case MESSAGE_RE_FETCHED:
-                //取消遮罩、更新rv数据
-                if(maskView.getVisibility() == View.VISIBLE) {
-                    maskView.setVisibility(View.GONE);
-                }
-                adapter.notifyDataSetChanged();
-                break;
-        }
+        mRv.setLayoutManager(new LinearLayoutManager(this));
+        mRv.setAdapter(adapter);
     }
+
 
     @Override
     public void onButtonClickingDfgInteraction(int dfgType, Bundle data) {

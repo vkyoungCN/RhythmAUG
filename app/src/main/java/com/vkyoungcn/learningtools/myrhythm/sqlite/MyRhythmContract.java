@@ -67,6 +67,21 @@ public class MyRhythmContract {
     }
 
 
+
+    /* 分组表*/
+    public static class Group implements BaseColumns {
+        public static final String TABLE_NAME = "pitches";
+        public static final String COLUMN_TITLE ="title";
+        public static final String COLUMN_DESCRIPTION = "description";
+//        public static final String COLUMN_CODES = "pitch_serial";
+        public static final String COLUMN_STAR = "star";
+        public static final String COLUMN_SELF_DESIGN = "self_design";
+        public static final String COLUMN_KEEP_TOP = "keep_top";
+        public static final String COLUMN_CREATE_TIME = "create_time";
+        public static final String COLUMN_LAST_MODIFY_TIME = "last_modify_time";
+    }
+
+
     /* 操作记录表*/
     public static class ActionRecord implements BaseColumns {
         public static final String TABLE_NAME = "action_records";

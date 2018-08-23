@@ -7,23 +7,24 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
 import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
-public class RvBassActivity extends AppCompatActivity {
+public class RvBassActivity<T extends BaseModel,K extends RecyclerView.Adapter > extends AppCompatActivity {
     public static final int MESSAGE_PRE_DB_FETCHED = 5505;
     public static final int MESSAGE_RE_FETCHED = 5506;
 
     RecyclerView mRv;
-    RecyclerView.Adapter adapter;
+    K adapter;
     View maskView;
 
 
     MyRhythmDbHelper rhythmDbHelper;
 
-    ArrayList<Object> dataFetched;
+    ArrayList<T> dataFetched;//T是BM的子类，使用泛型使dataFetched可以指向AL<Rhythm>等类型的列表。
     Handler handler = new RvBassActivityHandler(this);//涉及弱引用，通过其发送消息。
 
 
@@ -41,6 +42,7 @@ public class RvBassActivity extends AppCompatActivity {
     class FetchDataRunnable implements Runnable{
         @Override
         public void run() {
+            fetchAndSort();//子类可以通过覆写该方法实现自定义行为
 
             //然后封装消息
             Message message = new Message();
@@ -52,6 +54,9 @@ public class RvBassActivity extends AppCompatActivity {
         }
     }
 
+    void fetchAndSort(){
+
+    }
 
     final static class RvBassActivityHandler extends Handler {
         final WeakReference<RvBassActivity> activityWeakReference;
@@ -70,9 +75,30 @@ public class RvBassActivity extends AppCompatActivity {
     }
 
     void handleMessage(Message message) {
-        //基础基类的实现只负责取消上方遮罩
-        if(maskView.getVisibility() == View.VISIBLE) {
-            maskView.setVisibility(View.GONE);
+        switch (message.what){
+            case MESSAGE_PRE_DB_FETCHED:
+                //取消上方遮罩
+                if(maskView.getVisibility() == View.VISIBLE) {
+                    maskView.setVisibility(View.GONE);
+                }
+
+                //为mRv加载adapter
+                loadAdapter();
+
+                break;
+            case MESSAGE_RE_FETCHED:
+                //取消遮罩、更新rv数据
+                if(maskView.getVisibility() == View.VISIBLE) {
+                    maskView.setVisibility(View.GONE);
+                }
+                adapter.notifyDataSetChanged();
+                break;
         }
+
     }
+
+    void loadAdapter(){
+        //子类负责实现
+    };
+
 }

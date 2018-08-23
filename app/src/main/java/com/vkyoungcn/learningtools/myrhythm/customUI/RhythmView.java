@@ -12,7 +12,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
 
 import java.util.ArrayList;
@@ -388,16 +388,16 @@ public class RhythmView extends View {
 
 
 
-    public void setRhythmViewData(RhythmBasedCompounds rhythmBasedCompounds){
-//        Log.i(TAG, "setRhythmViewData: cRh="+rhythmBasedCompounds.toString());
-        setRhythmViewData(RhythmHelper.codeParseIntoSections(rhythmBasedCompounds.getCodeSerialByte(), rhythmBasedCompounds.getRhythmType()),
-                rhythmBasedCompounds.getRhythmType(), rhythmBasedCompounds.getPrimaryLyricSerial(), rhythmBasedCompounds.getSecondLyricSerial(),
+    public void setRhythmViewData(RhythmBasedCompound rhythmBasedCompound){
+//        Log.i(TAG, "setRhythmViewData: cRh="+rhythmBasedCompound.toString());
+        setRhythmViewData(RhythmHelper.codeParseIntoSections(rhythmBasedCompound.getCodeSerialByte(), rhythmBasedCompound.getRhythmType()),
+                rhythmBasedCompound.getRhythmType(), rhythmBasedCompound.getPrimaryLyricSerial(), rhythmBasedCompound.getSecondLyricSerial(),
                 18,20,20);
     }
 
-    public void setRhythmViewData(RhythmBasedCompounds rhythmBasedCompounds, int codeSize, int unitWidth, int unitHeight){
-        setRhythmViewData(RhythmHelper.codeParseIntoSections(rhythmBasedCompounds.getCodeSerialByte(), rhythmBasedCompounds.getRhythmType()),
-                rhythmBasedCompounds.getRhythmType(), rhythmBasedCompounds.getPrimaryLyricSerial(), rhythmBasedCompounds.getSecondLyricSerial(),
+    public void setRhythmViewData(RhythmBasedCompound rhythmBasedCompound, int codeSize, int unitWidth, int unitHeight){
+        setRhythmViewData(RhythmHelper.codeParseIntoSections(rhythmBasedCompound.getCodeSerialByte(), rhythmBasedCompound.getRhythmType()),
+                rhythmBasedCompound.getRhythmType(), rhythmBasedCompound.getPrimaryLyricSerial(), rhythmBasedCompound.getSecondLyricSerial(),
                 codeSize,unitWidth,unitHeight);
     }
     /* 一个简化的外部设置方法，采用默认调校好的尺寸大小*/

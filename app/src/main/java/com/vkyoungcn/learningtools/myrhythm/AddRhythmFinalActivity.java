@@ -15,16 +15,16 @@ import android.widget.Toast;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
 import com.vkyoungcn.learningtools.myrhythm.fragments.FinalAddRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompounds;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_DONE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_FAILURE;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_24;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_34;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_38;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_44;
-import static com.vkyoungcn.learningtools.myrhythm.models.Rhythm.RHYTHM_TYPE_68;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_24;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_34;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_38;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_44;
+import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_68;
 
 public class AddRhythmFinalActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
 
@@ -36,7 +36,7 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
     private EditText edt_description;
     private TextView tv_confirm;
 
-    private RhythmBasedCompounds rhythmBasedCompounds;
+    private RhythmBasedCompound rhythmBasedCompound;
 
 
     //操作结果，是否成功（根据DB返回确定）
@@ -58,17 +58,17 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
         tv_confirm = findViewById(R.id.tv_confirm_ARFA);
 
         Bundle bundle = getIntent().getBundleExtra("COMPOUND_RHYTHM_BUNDLE");
-        rhythmBasedCompounds = bundle.getParcelable("COMPOUND_RHYTHM");
+        rhythmBasedCompound = bundle.getParcelable("COMPOUND_RHYTHM");
 
-        if(rhythmBasedCompounds == null){
+        if(rhythmBasedCompound == null){
             Toast.makeText(this, "出错，节奏数据传递为空", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        rhythmView.setRhythmViewData(rhythmBasedCompounds);
+        rhythmView.setRhythmViewData(rhythmBasedCompound);
 
         String strRhythmType = "";
-        switch (rhythmBasedCompounds.getRhythmType()){
+        switch (rhythmBasedCompound.getRhythmType()){
             case RHYTHM_TYPE_24:
                 strRhythmType = "2/4";
                 break;
@@ -91,18 +91,18 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
         tv_confirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                rhythmBasedCompounds.setSelfDesign(ckb_selfDesign.isChecked());
-                rhythmBasedCompounds.setKeepTop(ckb_keepTop.isChecked());
-                rhythmBasedCompounds.setStars(Integer.parseInt((String)(spinner.getSelectedItem())));
-                rhythmBasedCompounds.setDescription(edt_description.getText().toString());//一定非null
+                rhythmBasedCompound.setSelfDesign(ckb_selfDesign.isChecked());
+                rhythmBasedCompound.setKeepTop(ckb_keepTop.isChecked());
+                rhythmBasedCompound.setStars(Integer.parseInt((String)(spinner.getSelectedItem())));
+                rhythmBasedCompound.setDescription(edt_description.getText().toString());//一定非null
 
                 long currentTime = System.currentTimeMillis();
-                rhythmBasedCompounds.setCreateTime(currentTime);
-                rhythmBasedCompounds.setLastModifyTime(currentTime);//二者严格一致
+                rhythmBasedCompound.setCreateTime(currentTime);
+                rhythmBasedCompound.setLastModifyTime(currentTime);//二者严格一致
 
                 //向DB填入
                 MyRhythmDbHelper dbHelper = MyRhythmDbHelper.getInstance(getApplicationContext());
-                long l = dbHelper.createRhythm(rhythmBasedCompounds);
+                long l = dbHelper.createRhythm(rhythmBasedCompound);
                 //根据返回的结果（布尔值——成败。），向dfg传递成功或失败。
                 if(l<0){
                     //失败

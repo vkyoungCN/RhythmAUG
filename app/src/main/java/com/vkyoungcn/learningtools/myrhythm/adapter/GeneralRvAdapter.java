@@ -1,5 +1,9 @@
 package com.vkyoungcn.learningtools.myrhythm.adapter;
 
+import android.app.Activity;
+import android.app.DialogFragment;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -7,9 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
+import com.vkyoungcn.learningtools.myrhythm.fragments.DeleteRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.helper.LongClickDeleteListener;
 import com.vkyoungcn.learningtools.myrhythm.helper.ToDetailClickListener;
 import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
@@ -24,26 +30,25 @@ import java.util.ArrayList;
  * email: yangsheng@ouc.edu.cn
  * 2018.08.23
  * */
-public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHolder>{
-//这个东西很难设计为继承啊？！尝试一天，失败告终（仅剩的成果是把监听独立了出去）
-    //* 是展示任务所属分组的RecyclerView所使用的适配器
+public class GeneralRvAdapter<T extends BaseModel> extends RecyclerView.Adapter<GeneralRvAdapter.ViewHolder>{
+//* 是展示任务所属分组的RecyclerView所使用的适配器
 // 采用纵向列表形式。
-    static final String TAG = "RhythmRvAdapter";
-    ArrayList<RhythmBasedCompound> dataList;
+    static final String TAG = "GeneralRvAdapter";
+    ArrayList<T> dataList;
     Context context;
-    RhythmBasedCompound singleModel;
+    T singleModel;
 
     class ViewHolder extends RecyclerView.ViewHolder{
         private final TextView tv_id;
         private final TextView tv_title;
         private final TextView tv_createTime;
         private final LinearLayout llt_overall;
-        private final RhythmSingleLineView mainModelView; //主要就是这个很难处理，VH这种内部类如何继承是个问题（暂未掌握，或者根本没法继承）
+//        private final View mainModelView;
 
         private ViewHolder(View itemView) {
             super(itemView);
 
-            mainModelView = itemView.findViewById(R.id.rhView_mainModel_generalRv);【这里需要改写布局，布局需要换成rh版专用】
+//            mainModelView = itemView.findViewById(R.id.rhView_mainModel_generalRv);
             tv_id = itemView.findViewById(R.id.tv_rhId_generalRv);
             tv_title = itemView.findViewById(R.id.tv_title_generalRv);
             tv_createTime = itemView.findViewById(R.id.tv_createTime_generalRv);
@@ -65,18 +70,14 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
         public TextView getTv_createTime() {
             return tv_createTime;
         }
-
-        public RhythmSingleLineView getMainModelView() {
-            return mainModelView;
-        }
     }
 
-    public RhythmRvAdapter() {
+    public GeneralRvAdapter() {
     }
 
 
 
-    public RhythmRvAdapter(ArrayList<RhythmBasedCompound> models, Context context){
+    public GeneralRvAdapter(ArrayList<T> models, Context context){
         this.dataList = models;
         this.context = context;
     }
@@ -84,13 +85,13 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.rv_row_rhythm,parent,false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.rv_row_general,parent,false);
         return new ViewHolder(view);
     }
 
 
     @Override
-    public void onBindViewHolder(RhythmRvAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(GeneralRvAdapter.ViewHolder holder, int position) {
         singleModel = this.dataList.get(position);
 
 //        holder.getMainSourceView().setRhythmViewData(singleModel);
