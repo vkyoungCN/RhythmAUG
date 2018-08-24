@@ -18,22 +18,24 @@ import com.vkyoungcn.learningtools.myrhythm.R;
  * 2018.08.01
  * */
 @SuppressWarnings("all")
-public class DeleteRhythmDiaFragment extends DialogFragment
+public class DeleteModelDiaFragment extends DialogFragment
         implements View.OnClickListener {
-    private static final String TAG = "DeleteGroupDiaFragment";
-    private int rhId = 0;
+    private static final String TAG = "DeleteModelDiaFragment";
+    private int model_id = 0;
+    private int deleteType = 0;
 
     private OnGeneralDfgInteraction mListener;
 
-    public DeleteRhythmDiaFragment() {
+    public DeleteModelDiaFragment() {
         // Required empty public constructor
     }
 
 
-    public static DeleteRhythmDiaFragment newInstance(int rhId) {
-        DeleteRhythmDiaFragment fragment = new DeleteRhythmDiaFragment();
+    public static DeleteModelDiaFragment newInstance(int mId, int deleteType) {
+        DeleteModelDiaFragment fragment = new DeleteModelDiaFragment();
         Bundle args = new Bundle();
-        args.putInt("RHYTHM_ID",rhId);
+        args.putInt("MODEL_ID",mId);
+        args.putInt("DELETE_TYPE",deleteType);
         fragment.setArguments(args);
 
         return fragment;
@@ -43,14 +45,15 @@ public class DeleteRhythmDiaFragment extends DialogFragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            rhId = getArguments().getInt("RHYTHM_ID");
+            model_id = getArguments().getInt("MODEL_ID");
+            deleteType = getArguments().getInt("DELETE_TYPE");
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView =  inflater.inflate(R.layout.dfg_delete_rhythm, container, false);
+        View rootView =  inflater.inflate(R.layout.dfg_delete_model, container, false);
 
         TextView cancel = (TextView) rootView.findViewById(R.id.btn_cancel_deleteRhythmDfg);
         TextView confirm = (TextView) rootView.findViewById(R.id.btn_ok_deleteRhythmDfg);
@@ -87,8 +90,8 @@ public class DeleteRhythmDiaFragment extends DialogFragment
         switch (view.getId()){
             case R.id.btn_ok_deleteRhythmDfg://删除分组，将位置发回给activity，由调用方负责去DB实际删除,并更新列表显示。
                 Bundle data = new Bundle();
-                data.putInt("RHYTHM_ID", rhId);
-                mListener.onButtonClickingDfgInteraction(OnGeneralDfgInteraction.DELETE_RHYTHM,data);
+                data.putInt("MODEL_ID", model_id);
+                mListener.onButtonClickingDfgInteraction(deleteType,data);
                 this.dismiss();
                 break;
 

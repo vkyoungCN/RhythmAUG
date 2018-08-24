@@ -9,16 +9,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
-import com.vkyoungcn.learningtools.myrhythm.RhythmDetailActivity;
-import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
 import com.vkyoungcn.learningtools.myrhythm.helper.LongClickDeleteListener;
 import com.vkyoungcn.learningtools.myrhythm.helper.ToDetailClickListener;
 import com.vkyoungcn.learningtools.myrhythm.models.Group;
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import java.util.ArrayList;
 
 import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.DELETE_GROUP;
+import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.DELETE_LYRIC;
 
 /*
  * 作者：杨胜 @中国海洋大学
@@ -27,9 +25,8 @@ import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInterac
  * email: yangsheng@ouc.edu.cn
  * 2018.08.24
  * */
-public class GroupRvAdapter extends RecyclerView.Adapter<GroupRvAdapter.ViewHolder>{
-    //* 是展示任务所属分组的RecyclerView所使用的适配器
-    static final String TAG = "GroupRvAdapter";
+public class LyricRvAdapter extends RecyclerView.Adapter<LyricRvAdapter.ViewHolder>{
+    static final String TAG = "LyricRvAdapter";
     ArrayList<Group> dataList;
     Context context;
     Group singleModel;
@@ -44,14 +41,14 @@ public class GroupRvAdapter extends RecyclerView.Adapter<GroupRvAdapter.ViewHold
         private ViewHolder(View itemView) {
             super(itemView);
 
-            tv_description = itemView.findViewById(R.id.tv_description_RVG);
-            tv_id = itemView.findViewById(R.id.tv_rhId_RVG);
-            tv_title = itemView.findViewById(R.id.tv_title_RVG);
-            tv_createTime = itemView.findViewById(R.id.tv_createTime_RVG);
+            tv_description = itemView.findViewById(R.id.tv_description_RVL);
+            tv_id = itemView.findViewById(R.id.tv_rhId_RVL);
+            tv_title = itemView.findViewById(R.id.tv_title_RVL);
+            tv_createTime = itemView.findViewById(R.id.tv_createTime_RVL);
             llt_overall = itemView.findViewById(R.id.llt_overall_RVG);
 
-            llt_overall.setOnClickListener(new ToDetailClickListener(getAdapterPosition(),context, GroupDetailActivity.class));
-            llt_overall.setOnLongClickListener(new LongClickDeleteListener(context,dataList.get(getAdapterPosition()).getId(),DELETE_GROUP));
+            llt_overall.setOnClickListener(new ToDetailClickListener(getAdapterPosition(),context, LyricDetailActivity.class));
+            llt_overall.setOnLongClickListener(new LongClickDeleteListener(context,dataList.get(getAdapterPosition()).getId(),DELETE_LYRIC));
         }
 
 
@@ -72,12 +69,12 @@ public class GroupRvAdapter extends RecyclerView.Adapter<GroupRvAdapter.ViewHold
         }
     }
 
-    public GroupRvAdapter() {
+    public LyricRvAdapter() {
     }
 
 
 
-    public GroupRvAdapter(ArrayList<Group> models, Context context){
+    public LyricRvAdapter(ArrayList<Group> models, Context context){
         this.dataList = models;
         this.context = context;
     }
@@ -91,7 +88,7 @@ public class GroupRvAdapter extends RecyclerView.Adapter<GroupRvAdapter.ViewHold
 
 
     @Override
-    public void onBindViewHolder(GroupRvAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(LyricRvAdapter.ViewHolder holder, int position) {
         singleModel = this.dataList.get(position);
 
 //        holder.getMainSourceView().setRhythmViewData(singleModel);

@@ -7,13 +7,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
 import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
 import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
-public class RvBassActivity<T extends BaseModel,K extends RecyclerView.Adapter > extends AppCompatActivity {
+public class RvBassActivity<T extends BaseModel,K extends RecyclerView.Adapter >
+        extends AppCompatActivity implements OnGeneralDfgInteraction {
     public static final int MESSAGE_PRE_DB_FETCHED = 5505;
     public static final int MESSAGE_RE_FETCHED = 5506;
 
@@ -100,5 +102,22 @@ public class RvBassActivity<T extends BaseModel,K extends RecyclerView.Adapter >
     void loadAdapter(){
         //子类负责实现
     };
+
+    @Override
+    public void onButtonClickingDfgInteraction(int dfgType, Bundle data) {
+        switch (dfgType){
+            case DELETE_RHYTHM:
+                rhythmDbHelper.deleteRhythmById(data.getInt("MODEL_ID"));
+                //删完要刷新
+                new Thread(new FetchDataRunnable()).start();
+                break;
+
+            case DELETE_GROUP:
+                rhythmDbHelper.deleteGroupById(data.getInt("MODEL_ID"));
+                //删完要刷新
+                new Thread(new FetchDataRunnable()).start();
+                break;
+        }
+    }
 
 }

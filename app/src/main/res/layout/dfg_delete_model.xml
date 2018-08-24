@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".fragments.DeleteRhythmDiaFragment">
+    tools:context=".fragments.DeleteModelDiaFragment">
 
     <!--撑开宽度。如果没有具体宽度，即使全用match则宽度也按wrap计算-->
     <TextView

@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
+import com.vkyoungcn.learningtools.myrhythm.RhythmDetailActivity;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
 import com.vkyoungcn.learningtools.myrhythm.helper.LongClickDeleteListener;
 import com.vkyoungcn.learningtools.myrhythm.helper.ToDetailClickListener;
@@ -16,6 +17,8 @@ import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import java.util.ArrayList;
+
+import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.DELETE_RHYTHM;
 
 /*
  * 作者：杨胜 @中国海洋大学
@@ -43,14 +46,14 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
         private ViewHolder(View itemView) {
             super(itemView);
 
-            mainModelView = itemView.findViewById(R.id.rhView_mainModel_generalRv);【这里需要改写布局，布局需要换成rh版专用】
-            tv_id = itemView.findViewById(R.id.tv_rhId_generalRv);
-            tv_title = itemView.findViewById(R.id.tv_title_generalRv);
-            tv_createTime = itemView.findViewById(R.id.tv_createTime_generalRv);
-            llt_overall = itemView.findViewById(R.id.llt_overall_generalRv);
+            mainModelView = itemView.findViewById(R.id.rhView_singleLine);
+            tv_id = itemView.findViewById(R.id.tv_rhId);
+            tv_title = itemView.findViewById(R.id.tv_title);
+            tv_createTime = itemView.findViewById(R.id.tv_createTime);
+            llt_overall = itemView.findViewById(R.id.llt_overall);
 
-            llt_overall.setOnClickListener(new ToDetailClickListener(getAdapterPosition(),context,null,null));
-            llt_overall.setOnLongClickListener(new LongClickDeleteListener(context,getAdapterPosition()));
+            llt_overall.setOnClickListener(new ToDetailClickListener(getAdapterPosition(),context, RhythmDetailActivity.class));
+            llt_overall.setOnLongClickListener(new LongClickDeleteListener(context,dataList.get(getAdapterPosition()).getId(),DELETE_RHYTHM));
         }
 
 

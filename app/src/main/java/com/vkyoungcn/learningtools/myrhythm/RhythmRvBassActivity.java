@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.widget.LinearLayoutManager;
 
+import com.vkyoungcn.learningtools.myrhythm.adapter.RhythmRvAdapter;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
@@ -52,15 +53,6 @@ public class RhythmRvBassActivity extends RvBassActivity implements OnGeneralDfg
     }
 
 
-    @Override
-    public void onButtonClickingDfgInteraction(int dfgType, Bundle data) {
-        switch (dfgType){
-            case DELETE_RHYTHM:
-                rhythmDbHelper.deleteRhythmById(data.getInt("RHYTHM_ID"));
-                //删完要刷新
-                new Thread(new FetchDataRunnable()).start();
-                break;
-        }
-    }
+
 
 }

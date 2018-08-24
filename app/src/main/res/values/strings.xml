@@ -60,7 +60,7 @@
     <string name="rhythmDetail">节奏详情</string>
     <string name="descriptions">描述信息</string>
     <string name="confirm_delete">确认删除</string>
-    <string name="confirm_delete_2">请注意：点击确定后将删除该节奏！</string>
+    <string name="confirm_delete_2">请注意：点击确定后将执行删除！</string>
     <string name="linkingPitches">关联的音序</string>
     <string name="clickToSave">点击确定保存所做的修改</string>
     <string name="str_save">保存</string>
@@ -78,5 +78,28 @@
     <string name="str_toAllGroups">所有分组</string>
     <string name="all_groups">所有分组</string>
     <string name="all_resources">所有资源（通用标题）</string>
+    <string name="zone_divide">拆分区</string>
+    <string name="over_4">4分</string>
+    <string name="over_2">2分</string>
+    <string name="odd_divide">奇数均分</string>
+    <string name="over_5">5</string>
+    <string name="over_3">3</string>
+    <string name="over_7">7</string>
+    <string name="zone_merge">合并区</string>
+    <string name="merge_left"><![CDATA[+<<]]></string>
+    <string name="merge_right"><![CDATA[>>+]]></string>
+    <string name="merge_both_side">双向合并</string>
+    <string name="zone_short_cut">快捷</string>
+    <string name="divideCode">切分音</string>
+    <string name="toHavePoint">附+余</string>
+    <string name="lastSection_2"><![CDATA[<<|]]></string>
+    <string name="nextSection_2"><![CDATA[|>>]]></string>
+    <string name="lastUnit_2"><![CDATA[<]]></string>
+    <string name="nextUnit_2"><![CDATA[>]]></string>
+    <string name="this_beat">整拍</string>
+    <string name="defaultArea_1">预留区域：特殊按键1</string>
+    <string name="defaultArea_2">预留区域：特殊按键2</string>
+    <string name="defaultArea_pitches">预留区域：音高输入面板</string>
+    <string name="defaultArea_bottomInfo">底部信息预留</string>
 
 </resources>

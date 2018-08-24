@@ -3,8 +3,6 @@ package com.vkyoungcn.learningtools.myrhythm;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 
-import com.vkyoungcn.learningtools.myrhythm.adapter.GroupRvAdapter;
-
 public class AllGroupsActivity extends RvBassActivity {
 
     @Override

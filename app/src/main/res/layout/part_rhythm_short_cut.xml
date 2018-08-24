@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:context=".fragments.MelodyEditorFragment"
+    >
+
+
+    <!--Title-->
+    <TextView
+        android:id="@+id/tv_titleShortCut_part"
+        android:layout_width="64dp"
+        android:layout_height="24dp"
+        android:background="#f5f5f5"
+        android:text="@string/zone_short_cut"
+        android:gravity="center"
+        android:layout_marginBottom="2dp"
+        />
+    <!--横分割线-->
+    <TextView
+        android:layout_width="64dp"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_red"
+        android:layout_marginTop="22dp"
+        />
+    <TextView
+        android:id="@+id/tv_toDivide_part"
+        android:layout_below="@+id/tv_titleShortCut_part"
+        android:layout_width="60dp"
+        android:layout_height="36dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="2dp"
+        android:layout_marginEnd="2dp"
+        android:layout_marginBottom="2dp"
+        android:gravity="center"
+        android:background="#f5f5f5"
+        android:text="@string/divideCode"
+        />
+    <TextView
+        android:id="@+id/tv_toHavePoint"
+        android:layout_below="@+id/tv_toDivide_part"
+        android:layout_width="60dp"
+        android:layout_height="36dp"
+        android:layout_margin="2dp"
+        android:gravity="center"
+        android:background="#f5f5f5"
+        android:text="@string/toHavePoint"
+        />
+
+</RelativeLayout>
