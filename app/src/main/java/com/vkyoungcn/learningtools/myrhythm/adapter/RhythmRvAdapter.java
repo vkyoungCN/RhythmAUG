@@ -11,14 +11,14 @@ import android.widget.TextView;
 import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.RhythmDetailActivity;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
-import com.vkyoungcn.learningtools.myrhythm.helper.LongClickDeleteListener;
+import com.vkyoungcn.learningtools.myrhythm.helper.LongClickMultiFunctionListener;
 import com.vkyoungcn.learningtools.myrhythm.helper.ToDetailClickListener;
-import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import java.util.ArrayList;
 
 import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.DELETE_RHYTHM;
+import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.MODEL_TYPE_RH;
 
 /*
  * 作者：杨胜 @中国海洋大学
@@ -52,8 +52,8 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
             tv_createTime = itemView.findViewById(R.id.tv_createTime);
             llt_overall = itemView.findViewById(R.id.llt_overall);
 
-            llt_overall.setOnClickListener(new ToDetailClickListener(getAdapterPosition(),context, RhythmDetailActivity.class));
-            llt_overall.setOnLongClickListener(new LongClickDeleteListener(context,dataList.get(getAdapterPosition()).getId(),DELETE_RHYTHM));
+            llt_overall.setOnClickListener(new ToDetailClickListener(dataList.get(getAdapterPosition()),context, RhythmDetailActivity.class));
+            llt_overall.setOnLongClickListener(new LongClickMultiFunctionListener(context,dataList.get(getAdapterPosition()).getId(),MODEL_TYPE_RH));
         }
 
 

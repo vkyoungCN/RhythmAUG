@@ -19,4 +19,5 @@ public class AllRhythmsActivity extends RhythmRvBassActivity {
     }
 
     //其余均使用直接基类的逻辑。
+
 }

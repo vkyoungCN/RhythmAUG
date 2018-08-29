@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RhythmDetailActivity"
+    android:orientation="vertical"
+    >
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:background="#efefef"
+        android:gravity="center"
+        android:text="@string/lyricDetail"
+        android:textSize="16sp" />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_rhId_LEA"
+            android:layout_width="32dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/str_sharp2" />
+
+        <EditText
+            android:id="@+id/edt_title_LEA"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_weight="2"
+            android:gravity="start|center_vertical"
+            android:text="@string/str_sharp8"
+            android:textColor="@color/myRhythm_orange" />
+
+        <!--最后修改时间自动生成-->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/auto_create" />
+
+    </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#f5f5f5"
+        />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_margin="2dp"
+        >
+        <EditText
+            android:id="@+id/edt_lyricString_LEA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:gravity="center"
+            />
+    </ScrollView>
+
+    <!--分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginBottom="1dp"
+        android:background="#e0e0e0"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <CheckBox
+            android:id="@+id/ckb_isSelfDesign_LEA"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="8dp"
+            android:clickable="false"
+            android:gravity="center_vertical"
+            android:text="@string/selfDesign" />
+
+        <CheckBox
+            android:id="@+id/ckb_isKeepTop_LEA"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="4dp"
+            android:clickable="false"
+            android:gravity="center_vertical"
+            android:text="@string/keepTop2" />
+
+        <!--这里本来该放置一个星际标识UI，暂以tv代替-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="4dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:gravity="center"
+                android:text="@string/stars_rating" />
+
+            <Spinner
+                android:id="@+id/spinner_starts_LEA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:entries="@array/star_numbers" />
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+    <!--分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginBottom="1dp"
+        android:background="#e0e0e0"
+        />
+
+    <!--由于取消了多交叉的关系设计，因而暂不进行关联音、词的显示-->
+<!--
+    &lt;!&ndash;中1·横栏&ndash;&gt;
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:background="#efefef"
+        android:gravity="center"
+        android:text="@string/linkingPitches"
+        android:textSize="16sp" />
+
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        >
+
+        <TextView
+            android:id="@+id/tv_mask1_LEA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="@string/hold_for_loading" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >&lt;!&ndash;SV下只允许存在一个控件&ndash;&gt;
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_linkingPitches_LEA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+
+            </android.support.v7.widget.RecyclerView>
+
+        </ScrollView>
+
+
+    </FrameLayout>
+
+    &lt;!&ndash;中2·横栏&ndash;&gt;
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:background="#efefef"
+        android:gravity="center"
+        android:text="@string/linkingPitches"
+        android:textSize="16sp" />
+
+
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        >
+        <TextView
+            android:id="@+id/tv_mask2_LEA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/hold_for_loading"
+            android:gravity="center"
+            android:layout_marginTop="4dp"
+            />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >&lt;!&ndash;SV下只允许存在一个控件&ndash;&gt;
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_linkingLyrics_LEA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+
+            </android.support.v7.widget.RecyclerView>
+
+        </ScrollView>
+
+
+    </FrameLayout>-->
+
+    <!--底横栏-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:background="#efefef"
+        android:gravity="center"
+        android:text="@string/descriptions"
+        android:textSize="16sp"
+        android:layout_marginTop="2dp"
+        />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        >
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+            <EditText
+                android:id="@+id/edt_description_LEA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:gravity="center"
+                android:textSize="16sp"
+                />
+        </ScrollView>
+
+        <!--描述部分的修改-->
+    </FrameLayout>
+    <!--底部信息及按键，横置覆盖于rv上层-->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:orientation="horizontal"
+        android:layout_gravity="bottom"
+        android:background="#efefef"
+        >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:paddingStart="12dp"
+            android:paddingEnd="4dp"
+            android:text="@string/clickToEdit"
+            />
+        <TextView
+            android:layout_width="96dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:gravity="center"
+            android:text="@string/confirm"
+            android:background="@color/myRhythm_teal"
+            android:onClick="confirmAndBack"
+            />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/myRhythm_orange"
+            android:layout_gravity="bottom"
+            />
+    </FrameLayout>
+
+
+
+</LinearLayout>

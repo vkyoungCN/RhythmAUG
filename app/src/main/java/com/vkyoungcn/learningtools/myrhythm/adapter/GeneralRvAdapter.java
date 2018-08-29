@@ -9,11 +9,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
-import com.vkyoungcn.learningtools.myrhythm.helper.LongClickDeleteListener;
+import com.vkyoungcn.learningtools.myrhythm.helper.LongClickMultiFunctionListener;
 import com.vkyoungcn.learningtools.myrhythm.helper.ToDetailClickListener;
 import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
 
 import java.util.ArrayList;
+
+import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.DELETE_GROUP;
 
 /*
  * 作者：杨胜 @中国海洋大学
@@ -46,8 +48,8 @@ public class GeneralRvAdapter<T extends BaseModel> extends RecyclerView.Adapter<
             tv_createTime = itemView.findViewById(R.id.tv_createTime_generalRv);
             llt_overall = itemView.findViewById(R.id.llt_overall_generalRv);
 
-            llt_overall.setOnClickListener(new ToDetailClickListener(getAdapterPosition(),context,null,null));
-            llt_overall.setOnLongClickListener(new LongClickDeleteListener(context,getAdapterPosition()));
+            llt_overall.setOnClickListener(new ToDetailClickListener(dataList.get(getAdapterPosition()),context,null));
+            llt_overall.setOnLongClickListener(new LongClickMultiFunctionListener(context,getAdapterPosition(),DELETE_GROUP));
         }
 
 

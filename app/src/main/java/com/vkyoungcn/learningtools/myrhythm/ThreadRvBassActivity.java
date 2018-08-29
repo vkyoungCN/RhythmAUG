@@ -14,7 +14,7 @@ import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
-public class RvBassActivity<T extends BaseModel,K extends RecyclerView.Adapter >
+public class ThreadRvBassActivity<T extends BaseModel,K extends RecyclerView.Adapter >
         extends AppCompatActivity implements OnGeneralDfgInteraction {
     public static final int MESSAGE_PRE_DB_FETCHED = 5505;
     public static final int MESSAGE_RE_FETCHED = 5506;
@@ -61,15 +61,15 @@ public class RvBassActivity<T extends BaseModel,K extends RecyclerView.Adapter >
     }
 
     final static class RvBassActivityHandler extends Handler {
-        final WeakReference<RvBassActivity> activityWeakReference;
+        final WeakReference<ThreadRvBassActivity> activityWeakReference;
 
-        RvBassActivityHandler(RvBassActivity activity) {
+        RvBassActivityHandler(ThreadRvBassActivity activity) {
             this.activityWeakReference = new WeakReference<>(activity);
         }
 
         @Override
         public void handleMessage(Message msg) {
-            RvBassActivity mainActivity = activityWeakReference.get();
+            ThreadRvBassActivity mainActivity = activityWeakReference.get();
             if (mainActivity != null) {
                 mainActivity.handleMessage(msg);
             }
@@ -117,6 +117,14 @@ public class RvBassActivity<T extends BaseModel,K extends RecyclerView.Adapter >
                 //删完要刷新
                 new Thread(new FetchDataRunnable()).start();
                 break;
+
+            case REMOVE_RHYTHM:
+            case REMOVE_LYRIC:
+                rhythmDbHelper.removeModelCrossGroup(data.getInt("MODEL_ID"),data.getInt("GROUP_ID"));
+                //删完要刷新
+                new Thread(new FetchDataRunnable()).start();
+                break;
+
         }
     }
 

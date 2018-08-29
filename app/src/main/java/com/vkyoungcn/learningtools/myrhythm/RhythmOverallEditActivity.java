@@ -117,15 +117,6 @@ public class RhythmOverallEditActivity extends AppCompatActivity {
 
     }
 
-    /*public void editDescription(View view){
-        if(edt_descriptions.getVisibility()==View.GONE){
-            //尽在edt尚未打卡时起作用
-            edt_descriptions.setVisibility(View.GONE);
-            edt_descriptions.setVisibility(View.VISIBLE);
-            edt_descriptions.setText(rhythmBasedCompound.getDescription());
-        }
-
-    }*/
 
 
     /* 以下一个方法只可能是从rh的编码专用修改页返回*/
@@ -146,6 +137,9 @@ public class RhythmOverallEditActivity extends AppCompatActivity {
 
     public void editFinish(View view){
         //点击后，①保存到DB；②返回到前一页（应该是详情页）
+
+
+
         MyRhythmDbHelper myRhythmDbHelper = MyRhythmDbHelper.getInstance(this);
         int affectedRows = myRhythmDbHelper.updateRhythm(rhythmBasedCompound);
 //【如果未做出实质修改，如何避免向DB写入数据】

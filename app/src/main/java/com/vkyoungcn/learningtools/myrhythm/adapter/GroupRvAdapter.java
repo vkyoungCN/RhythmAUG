@@ -8,13 +8,11 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.vkyoungcn.learningtools.myrhythm.GroupDetailActivity;
 import com.vkyoungcn.learningtools.myrhythm.R;
-import com.vkyoungcn.learningtools.myrhythm.RhythmDetailActivity;
-import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
-import com.vkyoungcn.learningtools.myrhythm.helper.LongClickDeleteListener;
+import com.vkyoungcn.learningtools.myrhythm.helper.LongClickMultiFunctionListener;
 import com.vkyoungcn.learningtools.myrhythm.helper.ToDetailClickListener;
 import com.vkyoungcn.learningtools.myrhythm.models.Group;
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import java.util.ArrayList;
 
@@ -50,8 +48,8 @@ public class GroupRvAdapter extends RecyclerView.Adapter<GroupRvAdapter.ViewHold
             tv_createTime = itemView.findViewById(R.id.tv_createTime_RVG);
             llt_overall = itemView.findViewById(R.id.llt_overall_RVG);
 
-            llt_overall.setOnClickListener(new ToDetailClickListener(getAdapterPosition(),context, GroupDetailActivity.class));
-            llt_overall.setOnLongClickListener(new LongClickDeleteListener(context,dataList.get(getAdapterPosition()).getId(),DELETE_GROUP));
+            llt_overall.setOnClickListener(new ToDetailClickListener(dataList.get(getAdapterPosition()),context, GroupDetailActivity.class));
+            llt_overall.setOnLongClickListener(new LongClickMultiFunctionListener(context,dataList.get(getAdapterPosition()).getId(),DELETE_GROUP));
         }
 
 
@@ -97,6 +95,7 @@ public class GroupRvAdapter extends RecyclerView.Adapter<GroupRvAdapter.ViewHold
 //        holder.getMainSourceView().setRhythmViewData(singleModel);
         holder.getTv_id().setText(String.format(context.getResources().getString(R.string.plh_sharp_id), singleModel.getId()));
         holder.getTv_title().setText(singleModel.getTitle());
+        holder.getTv_description().setText(singleModel.getDescription());
 //        holder.getTv_createTime().setText(singleModel.getCreateTimeStr());
 
     }

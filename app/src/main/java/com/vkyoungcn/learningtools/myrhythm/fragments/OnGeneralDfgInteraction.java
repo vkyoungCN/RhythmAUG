@@ -16,9 +16,19 @@ public interface OnGeneralDfgInteraction {
 
     int CREATE_RHYTHM = 2201;
 
+    int MODEL_TYPE_RH =201;
+    int MODEL_TYPE_LY =202;
+    int MODEL_TYPE_PT =203;
+
+
     int DELETE_RHYTHM =2211;
     int DELETE_GROUP =2212;
     int DELETE_LYRIC = 2213;
+
+    int REMOVE_RHYTHM =2291;
+    int REMOVE_GROUP =2292;
+    int REMOVE_LYRIC = 2293;
+
 
     int RHYTHM_CREATE_EDITED = 2215;
     int RHYTHM_CREATE_DONE = 2216;

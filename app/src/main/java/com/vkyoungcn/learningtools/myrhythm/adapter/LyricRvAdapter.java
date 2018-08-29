@@ -8,14 +8,14 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.vkyoungcn.learningtools.myrhythm.LyricDetailActivity;
 import com.vkyoungcn.learningtools.myrhythm.R;
-import com.vkyoungcn.learningtools.myrhythm.helper.LongClickDeleteListener;
+import com.vkyoungcn.learningtools.myrhythm.helper.LongClickMultiFunctionListener;
 import com.vkyoungcn.learningtools.myrhythm.helper.ToDetailClickListener;
 import com.vkyoungcn.learningtools.myrhythm.models.Group;
 
 import java.util.ArrayList;
 
-import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.DELETE_GROUP;
 import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.DELETE_LYRIC;
 
 /*
@@ -47,8 +47,8 @@ public class LyricRvAdapter extends RecyclerView.Adapter<LyricRvAdapter.ViewHold
             tv_createTime = itemView.findViewById(R.id.tv_createTime_RVL);
             llt_overall = itemView.findViewById(R.id.llt_overall_RVG);
 
-            llt_overall.setOnClickListener(new ToDetailClickListener(getAdapterPosition(),context, LyricDetailActivity.class));
-            llt_overall.setOnLongClickListener(new LongClickDeleteListener(context,dataList.get(getAdapterPosition()).getId(),DELETE_LYRIC));
+            llt_overall.setOnClickListener(new ToDetailClickListener(dataList.get(getAdapterPosition()),context, LyricDetailActivity.class));
+            llt_overall.setOnLongClickListener(new LongClickMultiFunctionListener(context,dataList.get(getAdapterPosition()).getId(),DELETE_LYRIC));
         }
 
 

@@ -102,6 +102,13 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
                     MyRhythmContract.Group.COLUMN_LAST_MODIFY_TIME + " INTEGER)";
 
 
+    public static final String SQL_CREATE_GROUP_CROSS =
+            "CREATE TABLE " + MyRhythmContract.GroupCrossModels.TABLE_NAME + " (" +
+                    MyRhythmContract.GroupCrossModels._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    MyRhythmContract.GroupCrossModels.COLUMN_GID + " INTEGER, "+
+                    MyRhythmContract.GroupCrossModels.COLUMN_MID + " INTEGER, "+
+                    MyRhythmContract.GroupCrossModels.COLUMN_MODEL_TYPE + " INTEGER)";
+
     /* 删表语句*/
     private static final String SQL_DROP_RHYTHM =
             "DROP TABLE IF EXISTS " +  MyRhythmContract.Rhythm.TABLE_NAME;
@@ -113,6 +120,8 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
             "DROP TABLE IF EXISTS " +  MyRhythmContract.ActionRecord.TABLE_NAME;
     private static final String SQL_DROP_GROUP =
             "DROP TABLE IF EXISTS " +  MyRhythmContract.Group.TABLE_NAME;
+    private static final String SQL_DROP_GROUP_CROSS =
+                "DROP TABLE IF EXISTS " +  MyRhythmContract.GroupCrossModels.TABLE_NAME;
 
 
     //构造器
@@ -279,6 +288,24 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
     }
 
 
+    /* 仅更新group表的非交叉信息（只涉及一张表）*/
+    public int updateGroupPure(Group group){
+        int affectedRows = 0;
+
+        getReadableDatabaseIfClosedOrNull();
+
+        ContentValues values = new ContentValues();
+
+        values.put(MyRhythmContract.Rhythm.COLUMN_TITLE, group.getTitle());
+        values.put(MyRhythmContract.Rhythm.COLUMN_DESCRIPTION, group.getDescription());
+
+        affectedRows = mSQLiteDatabase.update(MyRhythmContract.Group.TABLE_NAME,values,
+                MyRhythmContract.Group._ID+" = ? ",new String[]{String.valueOf(group.getId())} );
+        closeDB();
+        return affectedRows;
+    }
+
+
 
     /* 如果传递c_Rh类则需要对两表操作*/
     /*public long createRhythm(RhythmBasedCompound compoundRhythm){
@@ -417,6 +444,16 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
     }
 
+    public void removeModelCrossGroup(int modelId, int groupId){
+        String deleteSingleRhythmSql = "DELETE FROM "+ MyRhythmContract.GroupCrossModels.TABLE_NAME+" WHERE "+
+                MyRhythmContract.GroupCrossModels.COLUMN_MID+" = "+modelId+" AND "+
+                MyRhythmContract.GroupCrossModels.COLUMN_GID+" = "+groupId;
+        mSQLiteDatabase.execSQL(deleteSingleRhythmSql);
+        getWritableDatabaseIfClosedOrNull();
+        closeDB();
+
+    }
+
     public void deleteLyricById(int lyricId){
         String deleteSingleLyricSql = "DELETE FROM "+ MyRhythmContract.Lyric.TABLE_NAME+" WHERE "+
                 MyRhythmContract.Lyric._ID+" = "+lyricId;
@@ -433,6 +470,17 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         closeDB();
 
     }
+
+    public void deleteGroupById(int groupId){
+        String deleteSql = "DELETE FROM "+ MyRhythmContract.Group.TABLE_NAME+" WHERE "+
+                MyRhythmContract.Group._ID+" = "+groupId;
+        //考虑到cascade的设定，就不对交叉表做手动处理了。
+
+        mSQLiteDatabase.execSQL(deleteSql);
+        getWritableDatabaseIfClosedOrNull();
+        closeDB();
+    }
+
 
     /* 修改*/
     public int updateRhythmById(int rhythmId,Rhythm rhythm){
@@ -460,7 +508,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         return affectedRows;
     }
 
-    public int updateLyricById(int lyricId,Lyric lyric){
+    public int updateLyricById(Lyric lyric){
         int affectedRows = 0;
         getReadableDatabaseIfClosedOrNull();
 
@@ -473,11 +521,11 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
         values.put(MyRhythmContract.Lyric.COLUMN_SELF_DESIGN,lyric.isSelfDesign());
         values.put(MyRhythmContract.Lyric.COLUMN_KEEP_TOP,lyric.isKeepTop());
-        values.put(MyRhythmContract.Lyric.COLUMN_CREATE_TIME,lyric.getCreateTime());
+//        values.put(MyRhythmContract.Lyric.COLUMN_CREATE_TIME,lyric.getCreateTime());
         values.put(MyRhythmContract.Lyric.COLUMN_LAST_MODIFY_TIME,lyric.getLastModifyTime());
 
         affectedRows = mSQLiteDatabase.update(MyRhythmContract.Lyric.TABLE_NAME,values,
-                MyRhythmContract.Lyric._ID+" = ? ",new String[]{String.valueOf(lyricId)} );
+                MyRhythmContract.Lyric._ID+" = ? ",new String[]{String.valueOf(lyric.getId())} );
         closeDB();
         return affectedRows;
     }
@@ -547,6 +595,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         return rhythms;
     }
 
+
     public ArrayList<RhythmBasedCompound> getAllCompoundRhythms(){
         ArrayList<RhythmBasedCompound> rhythms = new ArrayList<>();
 
@@ -597,6 +646,115 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
         return rhythms;
     }
+
+
+    /* 获取某分组所含的节奏记录（混合式，完整数据）*/
+    public ArrayList<RhythmBasedCompound> getRhythmBasedCompoundsByGid(int groupId){
+        ArrayList<RhythmBasedCompound> rhythms = new ArrayList<>();
+
+        String selectRhid = "SELECT "+MyRhythmContract.GroupCrossModels.COLUMN_MID+" FROM "+
+                MyRhythmContract.GroupCrossModels.TABLE_NAME +
+                " WHERE "+MyRhythmContract.GroupCrossModels.COLUMN_GID +" = "+groupId +
+                " AND "+MyRhythmContract.GroupCrossModels.COLUMN_MODEL_TYPE +" = "+
+                MyRhythmContract.GroupCrossModels.MODEL_TYPE_RH;
+
+        getReadableDatabaseIfClosedOrNull();
+        mSQLiteDatabase.beginTransaction();
+
+        Cursor cursor = mSQLiteDatabase.rawQuery(selectRhid,null);
+
+        if(cursor.moveToFirst()){
+            do {
+                rhythms.add(getCompoundRhythmById_TRS(cursor.getInt(0)));
+            }while (cursor.moveToNext());
+        }else{
+            return null;
+        }
+        try {
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        mSQLiteDatabase.setTransactionSuccessful();
+        mSQLiteDatabase.endTransaction();
+
+        closeDB();
+
+        return rhythms;
+    }
+
+    public ArrayList<Lyric> getFreeLyricsByGid(int groupId){
+        ArrayList<Lyric> lyris = new ArrayList<>();
+
+        String selectLYid = "SELECT "+MyRhythmContract.GroupCrossModels.COLUMN_MID+" FROM "+
+                MyRhythmContract.GroupCrossModels.TABLE_NAME +
+                " WHERE "+MyRhythmContract.GroupCrossModels.COLUMN_GID +" = "+groupId +
+                " AND "+MyRhythmContract.GroupCrossModels.COLUMN_MODEL_TYPE +" = "+
+                MyRhythmContract.GroupCrossModels.MODEL_TYPE_LY;
+
+        getReadableDatabaseIfClosedOrNull();
+        mSQLiteDatabase.beginTransaction();
+
+        Cursor cursor = mSQLiteDatabase.rawQuery(selectLYid,null);
+
+        if(cursor.moveToFirst()){
+            do {
+                lyris.add(getFreeLyricsById_TRS(cursor.getInt(0)));
+            }while (cursor.moveToNext());
+        }else{
+            return null;
+        }
+        try {
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        mSQLiteDatabase.setTransactionSuccessful();
+        mSQLiteDatabase.endTransaction();
+
+        closeDB();
+
+        return lyris;
+    }
+
+
+    /*public ArrayList<String> getFreePitchesByGid(int groupId){
+        ArrayList<String> pitchesCodes = new ArrayList<>();
+
+        String selectLYid = "SELECT "+MyRhythmContract.GroupCrossModels.COLUMN_MID+" FROM "+
+                MyRhythmContract.GroupCrossModels.TABLE_NAME +
+                " WHERE "+MyRhythmContract.GroupCrossModels.COLUMN_GID +" = "+groupId +
+                " AND "+MyRhythmContract.GroupCrossModels.COLUMN_MODEL_TYPE +" = "+
+                MyRhythmContract.GroupCrossModels.MODEL_TYPE_PT;
+
+        getReadableDatabaseIfClosedOrNull();
+        mSQLiteDatabase.beginTransaction();
+
+        Cursor cursor = mSQLiteDatabase.rawQuery(selectLYid,null);
+
+        if(cursor.moveToFirst()){
+            do {
+//                pitchesCodes.add(getLyricStringById_TRS(cursor.getInt(0)));
+            }while (cursor.moveToNext());
+        }else{
+            return null;
+        }
+        try {
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        mSQLiteDatabase.setTransactionSuccessful();
+        mSQLiteDatabase.endTransaction();
+
+        closeDB();
+
+        return pitchesCodes;
+    }*/
+
 
     public ArrayList<RhythmBasedCompound> getCompoundRhythmsModifiedLaterThan(long time){
         ArrayList<RhythmBasedCompound> compounds = new ArrayList<>();
@@ -702,7 +860,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         return compounds;
     }
 
-    public Rhythm getCompoundRhythmById(int rhythmId){
+    public RhythmBasedCompound getCompoundRhythmById(int rhythmId){
         RhythmBasedCompound cRhythm = new RhythmBasedCompound();
         String selectQuery = "SELECT * FROM "+ MyRhythmContract.Rhythm.TABLE_NAME+
                 " WHERE "+ MyRhythmContract.Rhythm._ID+" = "+rhythmId;
@@ -746,6 +904,82 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         return cRhythm;
     }
 
+
+    public RhythmBasedCompound getCompoundRhythmById_TRS(int rhythmId){
+        RhythmBasedCompound cRhythm = new RhythmBasedCompound();
+        String selectQuery = "SELECT * FROM "+ MyRhythmContract.Rhythm.TABLE_NAME+
+                " WHERE "+ MyRhythmContract.Rhythm._ID+" = "+rhythmId;
+
+//        getReadableDatabaseIfClosedOrNull();
+//        mSQLiteDatabase.beginTransaction();
+
+        Cursor cursor = mSQLiteDatabase.rawQuery(selectQuery, null);
+        if(cursor.moveToFirst()){
+            cRhythm.setId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm._ID)));
+            cRhythm.setCreateTime(cursor.getLong(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_CREATE_TIME)));
+            cRhythm.setLastModifyTime(cursor.getLong(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_LAST_MODIFY_TIME)));
+            cRhythm.setDescription(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_DESCRIPTION)));
+            cRhythm.setSelfDesign(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_SELF_DESIGN))==1);
+            cRhythm.setKeepTop(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_KEEP_TOP))==1);
+            cRhythm.setRhythmType(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_RHYTHM_TYPE)));
+            cRhythm.setStars(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_STAR)));
+            cRhythm.setTitle(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_TITLE)));
+            cRhythm.setCodeSerialString(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_C0DES)));
+
+            cRhythm.setPrimaryLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PRIMARY_LYRIC_ID)));
+            cRhythm.setSecondLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_SECOND_LYRIC_ID)));
+            cRhythm.setPitchesId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID)));
+        }
+        String primaryLyricSerial = getLyricStringById_TRS(cRhythm.getPrimaryLyricId());
+        cRhythm.setPrimaryLyricSerial(primaryLyricSerial);
+
+        String secondLyricSerial = getLyricStringById_TRS(cRhythm.getSecondLyricId());
+        cRhythm.setSecondLyricSerial(secondLyricSerial);
+
+
+       /* try {
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        mSQLiteDatabase.setTransactionSuccessful();
+        mSQLiteDatabase.endTransaction();
+
+        closeDB();*/
+        return cRhythm;
+    }
+
+    public Lyric getFreeLyricsById_TRS(int lyricId){
+        Lyric lyric = new Lyric();
+        String selectQuery = "SELECT * FROM "+ MyRhythmContract.Lyric.TABLE_NAME+
+                " WHERE "+ MyRhythmContract.Lyric._ID+" = "+lyricId;
+
+//        getReadableDatabaseIfClosedOrNull();
+//        mSQLiteDatabase.beginTransaction();
+
+        Cursor cursor = mSQLiteDatabase.rawQuery(selectQuery, null);
+        if(cursor.moveToFirst()){
+            lyric.setId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Lyric._ID)));
+            lyric.setCreateTime(cursor.getLong(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_CREATE_TIME)));
+            lyric.setLastModifyTime(cursor.getLong(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_LAST_MODIFY_TIME)));
+            lyric.setDescription(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_DESCRIPTION)));
+            lyric.setSelfDesign(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_SELF_DESIGN))==1);
+            lyric.setKeepTop(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_KEEP_TOP))==1);
+            lyric.setStars(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_STAR)));
+            lyric.setTitle(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_TITLE)));
+        }
+
+       /* try {
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        mSQLiteDatabase.setTransactionSuccessful();
+        mSQLiteDatabase.endTransaction();
+
+        closeDB();*/
+        return lyric;
+    }
 
     //在事务中使用的版本，不启用db开闭
     public String getLyricStringById_TRS(int lyricId){

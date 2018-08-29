@@ -11,7 +11,7 @@ import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 import java.util.Collections;
 import java.util.Comparator;
 
-public class RhythmRvBassActivity extends RvBassActivity implements OnGeneralDfgInteraction {
+public class RhythmRvBassActivity extends ThreadRvBassActivity implements OnGeneralDfgInteraction {
     private static final String TAG = "RhythmRvBassActivity";
     /* 基类的部分字段实现为具体类型的字段*/
     Handler handler = new RvBassActivityHandler(this);

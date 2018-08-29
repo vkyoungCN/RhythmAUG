@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RhythmDetailActivity"
+    android:orientation="vertical"
+    >
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:background="#efefef"
+        android:gravity="center"
+        android:text="@string/groupDetail"
+        android:textSize="16sp" />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_rhId_GDA"
+            android:layout_width="32dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/str_sharp2" />
+
+        <TextView
+            android:id="@+id/tv_title_GDA"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:gravity="start|center_vertical"
+            android:text="@string/str_sharp8"
+            android:textColor="@color/myRhythm_orange" />
+        <TextView
+            android:layout_width="96dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:gravity="center"
+            android:text="@string/modify"
+            android:background="@color/myRhythm_red"
+            android:onClick="toEditGroupActivity"
+            />
+
+    </LinearLayout>
+
+    <!--横分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#e0e0e0"
+        />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="90dp">
+
+        <TextView
+            android:id="@+id/tv_description_GDA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:gravity="center"
+            android:textSize="16sp"
+
+            />
+    </ScrollView>
+
+
+    <!--中1·横栏-->
+    <TextView
+        android:id="@+id/tv_rhythmTitleBar_GDA"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:background="#e0e0e0"
+        android:gravity="center"
+        android:text="@string/linkingRyhythms"
+        android:textSize="16sp"
+        />
+    <!--分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        />
+    <!--内容区-->
+    <FrameLayout
+        android:id="@+id/flt_rhythmsContentArea_GDA"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        >
+        <!--遮罩tv-->
+        <TextView
+            android:id="@+id/tv_mask1_GDA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="@string/hold_for_loading" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+            <!--SV下只允许存在一个控件-->
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_linkingRhythms_GDA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+
+            </android.support.v7.widget.RecyclerView>
+
+        </ScrollView>
+
+
+    </FrameLayout>
+
+
+    <!--中2·横栏-->
+    <TextView
+        android:id="@+id/tv_lyricTitleBar_GDA"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:background="#e0e0e0"
+        android:gravity="center"
+        android:text="@string/linkingLyrics"
+        android:textSize="16sp" />
+    <!--分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        />
+    <!--内容区-->
+    <FrameLayout
+        android:id="@+id/flt_lyricContentArea_GDA"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        >
+        <!--遮罩tv-->
+        <TextView
+            android:id="@+id/tv_mask2_GDA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="@string/hold_for_loading" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+            <!--SV下只允许存在一个控件-->
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_linkingLyrics_GDA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+
+            </android.support.v7.widget.RecyclerView>
+
+        </ScrollView>
+    </FrameLayout>
+
+
+    <!--暂不开放独立音高序列的管理-->
+    <!--&lt;!&ndash;中3·横栏&ndash;&gt;
+    <TextView
+        android:id="@+id/tv_pitchesTitleBar_GDA"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:background="#e0e0e0"
+        android:gravity="center"
+        android:text="@string/linkingPitches_2"
+        android:onClick="titleClick"
+        android:textSize="16sp" />
+    &lt;!&ndash;分割线&ndash;&gt;
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        />
+    &lt;!&ndash;内容区&ndash;&gt;
+    <FrameLayout
+        android:id="@+id/flt_pitchesContentArea_GDA"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:visibility="gone"
+        >
+        &lt;!&ndash;遮罩tv&ndash;&gt;
+        <TextView
+            android:id="@+id/tv_mask3_GDA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="@string/hold_for_loading" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+            &lt;!&ndash;SV下只允许存在一个控件&ndash;&gt;
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_linkingPitches_GDA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+
+            </android.support.v7.widget.RecyclerView>
+
+        </ScrollView>
+    </FrameLayout>
+    -->
+
+    <!--底部信息及按键，横置覆盖于rv上层-->
+    <TextView
+        android:id="@+id/tv_bottomInfo_GDA"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:gravity="center"
+        android:layout_gravity="bottom"
+        android:background="#efefef"
+        android:text="@string/plh_groupAllInfo_GDA"
+        />
+    <!--底边线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_cyan"
+        android:layout_gravity="bottom"
+        />
+</LinearLayout>

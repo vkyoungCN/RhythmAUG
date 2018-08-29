@@ -101,5 +101,16 @@
     <string name="defaultArea_2">预留区域：特殊按键2</string>
     <string name="defaultArea_pitches">预留区域：音高输入面板</string>
     <string name="defaultArea_bottomInfo">底部信息预留</string>
+    <string name="groupDetail">分组详情</string>
+    <string name="resourceOfGroup">组内资源</string>
+    <string name="linkingRyhythms">组内节奏记录</string>
+    <string name="linkingLyrics">词记录</string>
+    <string name="linkingPitches_2">音高序列</string>
+    <string name="plh_groupAllInfo_GDA">本组统计：节奏%1$d条，词%2$d条，音高%3$d条。</string>
+    <string name="removeByLongClick">在详情页中长按来移除节奏记录</string>
+    <string name="remove_from_group">从分组移除</string>
+    <string name="remove_from_group_2">点击确定后，从分组移除本记录。</string>
+    <string name="lyricDetail">词作详情</string>
+    <string name="auto_create">修改时间\n（自动生成）</string>
 
 </resources>

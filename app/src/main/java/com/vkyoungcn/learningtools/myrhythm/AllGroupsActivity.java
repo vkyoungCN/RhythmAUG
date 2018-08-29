@@ -3,7 +3,9 @@ package com.vkyoungcn.learningtools.myrhythm;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 
-public class AllGroupsActivity extends RvBassActivity {
+import com.vkyoungcn.learningtools.myrhythm.adapter.GroupRvAdapter;
+
+public class AllGroupsActivity extends ThreadRvBassActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,7 +22,7 @@ public class AllGroupsActivity extends RvBassActivity {
     void fetchAndSort(){
         //获取节奏数据
         dataFetched = rhythmDbHelper.getAllGroups();
-        //暂不排序
+        //不需排序
     }
 
     @Override

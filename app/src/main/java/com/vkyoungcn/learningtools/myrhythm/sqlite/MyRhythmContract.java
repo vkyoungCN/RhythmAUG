@@ -82,6 +82,22 @@ public class MyRhythmContract {
     }
 
 
+    /* 分组--资源交叉表*/
+    /* 混合在一起*/
+    public static class GroupCrossModels implements BaseColumns {
+        public static final String TABLE_NAME = "group_cross_models";
+        public static final String COLUMN_GID ="gid";
+        public static final String COLUMN_MID = "mid";
+        public static final String COLUMN_MODEL_TYPE = "model_type";//7001、节奏；7002、词；7003、音高
+
+        public static final int MODEL_TYPE_RH = 7001;
+        public static final int MODEL_TYPE_LY = 7002;
+        public static final int MODEL_TYPE_PT = 7003;
+
+    }
+
+
+
     /* 操作记录表*/
     public static class ActionRecord implements BaseColumns {
         public static final String TABLE_NAME = "action_records";
