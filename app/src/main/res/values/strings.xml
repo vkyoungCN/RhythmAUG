@@ -116,5 +116,8 @@
     <string name="allModels">所有资源</string>
     <string name="ryhythm">节奏</string>
     <string name="lyrics">词</string>
+    <string name="merge">合并</string>
+    <string name="move_zone">移动操作区：</string>
+    <string name="expand_pitches">音高输入面板\n（点击展开）</string>
 
 </resources>

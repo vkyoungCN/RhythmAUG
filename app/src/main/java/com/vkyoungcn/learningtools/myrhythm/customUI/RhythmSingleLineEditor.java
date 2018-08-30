@@ -70,6 +70,8 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 //    private Paint slidingVerticalBarCenterBoxPaint;
 
     private Paint blueBoxPaint;
+    private Paint greenBoxPaint;//合并时的选择框
+    private Paint orangeBoxPaint;//添加上弧连音线时的另一端位置选择框。
 
 
 
@@ -77,7 +79,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 //    private float padding;
 //    private float unitStandardWidth;//24dp。单个普通音符的基准宽度。【按此标准宽度计算各节需占宽度；如果单节占宽超屏幕宽度，则需压缩单节内音符的占宽；
     // 如果下节因为超长而移到下一行，且本行剩余了更多空间，则需要对各音符占宽予以增加（但是字符大小不变）】
-    private float unitStandardHeight;//24dp。单个普通音符的基准高度。
+//    private float unitStandardHeight;//24dp。单个普通音符的基准高度。
 
 //    private float beatGap;//节拍之间、小节之间需要有额外间隔（但似乎没有统一规范），暂定12dp。
     //注意，一个节拍内的音符之间没有额外间隔。
@@ -102,7 +104,11 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
     /* 色彩组 */
 //    private int generalColor_Gray;
     private int editBox_blue;
-//    private int slidingMask_white;
+    private int editBox_green;
+    private int editBox_orange;
+
+
+    //    private int slidingMask_white;
 //    private int slidingBall_pink;
 //    private int slidingVerticalBar_black;
 
@@ -175,6 +181,8 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         super.initSizeAndColor();
         //本子类特有的（蓝色框的颜色）
         editBox_blue = ContextCompat.getColor(mContext, R.color.rhythmView_edBoxBlue);
+        editBox_green = ContextCompat.getColor(mContext, R.color.rhythmView_edBoxGreen);
+        editBox_orange = ContextCompat.getColor(mContext, R.color.rhythmView_edBoxOrange);
 
     }
 
@@ -187,17 +195,31 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         blueBoxPaint.setStrokeWidth(2);
         blueBoxPaint.setColor(editBox_blue);
 
+
+        greenBoxPaint = new Paint();
+        greenBoxPaint.setStyle(Paint.Style.STROKE);
+        greenBoxPaint.setStrokeWidth(2);
+        greenBoxPaint.setColor(editBox_green);
+
+        orangeBoxPaint = new Paint();
+        orangeBoxPaint.setStyle(Paint.Style.STROKE);
+        orangeBoxPaint.setStrokeWidth(2);
+        orangeBoxPaint.setColor(editBox_orange);
     }
 
 
     @Override
     protected void onDraw(Canvas canvas) {
-        Log.i(TAG, "onDraw: 1st DU.code="+drawingUnits.get(0).get(0).code);
+//        Log.i(TAG, "onDraw: 1st DU.code="+drawingUnits.get(0).get(0).code);
         super.onDraw(canvas);
 
         //本类特有：蓝框
         DrawingUnit blue_dU = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
             canvas.drawRect(blue_dU.left, blue_dU.top, blue_dU.right, blue_dU.bottomNoLyric, blueBoxPaint);
+
+            //绿框仅在合并情形下绘制；（蓝框仍然绘制）
+
+        //橘框仅在添加连音弧线时绘制
 
 //            invalidate();
     }

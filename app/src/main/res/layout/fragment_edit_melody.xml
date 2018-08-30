@@ -100,7 +100,7 @@
             android:layout_width="match_parent"
             android:layout_height="120dp"
             android:gravity="center"
-            android:text="@string/defaultArea_pitches" />
+            android:text="@string/expand_pitches" />
         <!--横分割线-->
         <TextView
             android:layout_width="match_parent"
