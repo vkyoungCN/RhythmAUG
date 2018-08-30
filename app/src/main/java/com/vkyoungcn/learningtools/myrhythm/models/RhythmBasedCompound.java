@@ -30,6 +30,8 @@ public class RhythmBasedCompound extends Rhythm {
     public RhythmBasedCompound() {
     }
 
+
+
     /* byte编码留空，通过string编码设置后自动生成的构造器*/
     public RhythmBasedCompound(int id, String title, String codeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int stars, int rhythmType, int primaryLyricId, int secondLyricId, int pitchesId, String primaryLyricSerial, String secondLyricSerial, ArrayList<Byte> pitchesSequence) {
         super(id, title, codeSerial, description, isSelfDesign, keepTop, createTime, lastModifyTime, stars, rhythmType, primaryLyricId, secondLyricId, pitchesId);

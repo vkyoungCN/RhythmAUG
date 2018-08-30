@@ -14,7 +14,7 @@ import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class BassModelEditActivity extends AppCompatActivity {
+public class BaseModelEditActivity extends AppCompatActivity {
 /* 由于暂时取消了多交叉复杂关系，暂不在本页面显示“相关的音序和歌词”
 * 其实这种互相关联的功能已经涉及到了创作的部分，暂时先实现记录，再谋求创作。
 * */
@@ -47,6 +47,7 @@ public class BassModelEditActivity extends AppCompatActivity {
 
         //需要先调用SUPER（也就是本类）然后执行各子类的实现，ui数据的初始在子类实现中进行
 
+        //各控件的fbd由子类实现
 //        initUiData();
 
     }
@@ -57,17 +58,9 @@ public class BassModelEditActivity extends AppCompatActivity {
     public void confirmAndBack(View view){
         //这个是确认并返回
 
-        //先把各项修改存入
-        saveIntoModel();//通用
-
-        updateModel();//子类具体实现
-        //        rhythmDbHelper.updateLyricById(model);
-        backToDetail();//子类具体实现
-//        Intent intentBack = new Intent(this,LyricDetailActivity.class);
-//        intentBack.putExtra("LYRIC", model);
-//        intentBack.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-
-//        startActivity(intentBack,REQUEST_CODE_LY_EDIT);
+        saveIntoModel();//先把各项修改存入
+        updateModel();//提交到DB
+        backToDetail();//返回上一页（详情页）
     }
 
     void updateModel(){
@@ -81,12 +74,15 @@ public class BassModelEditActivity extends AppCompatActivity {
 
     void saveIntoModel(){
         model.setTitle(edt_title.getText().toString());
-        model.setCodeSerialString(edt_LyricString.getText().toString());
+//        model.setCodeSerialString(edt_LyricString.getText().toString());
         model.setDescription(edt_descriptions.getText().toString());
         model.setKeepTop(ckb_keepTop.isChecked());
         model.setSelfDesign(ckb_selfDesign.isChecked());
         model.setStars(spinner.getSelectedItemPosition()+1);
         model.setLastModifyTime(System.currentTimeMillis());
+
+        /* 特有控件独立设定*/
+
     }
 
     @Override

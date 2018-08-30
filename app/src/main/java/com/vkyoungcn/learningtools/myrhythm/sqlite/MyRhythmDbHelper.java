@@ -432,6 +432,27 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
     }
 
 
+    public long createGroupPure(Group group){
+        long l;
+        getWritableDatabaseIfClosedOrNull();
+        ContentValues values = new ContentValues();
+
+        values.put(MyRhythmContract.Group.COLUMN_TITLE, group.getTitle());
+        values.put(MyRhythmContract.Group.COLUMN_DESCRIPTION, group.getDescription());
+        values.put(MyRhythmContract.Group.COLUMN_STAR,group.getStars());
+
+        values.put(MyRhythmContract.Group.COLUMN_SELF_DESIGN,group.isSelfDesign());
+        values.put(MyRhythmContract.Group.COLUMN_KEEP_TOP,group.isKeepTop());
+        values.put(MyRhythmContract.Group.COLUMN_CREATE_TIME,group.getCreateTime());
+        values.put(MyRhythmContract.Group.COLUMN_LAST_MODIFY_TIME,group.getLastModifyTime());
+
+        l = mSQLiteDatabase.insert(MyRhythmContract.Group.TABLE_NAME, null, values);
+        closeDB();
+
+        return l;
+    }
+
+
     /*
      * 要删除一个节奏，需要①节奏删除……没有其他操作
      * */
@@ -627,6 +648,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
                 rhythmBasedCompound.setPrimaryLyricSerial(getLyricStringById_TRS(rhythmBasedCompound.getPrimaryLyricId()));
                 rhythmBasedCompound.setSecondLyricSerial(getLyricStringById_TRS(rhythmBasedCompound.getSecondLyricId()));
+                //暂时未存入音高序列
 
                 rhythms.add(rhythmBasedCompound);
             }while (cursor.moveToNext());
@@ -717,6 +739,43 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         closeDB();
 
         return lyris;
+    }
+
+
+    public ArrayList<Lyric> getAllLyrics(){
+        ArrayList<Lyric> lyrics = new ArrayList<>();
+
+        String selectLYid = "SELECT * FROM "+MyRhythmContract.Lyric.TABLE_NAME ;
+
+        getReadableDatabaseIfClosedOrNull();
+        Cursor cursor = mSQLiteDatabase.rawQuery(selectLYid,null);
+        if(cursor.moveToFirst()){
+            do {
+                Lyric lyric = new Lyric();
+                lyric.setId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Lyric._ID)));
+                lyric.setCreateTime(cursor.getLong(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_CREATE_TIME)));
+                lyric.setLastModifyTime(cursor.getLong(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_LAST_MODIFY_TIME)));
+                lyric.setDescription(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_DESCRIPTION)));
+                lyric.setSelfDesign(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_SELF_DESIGN))==1);
+                lyric.setKeepTop(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_KEEP_TOP))==1);
+//                group.setRhythmType(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Group.COLUMN_RHYTHM_TYPE)));
+                lyric.setStars(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_STAR)));
+                lyric.setTitle(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_TITLE)));
+                lyric.setCodeSerialString(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_WORDS)));
+
+                lyrics.add(lyric);
+            }while (cursor.moveToNext());
+        }else{
+            return null;
+        }
+        try {
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        closeDB();
+        return lyrics;
     }
 
 

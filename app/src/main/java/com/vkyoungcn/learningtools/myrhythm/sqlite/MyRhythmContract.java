@@ -70,7 +70,7 @@ public class MyRhythmContract {
 
     /* 分组表*/
     public static class Group implements BaseColumns {
-        public static final String TABLE_NAME = "pitches";
+        public static final String TABLE_NAME = "groups";
         public static final String COLUMN_TITLE ="title";
         public static final String COLUMN_DESCRIPTION = "description";
 //        public static final String COLUMN_CODES = "pitch_serial";

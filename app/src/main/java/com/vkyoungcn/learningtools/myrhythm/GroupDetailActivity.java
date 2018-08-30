@@ -25,8 +25,8 @@ import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_OVERALL_EDIT_DONE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_PURE_EDIT_DONE;
 
-public class GroupDetailActivity extends ThreadRvBassActivity implements OnGeneralDfgInteraction {
-
+public class GroupDetailActivity extends ThreadRvBassActivity{
+//由于本页面需要从Db为Rv加载大量数据，因而不继承自BaseDetail而继承自RvActivity.
     Group group = new Group();
 
     private TextView tv_id;

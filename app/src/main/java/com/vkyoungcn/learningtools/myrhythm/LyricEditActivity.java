@@ -5,13 +5,15 @@ import android.os.Bundle;
 import android.view.View;
 
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
-import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
 import java.util.Date;
 
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_LY_EDIT;
+import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_GP_EDIT_DONE;
+import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_LY_EDIT_DONE;
+import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_OVERALL_EDIT_CANCEL;
 
-public class LyricEditActivity extends BassModelEditActivity {
+public class LyricEditActivity extends BaseModelEditActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,9 +21,40 @@ public class LyricEditActivity extends BassModelEditActivity {
 
         setContentView(R.layout.activity_edit_lyric);
 
+        tv_id = findViewById(R.id.tv_rhId_LEA);
+        edt_title = findViewById(R.id.edt_title_LEA);
+        spinner = findViewById(R.id.spinner_starts_LEA);
+        edt_descriptions = findViewById(R.id.edt_description_LEA);
+
+        ckb_selfDesign = findViewById(R.id.ckb_isSelfDesign_LEA);
+        ckb_keepTop = findViewById(R.id.ckb_isKeepTop_LEA);
+
+        edt_LyricString = findViewById(R.id.edt_lyricString_LEA);
+
         initUiData();
     }
 
+    @Override
+    public void confirmAndBack(View view) {
+        super.confirmAndBack(view);
+        //直接使用基类即可，会转而调用本类的分支方法实现
+        // （由于布局文件中需要相应的方法，所以这里必须写一遍）
+    }
+
+    public void cancel(View view){
+//        setResult(RESULT_CODE_RH_OVERALL_EDIT_CANCEL);
+        this.finish();
+
+    }
+
+    @Override
+    void saveIntoModel() {
+        super.saveIntoModel();
+
+        //特有控件
+        model.setCodeSerialString(edt_LyricString.getText().toString());
+
+    }
 
     @Override
     void updateModel() {
@@ -30,12 +63,10 @@ public class LyricEditActivity extends BassModelEditActivity {
 
     @Override
     void backToDetail() {
-        Intent intentBack = new Intent(this,LyricDetailActivity.class);
-        intentBack.putExtra("LYRIC", model);
-        intentBack.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-
-        setResult(REQUEST_CODE_LY_EDIT);
-        this.startActivity(intentBack);
+        Intent intentBack = new Intent();
+        intentBack.putExtra("MODEL", model);
+        setResult(RESULT_CODE_LY_EDIT_DONE,intentBack);
+        this.finish();
 
     }
 

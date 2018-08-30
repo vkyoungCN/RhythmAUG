@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RhythmDetailActivity"
+    android:orientation="vertical"
+    >
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:background="#efefef"
+        android:gravity="center"
+        android:text="@string/allModels"
+        android:textSize="16sp" />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        />
+
+    <!--横分割线-->
+
+
+    <!--中1·横栏-->
+    <TextView
+        android:id="@+id/tv_rhythmTitleBar_AMA"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:background="#e0e0e0"
+        android:gravity="center"
+        android:text="@string/ryhythm"
+        android:textSize="16sp"
+        />
+    <!--分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        />
+    <!--内容区-->
+    <FrameLayout
+        android:id="@+id/flt_rhythmsContentArea_AMA"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        >
+        <!--遮罩tv-->
+        <TextView
+            android:id="@+id/tv_mask1_AMA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="@string/hold_for_loading" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+            <!--SV下只允许存在一个控件-->
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_linkingRhythms_AMA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+
+            </android.support.v7.widget.RecyclerView>
+
+        </ScrollView>
+
+
+    </FrameLayout>
+
+
+    <!--中2·横栏-->
+    <TextView
+        android:id="@+id/tv_lyricTitleBar_AMA"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:background="#e0e0e0"
+        android:gravity="center"
+        android:text="@string/lyrics"
+        android:textSize="16sp" />
+    <!--分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        />
+    <!--内容区-->
+    <FrameLayout
+        android:id="@+id/flt_lyricContentArea_AMA"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        >
+        <!--遮罩tv-->
+        <TextView
+            android:id="@+id/tv_mask2_AMA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="@string/hold_for_loading" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+            <!--SV下只允许存在一个控件-->
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_linkingLyrics_AMA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+
+            </android.support.v7.widget.RecyclerView>
+
+        </ScrollView>
+    </FrameLayout>
+
+
+    <!--暂不开放独立音高序列的管理-->
+    <!--&lt;!&ndash;中3·横栏&ndash;&gt;
+    <TextView
+        android:id="@+id/tv_pitchesTitleBar_AMA"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:background="#e0e0e0"
+        android:gravity="center"
+        android:text="@string/linkingPitches_2"
+        android:onClick="titleClick"
+        android:textSize="16sp" />
+    &lt;!&ndash;分割线&ndash;&gt;
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        />
+    &lt;!&ndash;内容区&ndash;&gt;
+    <FrameLayout
+        android:id="@+id/flt_pitchesContentArea_AMA"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:visibility="gone"
+        >
+        &lt;!&ndash;遮罩tv&ndash;&gt;
+        <TextView
+            android:id="@+id/tv_mask3_AMA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="@string/hold_for_loading" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+            &lt;!&ndash;SV下只允许存在一个控件&ndash;&gt;
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_linkingPitches_AMA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+
+            </android.support.v7.widget.RecyclerView>
+
+        </ScrollView>
+    </FrameLayout>
+    -->
+
+    <!--底部信息及按键，横置覆盖于rv上层-->
+    <TextView
+        android:id="@+id/tv_bottomInfo_AMA"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:gravity="center"
+        android:layout_gravity="bottom"
+        android:background="#efefef"
+        android:text="@string/plh_groupAllInfo_AMA"
+        />
+    <!--底边线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_cyan"
+        android:layout_gravity="bottom"
+        />
+</LinearLayout>

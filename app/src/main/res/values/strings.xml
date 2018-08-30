@@ -11,7 +11,7 @@
     <string name="str_toAllRhythms">查看所有</string>
     <string name="str_Rhythms">Rhythms!</string>
     <string name="bar_star_bar">———☆———</string>
-    <string name="alpha_testing_string">（工程测试α-0.1.1）</string>
+    <string name="alpha_testing_string">（工程测试α-0.2.1）</string>
     <string name="hold_for_loading">正则加载数据，请稍候……</string>
     <string name="str_pitchSerial_add">创作一组\n使用默认节奏的音高序列</string>
     <string name="str_wordsSerial_add">词创作</string>
@@ -75,7 +75,7 @@
     <string name="plh_beat_value">基本拍子(X)值=%1$d</string>
     <string name="plh_section_value">小节总值=%1$d</string>
     <string name="plh_currentPlaceRest_value">当前位置可用总值=%1$d</string>
-    <string name="str_toAllGroups">所有分组</string>
+    <string name="allGroups">所有分组</string>
     <string name="all_groups">所有分组</string>
     <string name="all_resources">所有资源（通用标题）</string>
     <string name="zone_divide">拆分区</string>
@@ -112,5 +112,9 @@
     <string name="remove_from_group_2">点击确定后，从分组移除本记录。</string>
     <string name="lyricDetail">词作详情</string>
     <string name="auto_create">修改时间\n（自动生成）</string>
+    <string name="allRhythms">所有节奏</string>
+    <string name="allModels">所有资源</string>
+    <string name="ryhythm">节奏</string>
+    <string name="lyrics">词</string>
 
 </resources>

@@ -28,14 +28,14 @@
         android:layout_marginTop="2dp"
         >
         <TextView
-            android:id="@+id/tv_rhId_RODA"
+            android:id="@+id/tv_rhId_ROEA"
             android:layout_width="32dp"
             android:layout_height="match_parent"
             android:gravity="center"
             android:text="@string/str_sharp2"
             />
         <EditText
-            android:id="@+id/edt_title_RODA"
+            android:id="@+id/edt_title_ROEA"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="match_parent"
@@ -47,7 +47,6 @@
             />
 
         <TextView
-            android:id="@+id/tv_lastModifyTime_RODA"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -68,7 +67,7 @@
         android:layout_margin="2dp"
         >
         <com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView
-            android:id="@+id/rhView_singleLine_RODA"
+            android:id="@+id/rhView_singleLine_ROEA"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             />
@@ -112,7 +111,7 @@
         android:gravity="end"
         >
         <CheckBox
-            android:id="@+id/ckb_isSelfDesign_RODA"
+            android:id="@+id/ckb_isSelfDesign_ROEA"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="match_parent"
@@ -121,7 +120,7 @@
             android:text="@string/selfDesign"
             />
         <CheckBox
-            android:id="@+id/ckb_isKeepTop_RODA"
+            android:id="@+id/ckb_isKeepTop_ROEA"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="match_parent"
@@ -148,7 +147,7 @@
             />
 
             <Spinner
-                android:id="@+id/spinner_RODA"
+                android:id="@+id/spinner_ROEA"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
@@ -185,7 +184,7 @@
         >
 
         <TextView
-            android:id="@+id/tv_mask1_RODA"
+            android:id="@+id/tv_mask1_ROEA"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
@@ -196,7 +195,7 @@
             android:layout_height="match_parent"
             >&lt;!&ndash;SV下只允许存在一个控件&ndash;&gt;
             <android.support.v7.widget.RecyclerView
-                android:id="@+id/rv_linkingPitches_RODA"
+                android:id="@+id/rv_linkingPitches_ROEA"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -225,7 +224,7 @@
         android:layout_weight="2"
         >
         <TextView
-            android:id="@+id/tv_mask2_RODA"
+            android:id="@+id/tv_mask2_ROEA"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/hold_for_loading"
@@ -237,7 +236,7 @@
             android:layout_height="match_parent"
             >&lt;!&ndash;SV下只允许存在一个控件&ndash;&gt;
             <android.support.v7.widget.RecyclerView
-                android:id="@+id/rv_linkingLyrics_RODA"
+                android:id="@+id/rv_linkingLyrics_ROEA"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -274,7 +273,7 @@
             android:layout_height="match_parent"
             >
             <EditText
-                android:id="@+id/edt_description_RODA"
+                android:id="@+id/edt_description_ROEA"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
@@ -319,7 +318,7 @@
             android:gravity="center"
             android:text="@string/confirm"
             android:background="@color/myRhythm_red"
-            android:onClick="editFinish"
+            android:onClick="confirmAndBack"
             />
         <TextView
             android:layout_width="match_parent"

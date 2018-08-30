@@ -117,7 +117,7 @@
             android:scaleType="centerCrop"
             android:src="@drawable/fab_new_2"
             android:onClick="fabMainClick"
-            app:backgroundTint="@color/myRhythm_orange" />
+            app:backgroundTint="@color/myRhythm_pink" />
 
 
         <!--底部信息及按键，横置覆盖于rv上层-->
@@ -132,30 +132,45 @@
                 android:id="@+id/tv_rhythmAmount_MA"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:paddingStart="4dp"
+                android:paddingEnd="2dp"
                 android:gravity="center"
-                android:paddingStart="12dp"
-                android:paddingEnd="4dp"
                 android:text="@string/psh_totalRhythmAmount"
                 />
-            <TextView
-                android:layout_width="86dp"
+
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:orientation="horizontal"
                 android:layout_gravity="end"
-                android:layout_marginEnd="87dp"
-                android:gravity="center"
-                android:text="@string/str_toAllRhythms"
-                android:background="@color/myRhythm_teal"
-                android:onClick="toAllRhythms"
-                />
-            <TextView
-                android:layout_width="86dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="end"
-                android:gravity="center"
-                android:text="@string/str_toAllGroups"
-                android:background="@color/myRhythm_orange"
-                android:onClick="toGroups"
-                />
+                >
+                <TextView
+                    android:layout_width="66dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="@string/allRhythms"
+                    android:background="@color/myRhythm_teal"
+                    android:onClick="toAllRhythms"
+                    />
+                <TextView
+                    android:layout_width="66dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="@string/allGroups"
+                    android:background="@color/myRhythm_orange"
+                    android:onClick="toGroups"
+                    />
+                <TextView
+                    android:layout_width="66dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="@string/allModels"
+                    android:background="@color/myRhythm_red"
+                    android:onClick="toAllModels"
+                    />
+
+            </LinearLayout>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="1dp"

@@ -27,6 +27,12 @@
         <activity android:name=".ThreadRvBassActivity" />
         <activity android:name=".AllGroupsActivity"/>
         <activity android:name=".GroupDetailActivity"/>
+        <activity android:name=".LyricDetailActivity"/>
+        <activity android:name=".LyricEditActivity"/>
+        <activity android:name=".BaseModelDetailActivity"/>
+        <activity android:name=".BaseModelEditActivity"/>
+        <activity android:name=".GroupEditActivity"/>
+        <activity android:name=".AllModelsActivity"/>
     </application>
 
 </manifest>

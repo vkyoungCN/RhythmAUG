@@ -135,6 +135,11 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
     }
 
 
+    public void toAllModels(View view){
+        Intent intentToAllModels = new Intent(this,AllModelsActivity.class);
+        this.startActivity(intentToAllModels);
+    }
+
     void handleMessage(Message message) {
         super.handleMessage(message);
 
@@ -192,6 +197,10 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
             default:
                 Toast.makeText(this, "添加失败。", Toast.LENGTH_SHORT).show();
                 //什么都不做，暂时只有一个提示。
+                break;
+
+            case RESULT_CODE_GP_CREATED:
+                //不做任何事。因为主页不存在gp的显示内容。
                 break;
         }
     }
