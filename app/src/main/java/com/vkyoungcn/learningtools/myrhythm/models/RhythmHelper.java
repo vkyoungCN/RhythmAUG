@@ -51,9 +51,24 @@ public class RhythmHelper {
 
 
     public static ArrayList<ArrayList<Byte>> codeParseIntoSections(ArrayList<Byte> rhythmCodes,int rhythmType){
+        //将节奏编码序列按小节组织起来【编码增加126、127后不必再依靠累加时值判断】
+        ArrayList<ArrayList<Byte>>codesInSections = new ArrayList<>();//初步初始化
+        int startIndex = 0;//用于记录上次添加的末尾索引+1，即本节应添加的音符序列的索引起始值。
+
+        for (int i=0; i<rhythmCodes.size();i++){
+            int b = (int)(rhythmCodes.get(i));
+            if(b==127){
+                ArrayList<Byte> codeInSingleSection = new ArrayList<>(rhythmCodes.subList(startIndex,i+1));//装载单节内的音符【注意指定的右侧索引值是不包含的，仅截取到/包括到到其左邻一个位置。】
+                codesInSections.add(codeInSingleSection);//添加到按节管理的总编码表
+                startIndex = i+1;
+            }
+        }
+        return codesInSections;
+    }
+
+
+   /* public static ArrayList<ArrayList<Byte>> codeParseIntoSections(ArrayList<Byte> rhythmCodes,int rhythmType){
         //将节奏编码序列按小节组织起来
-//        Log.i(TAG, "codeParseIntoSections: size:"+rhythmCodes.size());
-//        Log.i(TAG, "codeParseIntoSections: rhyCodes="+rhythmCodes.toString());
         int valueOfBeat = calculateValueBeat(rhythmType);
         int valueOfSection = calculateValueSection(rhythmType);
 
@@ -65,7 +80,7 @@ public class RhythmHelper {
             int b = (int)(rhythmCodes.get(i));
 //            Log.i(TAG, "codeParseIntoSections: b="+String.valueOf(b));
             if(b>112){
-                //上弧连音专用符号，不记时值
+                //上弧连音专用符号，不记时值(以及小节结尾、拍子结尾……)
                 totalValue += 0;
             }else if(b>92){
                 totalValue += 4;//三类均分多连音的时值的定值，不随内容数量改变，也与vb无关。
@@ -94,8 +109,7 @@ public class RhythmHelper {
 
 //        Log.i(TAG, "codeParseIntoSections: section_1="+codesInSections.get(0).toString()+"type="+rhythmType);
         return codesInSections;
-    }
-
+    }*/
 
     public static float standardLengthOfSection( ArrayList<Byte> codesInSingleSection, float unitStandardWidth ,int valueOfBeat,float beatGap) {
         //是按标准单位宽度计算的本节所需宽度，在与控件宽度比较之后，(可能)会进行压缩或扩展

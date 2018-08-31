@@ -29,27 +29,35 @@ public class DrawingUnit {
     public float left;
     public float right;
     public float top;
-    public float bottomNoLyric;//没有歌词时的绘制底边位置。
+    public float bottomNoLyric;//没有歌词时的绘制底边位置。【几乎一半的Du组件的纵向要依赖本字段完成。】
     public float bottomWithLyric;//有歌词时（可能一行，最多两行）
 
     public String code = "X";//默认是X，当作为旋律绘制时绘制具体音高的数值。
-    public float codeCenterX;//用于字符绘制（字符底边中点）
+    public float codeCenterX;//用于字符绘制（字符底边中点）//计算时保证按中点计算就可行。
     public float codeBaseY;//字符底边【待？基线还是底边？】
 
-    public String word_1 = "";//歌词。注意顺序和位置，没有词的位置上留空【暂时只绘制一行歌词，暂时位于bottom下方一个标准单位】]
+    /*public String word_1 = "";//歌词。注意顺序和位置，没有词的位置上留空
     public float word_1_CenterX;
     public float word_1_BaseY;
 
     public String word_2 = "";//歌词。注意顺序和位置，没有词的位置上留空【暂时只绘制一行歌词，暂时位于bottom下方两个标准单位】]
     public float word_2_CenterX;
     public float word_2_BaseY;
-
+*/
     public ArrayList<BottomLine> bottomLines = new ArrayList<>();//已实例化，直接add即可。
     public RectF[] additionalPoints = new RectF[]{};//上下加点
 
     public int mCurveNumber = 0;//在均分多连音情况下，顶弧中间有一个小数字；
     public float mCurveNumCenterX;
     public float mCurveNumBaseY;
+
+    public String lyricWord_1 = "";//普通dU为一个汉字，如果是均分多连音，安排若干个汉字；
+    public float lyricWord_1_CenterX;
+    public float lyricWord_1_BaseY;
+
+    public String lyricWord_2 = "";//普通dU为一个汉字，如果是均分多连音，安排若干个汉字；
+    public float lyricWord_2_CenterX;
+    public float lyricWord_2_BaseY;
 
     public boolean isEndCodeOfLongCurve = false;//当编码遇到112~127数值时，需要在将前一个音符的du中的本字段设true，且记录弧线跨度。
     public int curveLength = 0;//如果要绘制上方连音弧线（且不是均分多连音），则需记录弧线向前跨越多少个音符。
@@ -217,8 +225,11 @@ public class DrawingUnit {
         this.mCurveNumCenterX +=h_shiftAmount;
         this.mCurveNumBaseY +=v_shiftAmount;
 
-        this.word_1_CenterX +=h_shiftAmount;
-        this.word_1_BaseY +=v_shiftAmount;
+        this.lyricWord_1_CenterX +=h_shiftAmount;
+        this.lyricWord_1_BaseY +=v_shiftAmount;
+
+        this.lyricWord_2_CenterX +=h_shiftAmount;
+        this.lyricWord_2_BaseY +=v_shiftAmount;
 
     }
 

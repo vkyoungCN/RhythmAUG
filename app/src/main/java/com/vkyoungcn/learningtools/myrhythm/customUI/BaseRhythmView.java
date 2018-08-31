@@ -14,6 +14,9 @@ import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 
@@ -26,12 +29,11 @@ public class BaseRhythmView extends View {
 //* 其中有词模式下需要绘制上方连音弧线；旋律模式下需要绘制上下方的加点。
 //*
 
-    private static final String TAG = "BaseRhythmView";
+    static final String TAG = "BaseRhythmView";
 
     Context mContext;
 
-
-    private RhythmBasedCompound bcRhythm; //数据源
+    RhythmBasedCompound bcRhythm; //数据源
     int rhythmType;//节拍类型（如4/4），会影响分节的绘制。【不能直接传递在本程序所用的节奏编码方案下的时值总长，因为3/4和6/8等长但绘制不同】
     int valueOfBeat = 16;
     int valueOfSection = 64;
@@ -44,15 +46,32 @@ public class BaseRhythmView extends View {
     ArrayList<Byte> pitchSerial;
 
     /* 绘制所需*/
-    private float topYDistanceBetweenTwoLine;//全局化以便可以提前处理，避免在for循环中多次处理。
+    float twoLinesTopYBetween;//仅在多行绘制模式下有意义。
+
+    //可用总长（控件宽扣除两侧缩进）
+    float availableTotalWidth;//（在initDrawing方法中初始化）
+    //可以指定起绘点（顶部高度，topY）位置
+    float topDrawing_Y;//（在initDrawing方法中初始化）
+
+    //在本行一共有多少小节（最后一节已经移到下一行，不算）。（使用这个代替索引列表）
+    int sectionAmountInLine = 0;
+    //当前本行所有小节所需的长度
+    float lineRequiredLength = 0;
+    //当前位于第几行，从0起。（用于折行模式下该行Y值的计算）
+    int lineCursor = 0;
+
+    /* 用于放缩使用*/
+    int codeSizeDip;
+    int unitWidthDip;
+    int unitHeightDip;
 
     /* 设置参数*/
     //设置参数与数据源一并设置
-    private boolean useLyric_1 =false;
-    private boolean useLyric_2 =false;
+    boolean useLyric_1 =false;
+    boolean useLyric_2 =false;
 
-    private boolean drawPitches = false;//如果使用旋律模式，则需要数字替代X且在onD中处理上下加点的绘制。
-//    private boolean useMultiLine = true;//在某些特殊模式下，需使用单行模式（如在显示某节奏所对应的单条旋律时，计划以可横向滑动的单行模式进行显示，以节省纵向空间。）
+    boolean drawPitches = false;//如果使用旋律模式，则需要数字替代X且在onD中处理上下加点的绘制。
+//    boolean useMultiLine = true;//在某些特殊模式下，需使用单行模式（如在显示某节奏所对应的单条旋律时，计划以可横向滑动的单行模式进行显示，以节省纵向空间。）
 
 
     /* 画笔组*/
@@ -63,9 +82,9 @@ public class BaseRhythmView extends View {
 
     /* 尺寸组 */
     float padding;
-    float unitStandardWidth;//24dp。单个普通音符的基准宽度。【按此标准宽度计算各节需占宽度；如果单节占宽超屏幕宽度，则需压缩单节内音符的占宽；
+    float unitWidth;//24dp。单个普通音符的基准宽度。【按此标准宽度计算各节需占宽度；如果单节占宽超屏幕宽度，则需压缩单节内音符的占宽；
     // 如果下节因为超长而移到下一行，且本行剩余了更多空间，则需要对各音符占宽予以增加（但是字符大小不变）】
-    float unitStandardHeight;//24dp。单个普通音符的基准高度。
+    float unitHeight;//24dp。单个普通音符的基准高度。
     float beatGap;//节拍之间、小节之间需要有额外间隔（但似乎没有统一规范），暂定12dp。
     //注意，一个节拍内的音符之间没有额外间隔。
 //    但是好像无法手动控制X和点之间的间距，因而本参数仅用于让后续字符自然。//暂定半宽
@@ -191,7 +210,7 @@ public class BaseRhythmView extends View {
 
         if(codesInSections!=null&&!codesInSections.isEmpty()){
             //如果数据源此时非空，则代表数据源的设置早于onSC，也即数据源设置方法中的绘制信息初始化方法被中止，
-            //需要再次再次初始化绘制信息（但是传入isTBOSC标记，只初始绘制信息不进行刷新）
+            //需要再次再次初始化绘制信息（但是传入isTriggerFromSC标记，只初始绘制信息不进行刷新）
             initDrawingUnits(true);
         }
         super.onSizeChanged(w, h, old_w, old_h);
@@ -222,8 +241,6 @@ public class BaseRhythmView extends View {
 
 
 
-
-
     @Override
     protected void onDraw(Canvas canvas) {
         if(checkEmptyAndDraw(canvas)){
@@ -234,8 +251,15 @@ public class BaseRhythmView extends View {
         //未退出则继续绘制主体内容
         //逐小节逐音符绘制(主体部分：各乐符、下划线、乐符间隔、拍子间隔、小节间隔、节间小节线、均分多连音、跨音符的上方连音弧线)
         drawByEachUnit(canvas);
-        //绘制下方汉字
-        drawLyric(canvas);
+
+        //绘制下方歌词
+        if(useLyric_1){
+            drawLyric_1(canvas);
+        }
+        if(useLyric_2){
+            drawLyric_2(canvas);
+        }
+
 //            invalidate();
     }
 
@@ -335,20 +359,23 @@ public class BaseRhythmView extends View {
 
 
     /* 绘制歌词。位于乐谱部分的下方，支持一到两行歌词（数据同样已事先存入drawingUnit）*/
-    void drawLyric(Canvas canvas) {
+    void drawLyric_1(Canvas canvas) {
         //遍历方式进行
         for (ArrayList<DrawingUnit> drawingUnitsInSections : drawingUnits) {
             for (DrawingUnit drawingUnit : drawingUnitsInSections) {
-                if (lyricInString_1 != null&&!lyricInString_1.isEmpty()) {
-                    canvas.drawText(drawingUnit.word_1, drawingUnit.word_1_CenterX, drawingUnit.word_1_BaseY, codePaint);
-                }
-                if (lyricInString_2 != null&&!lyricInString_2.isEmpty()) {
-                    canvas.drawText(drawingUnit.word_2, drawingUnit.word_2_CenterX, drawingUnit.word_2_BaseY, codePaint);
-                }
+                    canvas.drawText(drawingUnit.lyricWord_1, drawingUnit.lyricWord_1_CenterX, drawingUnit.lyricWord_1_BaseY, codePaint);
             }
         }
     }
 
+    void drawLyric_2(Canvas canvas) {
+        //遍历方式进行
+        for (ArrayList<DrawingUnit> drawingUnitsInSections : drawingUnits) {
+            for (DrawingUnit drawingUnit : drawingUnitsInSections) {
+                canvas.drawText(drawingUnit.lyricWord_2, drawingUnit.lyricWord_2_CenterX, drawingUnit.lyricWord_2_BaseY, codePaint);
+            }
+        }
+    }
 
     //调用本方法时，要求跨度必然大于本节k。否则直接处理即可不需本方法参与。
     public DrawingUnit findStartDrawingUnit(int currentK, int currentSectionIndex, int curveSpan, ArrayList<ArrayList<DrawingUnit>> drawingUnitsInSections){
@@ -381,67 +408,94 @@ public class BaseRhythmView extends View {
     }
 
     /* 用在数据设置方法中*/
-    void setSizeOfCodeAndUnit(int codeSize,int unitWidth,int unithHeight){
+    void setSizeOfCodeAndUnit(int codeSize,int unitWidth,int unitHeight){
         int codeMinSize = 12;
         int codeMaxSize = 28;
         if(codeSize<codeMinSize){
             //不允许小于12【暂定】
+            this.codeSizeDip =codeMinSize;
             this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeMinSize, getResources().getDisplayMetrics());
         }else if(codeSize>codeMaxSize){
             //不允许大于28【暂定】
+            this.codeSizeDip =codeMaxSize;
             this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeMaxSize, getResources().getDisplayMetrics());
         }else {
+            this.codeSizeDip =codeSize;
             this.textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, codeSize, getResources().getDisplayMetrics());
         }
         codePaint.setTextSize(textSize);//需要在设置了文字大小后重新设置画笔
 
-        int unitMinSize = 16;
-        int unitMaxSize = 32;
+        int unitMinSize = codeMinSize+4;//和字符尺寸相差4dp（sp?）。
+        int unitMaxSize = codeMaxSize+4;
         if(unitWidth<unitMinSize){
             //不允许小于18【暂定】
-            this.unitStandardWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, unitMinSize, getResources().getDisplayMetrics());
+            this.unitWidthDip = unitMinSize;
+            this.unitWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, unitMinSize, getResources().getDisplayMetrics());
         }else if(unitWidth>unitMaxSize){
             //不允许大于32【暂定】
-            this.unitStandardWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, unitMaxSize, getResources().getDisplayMetrics());
+            this.unitWidthDip = unitMaxSize;
+            this.unitWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, unitMaxSize, getResources().getDisplayMetrics());
         }else {
-            this.unitStandardWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, unitWidth, getResources().getDisplayMetrics());
+            this.unitWidthDip = unitWidth;
+            this.unitWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, unitWidth, getResources().getDisplayMetrics());
         }
 
-        if(unithHeight<unitMinSize){
+        if(unitHeight<unitMinSize){
             //不允许小于18【暂定】
-            this.unitStandardHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, unitMinSize, getResources().getDisplayMetrics());
-        }else if(unithHeight>unitMaxSize){
+            this.unitHeightDip = unitMinSize;
+            this.unitHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, unitMinSize, getResources().getDisplayMetrics());
+        }else if(unitHeight>unitMaxSize){
             //不允许大于32【暂定】
-            this.unitStandardHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, unitMaxSize, getResources().getDisplayMetrics());
+            this.unitHeightDip = unitMaxSize;
+            this.unitHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, unitMaxSize, getResources().getDisplayMetrics());
         }else {
-            this.unitStandardHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, unithHeight, getResources().getDisplayMetrics());
+            this.unitHeightDip = unitHeight;
+            this.unitHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, unitHeight, getResources().getDisplayMetrics());
         }
     }
 
 
+    /* 数据设置方法一（简化版）*/
     public void setRhythmViewData(RhythmBasedCompound rhythmBasedCompound){
        setRhythmViewData(rhythmBasedCompound,18,20,20);
     }
 
+    /* 数据设置方法二（提供尺寸设定功能）*/
     public void setRhythmViewData(RhythmBasedCompound rhythmBasedCompound, int codeSize, int unitWidth, int unitHeight){
         this.bcRhythm = rhythmBasedCompound;
         this.rhythmType = rhythmBasedCompound.getRhythmType();
         this.codesInSections = RhythmHelper.codeParseIntoSections(rhythmBasedCompound.getCodeSerialByte(), rhythmType);
 
-        this.lyricInString_1 = rhythmBasedCompound.getPrimaryLyricSerial();
+        this.lyricInString_1 = rhythmBasedCompound.getPrimaryLyricSerial();//【在计算时，会改为按节管理版本，才能正确放置位置】
         this.lyricInString_2 = rhythmBasedCompound.getSecondLyricSerial();
         this.pitchSerial = rhythmBasedCompound.getLinkingPitches();
 
         this.valueOfBeat = RhythmHelper.calculateValueBeat(rhythmType);
 
         checkAndSetThreeStates();
-
         setSizeOfCodeAndUnit(codeSize,unitWidth,unitHeight);
 
         //计算绘制信息（核心方法）
+        if(sizeChangedWidth == 0){
+            //此时尚未获取控件尺寸，无法真正计算绘制信息，中止
+            return;
+            //当运行到尺寸确定的方法（onSc）时，会对数据情况进行检查，如果有数据则会触发再次计算。
+        }
         initDrawingUnits(false);
 
     }
+
+    void initDrawingUnits(boolean isTriggerFromSC){
+        initDrawingUnits_step1();
+        initDrawingUnits_step2();
+
+        if(!isTriggerFromSC){
+            invalidate();
+        }//onSC方法返回后会自动调用onD因而没必要调用invalidate方法。
+
+    }
+
+
 
     /*（现已禁止直接传入编码数组，请传入混合Rhythm类）
     public void setRhythmViewData(ArrayList<ArrayList<Byte>> codesInSections, int rhythmType, String primaryLyricString, String secondLyricString, int codeSize, int unitWidth, int unithHeight){
@@ -464,222 +518,57 @@ public class BaseRhythmView extends View {
         }//就运行表现来看，似乎是先设置了数据然后才是onSC。
 
         //主要计算部分：各音符对应绘制单元的绘制信息计算。
-        initDrawingUnits(false);
+        initDrawingUnits_step1(false);
     }
 */
 
-    【至此，待】
-    void initDrawingUnits(boolean isTriggerFromOnSC) {
-//        Log.i(TAG, "initDrawingUnits:MULTI+"+isTriggerFromOnSC);
 
-        //本方法计算了大部分内容的绘制坐标，但是还有如下未处理：
-        // ①旋律的上下加点画法；
-        //
-        // 控件的真实绘制起点（是否top对齐）需要在计算出所有数据后，根据所需总长与控件高度的关系
-        // （即是否能占满或超出）来决定（如果在控件高度内能够绘制完成所有行，则垂直方向是居中；
-        // 否则是top对齐）。如果居中，则需要在计算完成一遍后，以遍历方式对各数据单元进行平移。
-        //
-        //【如果本方法是从onSc中触发的调用，则最后不进行invalidate()】
-
+    /*
+    * 目前（已分配的）编码
+    * ①0：延音符-
+    * ②1、2、3、4、6、8、12、16、24。各种时值的实体节奏符X（带下划线的是基本、非附点的音符）
+    * ③上述（②条目中）各值的负值：各种时值的空拍子
+    * ④73~79、83~89、93~99，总时值分别为（1/4、1/8、1/16）的均分多连音；
+    * 以code%10的余数表示其内含的多连音个数（3~9个）【编辑器暂时只支持3、5、7连音】
+    * ⑤112~125：连音弧结束标记，（以code-110代表其跨度，暂时支持2~15跨度）
+    * ⑥126：拍尾标记
+    * ⑦127：小节尾标记
+    * */
+    void initDrawingUnits_step1() {
+        //子类根据具体规则实现
+        //（折行模式要判断各节、各行与屏宽关系；单行模式向后累加）
 
         //可用总长（控件宽扣除两侧缩进）
-        float availableTotalWidth = sizeChangedWidth - padding * 2;
+        availableTotalWidth = sizeChangedWidth - padding * 2;
+        //可以指定起绘点（顶部高度，topY）位置
+        topDrawing_Y = padding;
 
         //装载绘制信息的总列表（按小节区分子列表管理）
-        drawingUnits = new ArrayList<ArrayList<DrawingUnit>>();//初步初始（后面采用add方式，因而不需彻底初始）
+        drawingUnits = new ArrayList<>();//初步初始（后面采用add方式，因而不需彻底初始）
 
-        //如果有歌词信息，则还要附加在Du中。（各dU分别对应一个字，无字的du也要对应特别占位符）
-
-        int accumulateSizeBeforeThisSection = 0;//为了能在一维的总表中对应（按小节组织的）二维表中的位置
-
-        float lineRequiredLength = 0;//当前本行所有小节所需的长度
-        int sectionAmountInLine = 0;//在本行一共有多少小节（最后一节已经移到下一行，不算）。（使用这个代替索引列表）
-
-        int lineCursor = 0;//当前位于第几行，从0起。（用于折行模式下该行Y值的计算）
-        float topDrawing_Y = padding;//临时随意指定的起绘顶点（topY），暂时按top对齐处理
-
+        lineRequiredLength =0;//每次重新计算时要重置。
         //两行之间的标准间距，（包含行高在内，是否包含词显示区高度则取决于是否有词）
-        topYDistanceBetweenTwoLine=(unitStandardHeight + additionalPointsHeight * 2 + curveOrLinesHeight * 2 + lineGap);
-        if(this.lyricInString_2 !=null){
-            topYDistanceBetweenTwoLine+=(unitStandardHeight*2);
-        }else if(this.lyricInString_1 !=null){
-            topYDistanceBetweenTwoLine+=unitStandardHeight;
-        }
+        //其中*2的原因：上下加点区都要预留，总高为单侧加点*2；上方弧线、下方横线区都要预留。（不论相关内容是否存在）。
+        twoLinesTopYBetween =(unitHeight + additionalPointsHeight * 2 + curveOrLinesHeight * 2 + lineGap);
+        if(useLyric_2){//使用第二词序则直接预留两行高度，不论主词序是否存在（否则词序初始化方法中不好判断位置，简化处理）
+            twoLinesTopYBetween +=(unitHeight *2);
+        }else if(useLyric_1){
+            twoLinesTopYBetween += unitHeight;
+        }//两者皆不使用则高度差不做调整。
 
-
-        //开始计算绘制信息。以小节为单位进行计算。
-        for (int i = 0; i < codesInSections.size(); i++) {
-            //先获取当前小节的长度
-            float sectionRequiredLength = standardLengthOfSection(codesInSections.get(i));
-
-            //记录到本行所需总长度
-            lineRequiredLength += sectionRequiredLength;
-
-            //本行既有小节数量+1
-            sectionAmountInLine++;
-//            sectionIndexesOfThisLine.add(i);//本小节在总小节编码列表中的索引,加入到“本行记录”列表中。
-
-            //针对本小节的宽度/本行既有小节总宽度 与 本行的屏幕宽度进行比较判断。
-            if (sectionRequiredLength > availableTotalWidth) {
-                //单节宽度大于屏幕宽度
-                // 如果本行已有其他节则需要压缩本节、扩展其他节；且本节下移
-                // 否则（如果本行只有本节自己），则压缩本节，下一节新起一行（行需要宽度重置）
-                if (sectionAmountInLine == 1) {
-                    //①本行只有本节自己，对本节的基础宽度压缩（不需下移）
-                    float unitWidthSingleZipped = (availableTotalWidth / sectionRequiredLength) * unitStandardWidth;//与外部使用的uW变量同名
-                    //【在此计算本行本节的绘制数据】
-                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidthSingleZipped, lyricInString_1, lyricInString_2,accumulateSizeBeforeThisSection);
-                    drawingUnits.add(sectionDrawingUnit);
-                    accumulateSizeBeforeThisSection+=drawingUnits.get(i).size();
-
-                    //②行需求宽度计数器重置，③本行节索引重置
-                    lineRequiredLength = 0;
-                    sectionAmountInLine=0;
-                } else {
-                    //本行超过1节。其他节扩展
-                    float unitWidth_extracted = (availableTotalWidth / (lineRequiredLength - sectionRequiredLength)) * unitStandardWidth;
-                    //计算其他行的绘制数据
-                    float sectionStartX = padding;
-
-                    //先对行内首节进行计算
-                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted, lyricInString_1, lyricInString_2,accumulateSizeBeforeThisSection);
-                    //并添加到总记录
-                    drawingUnits.add(sectionDrawingUnit);
-
-                    //其余各节需要依靠前一节的末尾坐标进行自身坐标的计算【仅当本行内（算上下移的那个）的小节数量≥3时才进入循环】
-                    //（否则，如果==2，则是一个下移，剩余一个独占整行在之前的“首节处理”逻辑中已完成计算，不需进循环。）
-                    for (int k=2;k<sectionAmountInLine;k++) {
-                        //计算（剩余在本行的）后续各节。
-                        int indexBeingCalculate = i-sectionAmountInLine+k;
-                        int indexBeforeCalculate = i-sectionAmountInLine+k-1;
-                        //先计算起始X，需要依赖同line中前一节最末音符的右边缘坐标。
-                        sectionStartX = drawingUnits.get(indexBeforeCalculate).get(drawingUnits.get(indexBeforeCalculate).size()-1).right+beatGap;
-                        ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted, lyricInString_1, lyricInString_2,accumulateSizeBeforeThisSection);
-                        drawingUnits.add(sectionDrawingUnit_2);
-
-                    }
-//                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(sectionIndex), topDrawing_Y, lineCursor, padding, unitWidthSingleZipped);
-
-
-                    //本节下移,独占一行，且压缩本节
-                    lineCursor++;
-                    float unitWidth_zipped = (availableTotalWidth / sectionRequiredLength) * unitStandardWidth;
-                    //【在此计算本节绘制数据】
-                    ArrayList<DrawingUnit> sectionDrawingUnit_3 = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidth_zipped, lyricInString_1, lyricInString_2,accumulateSizeBeforeThisSection);
-                    drawingUnits.add(sectionDrawingUnit_3);
-
-                    accumulateSizeBeforeThisSection+=drawingUnits.get(i).size();
-
-                    //行需求宽度计数器重置(以备下行使用)，本行节索引重置（以备下行使用）
-                    lineRequiredLength = 0;
-                    sectionAmountInLine=0;
-
-                }
-            } else if (lineRequiredLength > availableTotalWidth) {
-                //单节宽度不大于控件可用宽度，但是行累加宽度超过了；
-                // 本节下移，本行其他节要放大。
-                lineCursor++;
-                float unitWidth_extracted = (availableTotalWidth / (lineRequiredLength - sectionRequiredLength)) * unitStandardWidth;
-                //【在此计算本行绘制数据】
-                //计算其他行的绘制数据
-                float sectionStartX = padding;
-                //先对行内首节进行计算
-                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted, lyricInString_1, lyricInString_2,accumulateSizeBeforeThisSection);
-                //并添加到总记录
-                drawingUnits.add(sectionDrawingUnit);
-
-                //其余各节需要依靠前一节的末尾坐标进行自身坐标的计算【仅当本行内（算上下移的那个）的小节数量≥3时才进入循环】
-                //（否则，如果==2，则是一个下移，剩余一个独占整行在之前的“首节处理”逻辑中已完成计算，不需进循环。）
-                for (int k=2;k<sectionAmountInLine;k++) {
-                    //计算（剩余在本行的）后续各节。
-                    int indexBeingCalculate = i-sectionAmountInLine+k;
-                    int indexBeforeCalculate = i-sectionAmountInLine+k-1;
-                    //先计算起始X，需要依赖同line中前一节最末音符的右边缘坐标。
-                    sectionStartX = drawingUnits.get(indexBeforeCalculate).get(drawingUnits.get(indexBeforeCalculate).size()-1).right+beatGap;
-                    ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted, lyricInString_1, lyricInString_2,accumulateSizeBeforeThisSection);
-                    drawingUnits.add(sectionDrawingUnit_2);
-                }
-
-                //本行下移后，尺寸上暂不做特别处理，但需要将本节加入下一行的宽和索引记录。
-                //②行需求宽度计数器重置，③本行节索引重置
-                lineRequiredLength = sectionRequiredLength;//将下一行的宽度重置为本节宽度，以便后续累加。
-                sectionAmountInLine =1;//将本节仍然要位于计数内（因为本节单节不超屏宽，移到下行后，后面可能会有多节）
-                // 【因为开头的add只能负责将后续小节的计数进行添加，而本项是无法（以该方式）计入；只有在此手动添加一次】
-
-                //但是要判断此节是否是最后一节，如果是，则应扩展本节占据全行宽度
-                // （另一种思路是在后方填充空拍小节，但在“本节超宽下移，剩余节只有一节”分支下，剩余节即使很短，也同样会被扩展；
-                // 若在此填充则该情形同样需要填充的逻辑，故目前不予修改，暂时按简单规则进行。）
-                //且在此计算本节绘制数据。
-                if (i == codesInSections.size() - 1) {
-                    float unitWidth_singleExtracted = (availableTotalWidth / sectionRequiredLength) * unitStandardWidth;
-                    ArrayList<DrawingUnit> sectionDrawingUnit_3 = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, lineCursor, padding, unitWidth_singleExtracted, lyricInString_1, lyricInString_2,accumulateSizeBeforeThisSection);
-                    drawingUnits.add(sectionDrawingUnit_3);
-                }
-
-                accumulateSizeBeforeThisSection+=drawingUnits.get(i).size();
-
-            } else {
-                //单节宽度不超控件允许宽度、本行总宽也未超总宽。
-                // 本节索引已在开头自动加入行索引列表，因而不需在此再次操作。
-                //在此，需判断本节是否是最后一节，如果是，则将本行现有所有节进行整体扩展，以占满全行宽度
-                if (i == codesInSections.size() - 1) {
-                    float unitWidth_extracted = (availableTotalWidth / lineRequiredLength) * unitStandardWidth;
-
-                    //计算其他行的绘制数据
-                    float sectionStartX = padding;
-                    //先对行内首节进行计算
-                    ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted, lyricInString_1, lyricInString_2,accumulateSizeBeforeThisSection);
-                    //并添加到总记录
-                    drawingUnits.add(sectionDrawingUnit);
-                    accumulateSizeBeforeThisSection+=drawingUnits.get(i).size();
-
-                    //其余各节需要依靠前一节的末尾坐标进行自身坐标的计算【仅当本行内（算上下移的那个）的小节数量≥3时才进入循环】
-                    //（否则，如果==2，则是一个下移，剩余一个独占整行在之前的“首节处理”逻辑中已完成计算，不需进循环。）
-                    for (int k=2;k<=sectionAmountInLine;k++) {
-                        //计算（剩余在本行的）后续各节。【此情景下是包含最后一节即索引为i的节的，与前面若干分支的循环不同】
-                        int indexBeingCalculate = i-sectionAmountInLine+k;
-                        int indexBeforeCalculate = i-sectionAmountInLine+k-1;
-                        //先计算起始X，需要依赖同line中前一节最末音符的右边缘坐标。
-                        sectionStartX = drawingUnits.get(indexBeforeCalculate).get(drawingUnits.get(indexBeforeCalculate).size()-1).right+beatGap;
-                        ArrayList<DrawingUnit> sectionDrawingUnit_2 = initSectionDrawingUnit(codesInSections.get(indexBeingCalculate), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted, lyricInString_1, lyricInString_2,accumulateSizeBeforeThisSection);
-                        drawingUnits.add(sectionDrawingUnit_2);
-                    }
-                }//【注意！】此分支下仅当到达尾节时才进行计算（本行绘制数据的计算）【否则在后面的节超屏宽时会再次触发对本节的计算，重复负荷】
-
-                //其余情况下只是增加本行的小节数量记录即可，不必有其他处理。
-            }
-        }
-
-        //【这里应根据所需总高对各行进行平移】
-        //【如果不处理则默认是顶部对齐的绘制方式】
-        float totalHeightNeeded = lineCursor*topYDistanceBetweenTwoLine;
-        float totalAvailableHeight = sizeChangedHeight-2*padding;
-        if(totalHeightNeeded<totalAvailableHeight){
-            float shiftAmount = (totalAvailableHeight-totalHeightNeeded)/2;
-            for (ArrayList<DrawingUnit> drawingUnitSection: drawingUnits){
-                for (DrawingUnit du :drawingUnitSection) {
-                    du.shiftEntirely(0, shiftAmount, padding,padding,sizeChangedWidth-padding, sizeChangedHeight-padding);
-                }
-            }
-        }
-
-
-        if(!isTriggerFromOnSC){
-            invalidate();
-        }//onSC方法返回后会自动调用onD因而没必要调用invalidate方法。
     }
 
-    //按小节计算（小节内各音符的）绘制数据
-    public ArrayList<DrawingUnit> initSectionDrawingUnit(ArrayList<Byte> codesInThisSection, float topDrawing_Y,int lineCursor, float sectionStartX, float unitWidthChanged,String lyric_1,String lyric_2,int accumulateUnitsNumBeforeThisSection) {
-        // *注意，sectionStartX要传入“上一小节末尾+节间隔”（非首节时）或者传入padding（是首节时）
+    //按小节计算（小节内各音符的）绘制数据（未对音序、词序处理（但预留了空间）；应在完整dUs列表生成后再处理词、音序列）
+    public ArrayList<DrawingUnit> initSectionDrawingUnit(ArrayList<Byte> codesInThisSection, float topDrawing_Y,int lineCursor, float sectionStartX, float unitWidthChanged) {
+        //如果是折行的，根据各节所在位置传入相应startX（行首padding，非行首则是上一节末尾+gap；如果是单行模式则只有首节处于行首，其余向后累加即可。）
+        //int totalValueBeforeThisCodeInBeat = 0;//用于计算拍子【要在循环的末尾添加，因为要使用的是“本音符之前”的总和】
 
-        int totalValueBeforeThisCodeInBeat = 0;//用于计算拍子【要在循环的末尾添加，因为要使用的是“本音符之前”的总和】
         ArrayList<DrawingUnit> drawingUnitsInSection = new ArrayList<>();
 
         for (int j = 0; j < codesInThisSection.size(); j++) {
             byte code = codesInThisSection.get(j);
 
-            if(code>112) {
+            if(code>112&&code<126) {
                 //大于112的没有实体绘制单元，而是在其前一单元中设置专用字段
                 int curveSpanForward = code-111;//跨越的单元数量（比如，code=112时，指弧线覆盖本身及本身前的1个音符）
                 //连音线末端可以在小节首音符上，但是连音线标志必然不能是小节第一个，从而可以获取前一du进行设置
@@ -691,45 +580,52 @@ public class BaseRhythmView extends View {
                 }
             }else {
                 DrawingUnit drawingUnit = new DrawingUnit();
-                drawingUnit.top = topDrawing_Y + lineCursor * topYDistanceBetweenTwoLine;
-                drawingUnit.bottomNoLyric = drawingUnit.top + (unitStandardHeight + additionalPointsHeight * 2 + curveOrLinesHeight * 2);
+                drawingUnit.top = topDrawing_Y + lineCursor * twoLinesTopYBetween;
+                drawingUnit.bottomNoLyric = drawingUnit.top + (unitHeight + additionalPointsHeight * 2 + curveOrLinesHeight * 2);
 
+
+                //判断计算起点位置（startX）
                 if (j == 0) {
                     drawingUnit.left = sectionStartX;//首个音符
                 } else {
                     //非首位音符,根据前一音符是否是拍尾，而紧靠或有拍间隔。
-                    if (totalValueBeforeThisCodeInBeat == 0) {
+                    if (codesInThisSection.get(j-1) > 125) {//【新判断方式（126拍尾，127节尾），原来是加总时值判断】
                         //前一音符为拍尾
                         //如果不是首音符，则前面必然是有音符的，所以下句可行
                         drawingUnit.left = drawingUnitsInSection.get(j - 1).right + beatGap;//要加入拍间隔
-                        //【注意间隔是不能计算在du之内的，要在外面。因为下划线布满du内的宽度】
-                    } else if (codesInThisSection.get(j - 1) > valueOfBeat) {
-                        //此时，前一音节是大附点，此时本音节前方有累加时值（按当前的时值计算逻辑），按if判断应当紧靠，但事实上属于一个新拍子
-                        // 因而需要有间隔；
-                        drawingUnit.left = drawingUnitsInSection.get(j - 1).right + beatGap;//要加入拍间隔
+                        //注意间隔要计算在du的外面。因为下划线布满du内的宽度。
+
                     } else {
                         drawingUnit.left = drawingUnitsInSection.get(j - 1).right;//紧靠即可
 
                     }
+
+                    /*（新的计算方案下，大附点后方也有126或127，因而不必再单独处理）
+                    else if (codesInThisSection.get(j - 1) > valueOfBeat) {
+                        //此时，前一音节是大附点，此时本音节前方有累加时值（按当前的时值计算逻辑），按if判断应当紧靠，但事实上属于一个新拍子
+                        // 因而需要有间隔；
+                        drawingUnit.left = drawingUnitsInSection.get(j - 1).right + beatGap;//要加入拍间隔
+                    }*/
+
                 }
 
-                //单元的右侧在后面分条件（按不同类型的code）确定。独占一拍时，拍间隔也不计入宽度（毕竟不能在间隔上绘制下划线）【但是附点、均分多连音的宽度有所变化】
+                //单元的右侧在后面分条件（按不同类型的code）确定。独占一拍时，拍间隔也不计入宽度（因为下划线布满dU宽）【附点、均分多连音的宽度有所变化】
 
-                //绘制下划线、音符和附点；或延音线；或均分多连音（由于valueOfBeat不是常量，不能用sw判断。case分支要求使用常量条件）
-                //字符处理（后面还有对均分多连音字符的处理）
+                //下划线、音符（本方法只处理X/0,有值音高另行方法处理。）和附点；
+                // 或延音线；或均分多连音（由于valueOfBeat不是常量，不能用sw判断。case分支要求使用常量条件）
+                //字符（另：均分多连音字符在后面处理）
                 String charForCode = "X";
                 if (code < 0) {
                     charForCode = "0";
                 } else if (code == 0) {
                     charForCode = "-";
-                }//如果是旋律绘制，这里改成相应数字即可
+                }
 
-                //字符的绘制位置（字符按照给定左下起点方式绘制）
+                //字符位置（字符按照给定左下起点方式绘制）
                 //【为了保证①字符基本位于水平中央、②字符带不带附点时的起始位置基本不变，因而采用：左+三分之一单位宽度折半值 方式，后期据情况调整】
                 drawingUnit.codeCenterX = drawingUnit.left + unitWidthChanged / 2;//。
                 drawingUnit.codeBaseY = drawingUnit.bottomNoLyric - additionalPointsHeight - curveOrLinesHeight - 8;//暂定减8像素。
                 //这样所有长度的字串都指定同一起始点即可。
-
 
                 if (code == valueOfBeat + valueOfBeat / 2 || code == -valueOfBeat - valueOfBeat / 2) {
                     //大附点，无下划线
@@ -777,8 +673,8 @@ public class BaseRhythmView extends View {
                     drawingUnit.code = charForCode;
                 }
 
-                //均分多连音画法（仅数字部分，顶部圆弧另外处理）
-                //音符数量处理
+                //均分多连音画法（仅数字部分，顶部圆弧在onDraw中根据弧线结束位置和跨度直接计算）
+                //音符跨度处理（跨度数字、跨度数字的绘制位置）
                 if (code > 73 && code < 99) {
                     //有几个音符
                     StringBuilder codeBuilder = new StringBuilder();
@@ -812,29 +708,30 @@ public class BaseRhythmView extends View {
                 }
 
                 //在这一层循环的末尾，将本音符的时值累加到本小节的记录上；然后更新“tVBTCIS”记录以备下一音符的使用。
-                totalValueBeforeThisCodeInBeat = addValueToBeatTotalValue(code, valueOfBeat, totalValueBeforeThisCodeInBeat);
+//                totalValueBeforeThisCodeInBeat = addValueToBeatTotalValue(code, valueOfBeat, totalValueBeforeThisCodeInBeat);
                 drawingUnitsInSection.add(drawingUnit);//添加本音符对应的绘制信息。
-
-                if(lyric_1!=null&&!lyric_1.isEmpty()){
-                    drawingUnit.word_1 = lyric_1.substring((accumulateUnitsNumBeforeThisSection+j),(accumulateUnitsNumBeforeThisSection+j));
-                    drawingUnit.word_1_BaseY = drawingUnit.bottomNoLyric + unitStandardHeight;
-                    drawingUnit.word_1_CenterX = drawingUnit.codeCenterX;
-                }
-                if(lyric_2!=null&&!lyric_2.isEmpty()){
-                    drawingUnit.word_2 = lyric_1.substring((accumulateUnitsNumBeforeThisSection+j),(accumulateUnitsNumBeforeThisSection+j));
-                    drawingUnit.word_2_BaseY = drawingUnit.bottomNoLyric + unitStandardHeight*2;
-                    drawingUnit.word_2_CenterX = drawingUnit.codeCenterX;
-                }
-
                 drawingUnit.checkIsOutOfUi(padding,padding,sizeChangedWidth-padding,sizeChangedHeight-padding);
             }
         }
+        return drawingUnitsInSection;//返回本小节对应的绘制信息列表*/
 
-        return drawingUnitsInSection;//返回本小节对应的绘制信息列表
+    }
+
+    /* 计算词、音序列的绘制信息（需要在基础dUs列表完成计算后）*/
+    void initDrawingUnits_step2(){
+        if(useLyric_1){
+            initPrimaryLyric();
+        }
+        if(useLyric_2){
+            initSecondLyric();
+        }
+        if(drawPitches){
+            initPitches();
+        }
     }
 
     //用于将本音符转换成正确的时值信息然后加总到节拍时值计数器（进一步用于判断是否完成了一个拍子的时值）
-    public int addValueToBeatTotalValue(int thisCode, int valueOfBeat, int lastTotal){
+  /*  public int addValueToBeatTotalValue(int thisCode, int valueOfBeat, int lastTotal){
         if(thisCode>73 || thisCode==0){
             //时值计算（这一时值是标准时值，加上相当于原值不改变（原先可能剩余非标准时值））
             lastTotal += 0;
@@ -852,7 +749,7 @@ public class BaseRhythmView extends View {
             lastTotal -= valueOfBeat;
         }
         return lastTotal;
-    }
+    }*/
 
 
     public float standardLengthOfSection( ArrayList<Byte> codesInSingleSection) {
@@ -865,32 +762,32 @@ public class BaseRhythmView extends View {
             //大于112的是特殊记号，不绘制为实体单元，不记录长度
             if(b>73&&b<112){
                 //均分多连音
-                requiredSectionLength += (unitStandardWidth /2)*(b%10);
+                requiredSectionLength += (unitWidth /2)*(b%10);
                 //时值计算
                 totalValue += valueOfBeat;
             }else if(b==16||b==8||b==4||b==2) {
                 //是不带附点的音符,占据标准宽度
-                requiredSectionLength+= unitStandardWidth;
+                requiredSectionLength+= unitWidth;
                 //时值计算
                 totalValue+=b;
             }else if (b==0){
                 //延长音，且不是均分多连音；即
-                requiredSectionLength+= unitStandardWidth;
+                requiredSectionLength+= unitWidth;
                 //时值计算，独占节拍的延长音
                 totalValue+=valueOfBeat;
             }else if (b==-2||b==-4||b==-8||b==-16){
                 //空拍（不带附点时）也占标准宽
-                requiredSectionLength+= unitStandardWidth;
+                requiredSectionLength+= unitWidth;
                 //时值计算：空拍带时值，时值绝对值与普通音符相同
                 totalValue-=b;
             }else if(b==24||b==12||b==6||b==3){
                 //带附点，标准宽*1.5
-                requiredSectionLength += unitStandardWidth*1.5;
+                requiredSectionLength += unitWidth *1.5;
                 //时值计算
                 totalValue+=b;
             }else if(b==-3||b==-6||b==-12||b==-24){
                 //带附点，标准宽*1.5
-                requiredSectionLength += unitStandardWidth*1.5;
+                requiredSectionLength += unitWidth *1.5;
                 //时值计算
                 totalValue-=b;
             }
@@ -903,6 +800,126 @@ public class BaseRhythmView extends View {
             }
         }
         return requiredSectionLength;
+    }
+
+    //在基本dUs信息计算完毕后调用，要根据dUs的已有信息才能处理
+    //
+    //词序：只对有dU的位置编码：（其中有dU而无字符的情况：）
+    //空音符、延音符位置原则不安排字符，%代替；
+    //（1个dU多个字符的情况：）
+    //均分多连音根据连音数量安排多个字符。
+    //*词序在DB、程序中均以String存储、处理，因而不作特别处理，可用%填充。
+    //*目前的词序编码解码方式仅适用于“非拼音类”文字（如汉语；日韩等空间上一符基本对应一个音节的语言也可。）
+
+    void initPrimaryLyric(){
+        int charAmountAccumulation = 0;
+        for(int i=0;i<drawingUnits.size();i++){
+            ArrayList<DrawingUnit> currentDuSection = drawingUnits.get(i);
+            for (int k=0;k<currentDuSection.size();k++){
+                DrawingUnit drawingUnit = currentDuSection.get(k);
+                if(drawingUnit.mCurveNumber == 0){
+                    //不是均分多连音,安置1个字符即可
+                    if(drawingUnit.code.equals("-")||drawingUnit.code.equals("0")){
+                        charAmountAccumulation++;
+                        continue;//如果是空拍、延音符则跳过本次，索引同步增加因为是用%填充的。
+                    }
+                    drawingUnit.lyricWord_1 = String.valueOf(lyricInString_1.charAt(charAmountAccumulation));
+                    drawingUnit.lyricWord_1_BaseY = drawingUnit.bottomNoLyric+unitHeight;
+                    drawingUnit.lyricWord_1_CenterX = drawingUnit.codeCenterX;
+                    charAmountAccumulation++;
+                }else {
+                    //均分多连音
+                    drawingUnit.lyricWord_1 = lyricInString_1.substring(charAmountAccumulation,charAmountAccumulation+drawingUnit.mCurveNumber);
+                    drawingUnit.lyricWord_1_BaseY = drawingUnit.bottomNoLyric+unitHeight;
+                    drawingUnit.lyricWord_1_CenterX = drawingUnit.codeCenterX;
+                    //【已查API：截取从起坐标本身到终坐标左侧（起坐标字符将算入，终坐标字符不算入，终坐标左侧临字符算入。）】
+                    charAmountAccumulation+=drawingUnit.mCurveNumber;
+                }
+            }
+        }
+    }
+
+    void initSecondLyric(){
+        int charAmountAccumulation = 0;
+        for(int i=0;i<drawingUnits.size();i++){
+            ArrayList<DrawingUnit> currentDuSection = drawingUnits.get(i);
+            for (int k=0;k<currentDuSection.size();k++){
+                DrawingUnit drawingUnit = currentDuSection.get(k);
+                if(drawingUnit.mCurveNumber == 0){
+                    //不是均分多连音,安置1个字符即可
+                    if(drawingUnit.code.equals("-")||drawingUnit.code.equals("0")){
+                        charAmountAccumulation++;
+                        continue;//如果是空拍、延音符则跳过本次，索引同步增加因为是用%填充的。
+                    }
+                    drawingUnit.lyricWord_2 = String.valueOf(lyricInString_2.charAt(charAmountAccumulation));
+                    drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric+unitHeight;
+                    drawingUnit.lyricWord_2_CenterX = drawingUnit.codeCenterX;
+                    charAmountAccumulation++;
+                }else {
+                    //均分多连音
+                    drawingUnit.lyricWord_2 = lyricInString_2.substring(charAmountAccumulation,charAmountAccumulation+drawingUnit.mCurveNumber);
+                    drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric+unitHeight;
+                    drawingUnit.lyricWord_2_CenterX = drawingUnit.codeCenterX;
+                    //【已查API：截取从起坐标本身到终坐标左侧（起坐标字符将算入，终坐标字符不算入，终坐标左侧临字符算入。）】
+                    charAmountAccumulation+=drawingUnit.mCurveNumber;
+                }
+            }
+        }
+    }
+
+
+    //只对有dU信息的位置编码
+    //延音符、空音符都用0填充；正常位置（包括均分多连音）采用普通音高编码（）
+    //音序在程序是byte列表，在DB是String存储。采用byte 0填充。
+    void initPitches(){
+        int charAmountAccumulation = 0;
+        for(int i=0;i<drawingUnits.size();i++){
+            ArrayList<DrawingUnit> currentDuSection = drawingUnits.get(i);
+            for (int k=0;k<currentDuSection.size();k++){
+                DrawingUnit drawingUnit = currentDuSection.get(k);
+                if(drawingUnit.code.equals("-")||drawingUnit.code.equals("0")){
+                    charAmountAccumulation++;
+                    continue;//如果是空拍、延音符则跳过本次，索引同步增加因为是用0填充的。
+                }
+
+                Charset cs = Charset.forName("UTF-8");
+
+                if(drawingUnit.mCurveNumber == 0) {
+                    //不是均分多连音
+                    ByteBuffer bb = ByteBuffer.allocate(1);
+                    bb.put(pitchSerial.get(charAmountAccumulation));
+                    bb.flip();
+                    CharBuffer cb = cs.decode(bb);
+                    drawingUnit.code = cb.toString();
+
+                    charAmountAccumulation++;
+                }else {
+                    //均分多连音
+                    ByteBuffer bb = ByteBuffer.allocate(drawingUnit.mCurveNumber);
+                    byte b = pitchSerial.get(charAmountAccumulation);
+                    for(int j=0;j<drawingUnit.mCurveNumber;j++){
+                        bb.put(b);//添加若干次
+                    }
+                    bb.flip();
+                    CharBuffer cb = cs.decode(bb);
+                    drawingUnit.code = cb.toString();
+                    charAmountAccumulation++;//均分多连音的音高只编码一次，因而仍然是+1（与词序不同）。
+                }
+
+            }
+        }
+    }
+
+    //提供给调用方用于放大显示尺寸
+    // 需要重新计算绘制信息
+    public void zoomOut(){
+        setSizeOfCodeAndUnit(codeSizeDip+=2,unitWidthDip+=2,unitHeightDip+=2);
+        initDrawingUnits(false);
+    }
+
+    public void zoomIn(){
+        setSizeOfCodeAndUnit(codeSizeDip-=2,unitWidthDip-=2,unitHeightDip-=2);
+        initDrawingUnits(false);
     }
 
 }
