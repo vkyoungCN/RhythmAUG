@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:context=".fragments.MelodyEditorFragment"
+    >
+
+
+    <!--Title-->
+    <TextView
+        android:id="@+id/tv_titleSpecial_part"
+        android:layout_width="80dp"
+        android:layout_height="24dp"
+        android:background="#f5f5f5"
+        android:text="@string/zone_special"
+        android:layout_marginBottom="6dp"
+        android:gravity="center"
+        />
+    <!--横分割线-->
+    <TextView
+        android:layout_width="80dp"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_orange"
+        android:layout_marginTop="22dp"
+        />
+
+
+
+    <TextView
+        android:id="@+id/tv_codeZero"
+        android:layout_below="@+id/tv_titleSpecial_part"
+        android:layout_width="40dp"
+        android:layout_height="36dp"
+        android:layout_margin="2dp"
+        android:gravity="center"
+        android:background="#ffebee"
+        android:text="@string/code_0"
+        />
+
+    <TextView
+        android:id="@+id/tv_codeBar"
+        android:layout_below="@+id/tv_titleSpecial_part"
+        android:layout_toRightOf="@+id/tv_codeZero"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_margin="2dp"
+        android:gravity="center"
+        android:background="#f5f5f5"
+        android:text="@string/code_Bar"
+        />
+
+    <TextView
+        android:id="@+id/tv_perFix"
+        android:layout_width="76dp"
+        android:layout_height="36dp"
+        android:layout_below="@+id/tv_codeZero"
+        android:layout_marginBottom="2dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="6dp"
+        android:background="#f1f8e9"
+        android:gravity="center"
+        android:text="@string/preFix" />
+
+
+
+</RelativeLayout>

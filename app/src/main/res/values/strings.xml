@@ -85,7 +85,7 @@
     <string name="over_5">5</string>
     <string name="over_3">3</string>
     <string name="over_7">7</string>
-    <string name="zone_merge">合并区</string>
+    <string name="zone_merge">倍数合并</string>
     <string name="merge_left"><![CDATA[+<<]]></string>
     <string name="merge_right"><![CDATA[>>+]]></string>
     <string name="merge_both_side">双向合并</string>
@@ -119,5 +119,30 @@
     <string name="merge">合并</string>
     <string name="move_zone">移动操作区：</string>
     <string name="expand_pitches">音高输入面板\n（点击展开）</string>
+    <string name="zone_pitches_input">音高输入</string>
+    <string name="code_1sharp">1#</string>
+    <string name="code_2sharp">2#</string>
+    <string name="code_4sharp">4#</string>
+    <string name="code_5sharp">5#</string>
+    <string name="code_6sharp">6#</string>
+    <string name="code_1">1</string>
+    <string name="code_2">2</string>
+    <string name="code_3">3</string>
+    <string name="code_4">4</string>
+    <string name="code_5">5</string>
+    <string name="code_6">6</string>
+    <string name="code_7">7</string>
+    <string name="zone_special">特别</string>
+    <string name="code_0">0</string>
+    <string name="code_Bar">-</string>
+    <string name="preFix">前缀音</string>
+    <string name="zone_move_merge_curve">连音弧/选区合并/移动</string>
+    <string name="curve">连音弧</string>
+    <string name="str_S">S</string>
+    <string name="str_E">E</string>
+    <string name="merge_x2">2x</string>
+    <string name="merge_4x">4x</string>
+    <string name="str_Mx">Mx</string>
+    <string name="action">执行</string>
 
 </resources>
