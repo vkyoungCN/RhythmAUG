@@ -134,8 +134,15 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         //橘框仅在添加连音弧线时绘制
         if(curveModeOn){
             DrawingUnit orange_dU = drawingUnits.get(orangeBoxSectionIndex).get(orangeBoxUnitIndex);
-            canvas.drawRect(orange_dU.left-2, orange_dU.top-2, orange_dU.right+2, orange_dU.bottomNoLyric+2, blueBoxPaint);
-            //暂定比蓝框大一圈，万一重合也能分辨。
+            canvas.drawRect(orange_dU.left-2, orange_dU.top+additionalPointsHeight+curveOrLinesHeight, orange_dU.right+2, orange_dU.bottomNoLyric+2, blueBoxPaint);
+            //暂定比蓝框大一圈(但是高度比蓝框低，让出弧线位置)，万一重合也能分辨。
+
+            //弧线也绘制(非重合时)【暂时不考虑左右？判断太复杂了，左右坐标若设反是否存在问题，待。】
+            if(orangeBoxUnitIndex!=blueBoxUnitIndex && orangeBoxSectionIndex!=blueBoxSectionIndex){
+                canvas.drawArc(orange_dU.left,orange_dU.top+additionalPointsHeight,blue_dU.right,
+                        orange_dU.top+additionalPointsHeight+curveOrLinesHeight,
+                        0,180,false,bottomLinePaint);
+            }
 
         }
 
