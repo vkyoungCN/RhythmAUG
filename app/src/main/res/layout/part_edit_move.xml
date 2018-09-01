@@ -34,7 +34,7 @@
 
         <TextView
             android:id="@+id/tv_addCurve_PEM"
-            android:layout_width="50dp"
+            android:layout_width="48dp"
             android:layout_margin="2dp"
             android:layout_height="32dp"
             android:gravity="center"
@@ -52,30 +52,21 @@
             />
 
         <TextView
-            android:id="@+id/tv_merge_PEM"
-            android:layout_width="48dp"
-            android:layout_margin="2dp"
-            android:layout_height="32dp"
-            android:gravity="center"
-            android:text="@string/merge"
-            android:background="#e8f5e9"
-            />
-        <TextView
             android:id="@+id/tv_mergeStartCursor_PEM"
-            android:layout_width="24dp"
+            android:layout_width="36dp"
             android:layout_margin="1dp"
             android:layout_height="32dp"
             android:gravity="center"
-            android:text="@string/str_S"
+            android:text="@string/merge_start"
             android:background="#e8f5e9"
             />
         <TextView
             android:id="@+id/tv_mergeEndCursor_PEM"
-            android:layout_width="24dp"
+            android:layout_width="36dp"
             android:layout_margin="1dp"
             android:layout_height="32dp"
             android:gravity="center"
-            android:text="@string/str_E"
+            android:text="@string/merge_end"
             android:layout_marginStart="1dp"
             android:layout_marginEnd="1dp"
             android:background="#e8f5e9"
@@ -94,8 +85,8 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:orientation="horizontal"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="4dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="2dp"
             >
             <TextView
                 android:id="@+id/tv_lastSection_PEM"
@@ -117,6 +108,16 @@
                 android:text="@string/lastUnit_2"
                 android:layout_marginStart="1dp"
                 android:background="#f5f5f5"
+                />
+            <TextView
+                android:id="@+id/tv_choseOK_PEM"
+                android:layout_width="36dp"
+                android:layout_margin="2dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="@string/str_ok"
+                android:layout_marginStart="1dp"
+                android:background="#efefef"
                 />
 
             <TextView

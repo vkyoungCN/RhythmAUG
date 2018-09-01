@@ -144,5 +144,8 @@
     <string name="merge_4x">4x</string>
     <string name="str_Mx">Mx</string>
     <string name="action">执行</string>
+    <string name="str_ok">OK</string>
+    <string name="merge_start">[.合</string>
+    <string name="merge_end">并.]</string>
 
 </resources>

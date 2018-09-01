@@ -8,7 +8,6 @@ import android.util.AttributeSet;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
 
 import java.util.ArrayList;
@@ -21,14 +20,31 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
     /*特有*/
     //逻辑
+    private int boxSectionIndex = 0;//（dUs中的）音符单元的选框位置指针，小节索引。
+    // （通常模式下，就是蓝框的位置；在锁定模式下蓝框指针与之脱离，用于为绿框左右端、橘框提供索引。）
+    private int boxUnitIndex = 0;//(小节内du的索引)
+//    private boolean lockBlueBox = false;//某些模式下（加连音弧、合并区域选择等）蓝框位置要固定不动。【改用两个布尔变量判断】
+
     private int blueBoxSectionIndex = 0;//蓝框位置，小节的索引【注意，是针对dU列表而言的索引，由于code中多一个延音弧尾端标记，所以无法对应。】
     private int blueBoxUnitIndex = 0;//蓝框位置(小节内du的索引)
 
-    private int curveOrangeBoxSpan = -1;//进入连音弧绘制模式后，绘制蓝框+黄框，其中黄框可移动以便选定弧线起止位置。
+    private boolean curveModeOn = false;
+//    private int curveOrangeBoxSpan = -1;//进入连音弧绘制模式后，绘制蓝框+黄框，其中黄框可移动以便选定弧线起止位置。
     //负值记录向左侧dU的偏移量；正值记录向右侧的偏移量；0为蓝框位置，默认向左一个（即蓝框前一个）
 
+    private int orangeBoxSectionIndex = 0;//连音弧插入模式下，橘框位置，小节的索引【注意，是针对dU列表而言的索引，由于code中多一个延音弧尾端标记，所以无法对应。】
+    private int orangeBoxUnitIndex = 0;//连音弧插入模式下，橘框位置(小节内du的索引)
+
+
+    private boolean mergeFreeModeOn = false;
     private int mergeGreenBoxStartDiff = 0;//自由合并模式下，选定合并区的起点（坐标相对于蓝框的偏移，只能是负值）
     private int mergeGreenBoxEndDiff = 0;//自由合并模式下，选定合并区的起点（坐标相对于蓝框的偏移，只能是正值）
+
+    private int green_A_BoxSectionIndex = 0;//自由合并模式下选择合并区域的模式，左侧绿框位置，小节的索引【注意，是针对dU列表而言的索引，由于code中多一个延音弧尾端标记，所以无法对应。】
+    private int green_A_BoxUnitIndex = 0;//自由合并模式下选择合并区域的模式，左侧绿框位置(小节内du的索引)
+    private int green_B_BoxSectionIndex = 0;//自由合并模式下选择合并区域的模式，右侧绿框位置，小节的索引【注意，是针对dU列表而言的索引，由于code中多一个延音弧尾端标记，所以无法对应。】
+    private int green_B_BoxUnitIndex = 0;//自由合并模式下选择合并区域的模式，右侧绿框位置(小节内du的索引)
+    private boolean leftOn = true;//进入自由合并模式后，标志是绑定左端还有右端。
 
 
     /* 设置参数*/
@@ -111,13 +127,26 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        //本类特有：蓝框
+        //本类特有：蓝框【各种模式下，蓝框均绘制】
         DrawingUnit blue_dU = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
             canvas.drawRect(blue_dU.left, blue_dU.top, blue_dU.right, blue_dU.bottomNoLyric, blueBoxPaint);
 
-        //绿框仅在合并情形下绘制；（蓝框仍然绘制）
-
         //橘框仅在添加连音弧线时绘制
+        if(curveModeOn){
+            DrawingUnit orange_dU = drawingUnits.get(orangeBoxSectionIndex).get(orangeBoxUnitIndex);
+            canvas.drawRect(orange_dU.left-2, orange_dU.top-2, orange_dU.right+2, orange_dU.bottomNoLyric+2, blueBoxPaint);
+            //暂定比蓝框大一圈，万一重合也能分辨。
+
+        }
+
+        //绿框仅在合并情形下绘制；（蓝框仍然绘制）【单行模式下没有跨行问题，不需考虑绿框的跨行处理逻辑】
+        if (mergeFreeModeOn){
+            DrawingUnit green_dU_A = drawingUnits.get(green_A_BoxSectionIndex).get(green_A_BoxUnitIndex);
+            //绿框需要由两端的两个dU分别提供左右坐标（其实也可能二者指向同一位置）
+            DrawingUnit green_dU_B = drawingUnits.get(green_B_BoxSectionIndex).get(green_B_BoxUnitIndex);
+            canvas.drawRect(green_dU_A.left-4, green_dU_A.top-4, green_dU_B.right+4, green_dU_B.bottomNoLyric+4, blueBoxPaint);
+            //暂定比橘色框还大一圈，万一重合也能分辨。
+        }
 
 //            invalidate();
     }
@@ -130,85 +159,89 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
     //编码数据改变，但位置不改变
     public void codeChangedReDraw(){
         //        codesInSections =newCodes2Dimension;//不传不行啊……并不能更新绘制结果（测试发现dus还改变了）
-
         this.codesInSections = RhythmHelper.codeParseIntoSections(bcRhythm.getCodeSerialByte(), rhythmType);
-         【到此，待。】
-        initDrawingUnits_step1();//只针对节奏部分做了修改（如果是完整的CRH，词序暂时不变，音高？）  【音高、词序如何相应调整？只有Editor存在此逻辑要求】
-        invalidate();
+        initDrawingUnits(false);
     }
 
 
     //只改位置，不改编码数据
     //①改变蓝框指针的位置；②改变绘制中心【目前只是简单的处理为：如果超绘制区域，则将新指针所在du绘制到（水平）中心（即对所有du进行平移）】
     public int moveBox(int moveType){
+        //按照模式将移动的结果传给相应选框；
+
+
+
+        if(mergeFreeModeOn){
+
+        }
         int maxSectionIndex = drawingUnits.size()-1;
-        int maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
+        int maxUnitIndexCurrentSection = drawingUnits.get(boxSectionIndex).size()-1;
 
         switch (moveType){
             case MOVE_NEXT_UNIT:
-                if(blueBoxUnitIndex==maxUnitIndexCurrentSection&&blueBoxSectionIndex==maxSectionIndex){
+                if(boxUnitIndex ==maxUnitIndexCurrentSection&& boxSectionIndex ==maxSectionIndex){
                     //已在最后，不移动
                     Toast.makeText(mContext, "已在最后", Toast.LENGTH_SHORT).show();
                     return 0;
-                }else if (blueBoxUnitIndex ==maxUnitIndexCurrentSection) {
+                }else if (boxUnitIndex ==maxUnitIndexCurrentSection) {
                     //跨节
-                    blueBoxUnitIndex = 0;
-                    blueBoxSectionIndex++;
-                    maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
+                    boxUnitIndex = 0;
+                    boxSectionIndex++;
+                    maxUnitIndexCurrentSection = drawingUnits.get(boxSectionIndex).size()-1;
                     //移动到中心（如果超出绘制区）
-                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(boxSectionIndex).get(0)));
                     invalidate();
 
                     return 11;
                 }else {
                     //不跨节
-                    blueBoxUnitIndex ++;
+                    boxUnitIndex++;
                     //移动到中心（如果超出绘制区）
-                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(boxSectionIndex).get(0)));
 
                     invalidate();
 
                     return 1;
                 }
             case MOVE_NEXT_SECTION:
-                if(blueBoxSectionIndex == maxSectionIndex){
+                if(boxSectionIndex == maxSectionIndex){
                     //已在最后，不移动
                     Toast.makeText(mContext, "已在最后", Toast.LENGTH_SHORT).show();
                     return 0 ;
                 }else {
                     //跨节移动到下节首
-                    blueBoxUnitIndex = 0;
-                    blueBoxSectionIndex++;
-                    maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
+                    boxUnitIndex = 0;
+                    boxSectionIndex++;
+                    maxUnitIndexCurrentSection = drawingUnits.get(boxSectionIndex).size()-1;
                     //移动到中心（如果超出绘制区）
-                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(boxSectionIndex).get(0)));
 
                     invalidate();
 
                     return 11;
                 }
             case MOVE_LAST_UNIT:
-                if(blueBoxUnitIndex == 0&&blueBoxSectionIndex==0){
+                if(boxUnitIndex == 0&& boxSectionIndex ==0){
                     //已在最前，不移动
                     Toast.makeText(mContext, "已在最前", Toast.LENGTH_SHORT).show();
                     return 0;
-                }else if(blueBoxUnitIndex == 0) {
+                }else if(boxUnitIndex == 0) {
                     //跨节移到上节末尾
-                    blueBoxSectionIndex--;
-                    maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
-                    blueBoxUnitIndex = maxUnitIndexCurrentSection;
+                    boxSectionIndex--;
+                    maxUnitIndexCurrentSection = drawingUnits.get(boxSectionIndex).size()-1;
+                    boxUnitIndex = maxUnitIndexCurrentSection;
 
                     //移动到中心（如果超出绘制区）
-                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(boxSectionIndex).get(0)));
 
                     invalidate();
                     return -11;
                 }else {
                     //本节内移动
-                    blueBoxUnitIndex--;
+                    boxUnitIndex--;
 
                     //移动到中心（如果超出绘制区）
-                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(boxSectionIndex).get(0)));
 
                     invalidate();
 
@@ -216,18 +249,18 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
                 }
 
             case MOVE_LAST_SECTION:
-                if(blueBoxSectionIndex==0){
+                if(boxSectionIndex ==0){
                     //已在最前，不移动
                     Toast.makeText(mContext, "已在最前", Toast.LENGTH_SHORT).show();
                     return 0 ;
                 }else{
                     //跨节移到上节首
-                    blueBoxSectionIndex--;
-                    maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
-                    blueBoxUnitIndex = 0;
+                    boxSectionIndex--;
+                    maxUnitIndexCurrentSection = drawingUnits.get(boxSectionIndex).size()-1;
+                    boxUnitIndex = 0;
 
                     //移动到中心（如果超出绘制区）
-                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(boxSectionIndex).get(0)));
 
                     invalidate();
 
@@ -235,20 +268,20 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
                 }
             case DELETE_MOVE_LAST_SECTION:
-                if(blueBoxSectionIndex==0){
+                if(boxSectionIndex ==0){
                     //已在最前（删除的是第一小节）,小节索引不需改变，只改单元索引。
-                    blueBoxUnitIndex=0;
+                    boxUnitIndex =0;
                     invalidate();
 
                     return -18;
                 }else {
                     //跨节移到上节首
-                    blueBoxSectionIndex--;
-                    maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size() - 1;
-                    blueBoxUnitIndex = 0;
+                    boxSectionIndex--;
+                    maxUnitIndexCurrentSection = drawingUnits.get(boxSectionIndex).size() - 1;
+                    boxUnitIndex = 0;
 
                     //移动到中心（如果超出绘制区）
-                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(boxSectionIndex).get(0)));
 
                     invalidate();
 
@@ -256,13 +289,13 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
                 }
             case MOVE_FINAL_SECTION:
                 //移到最后一节的节首（用于添加一个新的小节后）
-                blueBoxSectionIndex = maxSectionIndex;//基于“引用数据源自动修改”的设想
-                maxUnitIndexCurrentSection = drawingUnits.get(blueBoxSectionIndex).size()-1;
+                boxSectionIndex = maxSectionIndex;//基于“引用数据源自动修改”的设想
+                maxUnitIndexCurrentSection = drawingUnits.get(boxSectionIndex).size()-1;
 
-                blueBoxUnitIndex = 0;
+                boxUnitIndex = 0;
 
                 //移动到中心（如果超出绘制区）
-                checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(blueBoxSectionIndex).get(0)));
+                checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(boxSectionIndex).get(0)));
                 invalidate();
 
                 return 20;
@@ -279,6 +312,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         *  -18：首节被删除后，移动到新首节的首位。
         *  0：未发生移动
         *  20：最后一节的节首
+        *  -25：处于锁定模式不能移动蓝框
         * */
 
 
@@ -296,6 +330,213 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
     }
 
 
+    public void curveModeOn(){
+        this.curveModeOn = true;
+        //将蓝框位置保存
+        blueBoxUnitIndex = boxUnitIndex;
+        blueBoxSectionIndex = boxSectionIndex;
+
+        //尝试将当前框位减一（向左移）（当处于首节首位时不产生移动）
+        moveBox(MOVE_LAST_UNIT);//框位指示器已经变化（如果可以的话）
+        //新框位赋值给橘色框
+        orangeBoxUnitIndex = boxUnitIndex;
+        orangeBoxSectionIndex = boxSectionIndex;
+
+        //重绘，此时curveMode已打开，需要绘制橘色框+蓝色框
+        invalidate();//但dUs信息并不改变不需initDw.
+
+    }
+
+    public void curveBoxMove(int moveType){
+        moveBox(moveType);
+        orangeBoxUnitIndex = boxUnitIndex;
+        orangeBoxSectionIndex = boxSectionIndex;
+        invalidate();
+    }
+
+    public void setCurveModeCancel(){
+        //取消弧线模式（只退出，不添加）
+        this.curveModeOn =false;
+
+        //将框位指示器重置回蓝框的位置
+        boxUnitIndex = blueBoxUnitIndex;
+        boxSectionIndex = blueBoxSectionIndex;
+
+        invalidate();
+    }
+
+    public void setCurveModeFinishOK(){
+        //取消弧线模式（退出，添加，绘制弧线）
+        this.curveModeOn =false;
+        //将框位指示器重置回蓝框的位置
+        boxUnitIndex = blueBoxUnitIndex;
+        boxSectionIndex = blueBoxSectionIndex;
+
+        //添加在外部进行，对rbC的编码字段直接修改。
+        //此时编码已发生改变，需要重置绘制数据（至少各dU所对应的在原始编码中的索引值已变化，需重新计算）
+        codeChangedReDraw();//方法内自带invalidate()
+    }
+
+    public int getOrangeIndex(){
+        return drawingUnits.get(orangeBoxSectionIndex).get(orangeBoxUnitIndex).indexInCodeSerial;
+    }//【提示】如果调用方发现橘框位置和蓝框位置一致，则应拒绝添加弧线标记！二者不一致时，注意选择在其中稍大者后面添加。
+
+    //【注意】如果在弧线模式接近结束时获取蓝框的值，应在调用结束方法前调用本方法；
+    // 否则蓝框索引会被结束方法重置。
+    public int getBlueIndex(){
+        return drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).indexInCodeSerial;
+    }
+
+    public int getGreenA_Index(){
+        return drawingUnits.get(green_A_BoxSectionIndex).get(green_A_BoxUnitIndex).indexInCodeSerial;
+    }//【提示】如果调用方发现绿框两端的位置一致（都和蓝框一致），则应拒绝合并操作。
+
+    public int getGreenB_Index(){
+        return drawingUnits.get(green_B_BoxSectionIndex).get(green_B_BoxUnitIndex).indexInCodeSerial;
+    }
+
+
+    /* 绿框操作区*/
+    //【绿、橘不能共存】
+    public void mergeFreeModeOn(){
+        //【还应该考虑如果橘色框模式未退出，应该先触发其cancel。该逻辑或由外部调用方负责；或二者都有负责双保险】
+        if(curveModeOn){
+            setCurveModeCancel();
+        }
+
+        this.mergeFreeModeOn = true;
+        //将蓝框位置保存
+        blueBoxUnitIndex = boxUnitIndex;
+        blueBoxSectionIndex = boxSectionIndex;
+
+        //绿框模式初始时和蓝框同位置。
+        green_A_BoxSectionIndex = boxSectionIndex;
+        green_B_BoxSectionIndex = boxSectionIndex;
+        green_A_BoxUnitIndex = boxUnitIndex;
+        green_B_BoxUnitIndex = boxUnitIndex;
+        //重绘，此时mFM已打开，需要绘制绿框+蓝色框
+        invalidate();//但dUs信息并不改变不需initDw.
+
+    }
+
+    /* 本方法在进入合并模式后（点击合并的左右两键之一），在mFMO方法调用完毕后随即调用（或right方法，取决于所按按钮）*/
+    //作用就是将左/右端坐标指针与移动指针绑定。
+    public void mergeFreeModeChoseLeft(){
+        //选定左侧，右侧解绑
+        if(!leftOn){
+            //当前是右侧绑定
+            //解绑
+            //先保存已有右侧位置
+            green_B_BoxSectionIndex = boxSectionIndex;
+            green_B_BoxUnitIndex = boxUnitIndex;
+
+            //位置指针重置到左侧
+            boxSectionIndex = green_A_BoxSectionIndex;
+            boxUnitIndex = green_A_BoxUnitIndex;
+
+            leftOn = true;//标记置左，当移动发生时，更新的位置将赋给左侧
+        }//else 已经是左侧，则无操作。
+
+        //此时没有显示上的实质改变，不修改UI
+    }
+
+    public void mergeFreeModeChoseRight(){
+        if(leftOn){
+            //当前是左侧绑定
+            //解绑
+            //先保存已有左侧位置
+            green_A_BoxSectionIndex = boxSectionIndex;
+            green_A_BoxUnitIndex = boxUnitIndex;
+
+            //位置指针重置到右侧
+            boxSectionIndex = green_B_BoxSectionIndex;
+            boxUnitIndex = green_B_BoxUnitIndex;
+
+            leftOn = false;//标记置右，当移动发生时，更新的位置将赋给右侧
+        }//else 已经是该侧，则无操作。
+
+        //此时没有显示上的实质改变，不修改UI
+    }
+
+
+    public void merge_BoxMove(int moveType){
+        int tempSI = boxSectionIndex;//如果移动操作非法时，用本数据还原。
+        int tempUI = boxUnitIndex;
+
+        moveBox(moveType);
+
+        if(leftOn) {
+            //判断移动后的坐标是否合法
+            if(boxSectionIndex>blueBoxSectionIndex){
+                //非法移动，坐标退回，方法退出
+                boxSectionIndex = tempSI;
+                boxUnitIndex = tempUI;
+                Toast.makeText(mContext, "移动不能跨越蓝框。", Toast.LENGTH_SHORT).show();
+                return;
+            }else if(boxSectionIndex == blueBoxSectionIndex && boxUnitIndex>blueBoxUnitIndex){
+                //非法移动，坐标退回，方法退出
+                boxSectionIndex = tempSI;
+                boxUnitIndex = tempUI;
+                Toast.makeText(mContext, "移动不能跨越蓝框。", Toast.LENGTH_SHORT).show();
+                return;
+            }//else再然后的情形，从移动角度来说都是合理的，即使移动到蓝框位置（此时只是在结束并提交时，由外部检查合并选区不合理，拒绝合并即可）
+
+            //移动后的坐标赋给左侧
+            green_A_BoxSectionIndex = boxSectionIndex;
+            green_A_BoxUnitIndex = boxUnitIndex;
+        }else {
+            //判断移动后的坐标是否合法
+            if(boxSectionIndex<blueBoxSectionIndex){
+                //非法移动，坐标退回，方法退出
+                boxSectionIndex = tempSI;
+                boxUnitIndex = tempUI;
+                Toast.makeText(mContext, "移动不能跨越蓝框。", Toast.LENGTH_SHORT).show();
+                return;
+            }else if(boxSectionIndex == blueBoxSectionIndex && boxUnitIndex<blueBoxUnitIndex){
+                //非法移动，坐标退回，方法退出
+                boxSectionIndex = tempSI;
+                boxUnitIndex = tempUI;
+                Toast.makeText(mContext, "移动不能跨越蓝框。", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            //合法移动下，
+            //移动后的坐标赋给右侧
+            green_B_BoxSectionIndex = boxSectionIndex;
+            green_B_BoxUnitIndex = boxUnitIndex;
+        }
+        invalidate();
+    }
+
+    public void setMergeFreeModeCancel(){
+        //取消自由合并模式（只退出，不添加）
+        this.mergeFreeModeOn =false;
+
+        //将框位指示器重置回蓝框的位置
+        boxUnitIndex = blueBoxUnitIndex;
+        boxSectionIndex = blueBoxSectionIndex;
+
+        invalidate();
+    }
+
+    public void setMergeFreeModeFinishOK(){
+        //取消自由合并模式（只退出，不添加）
+        this.mergeFreeModeOn =false;
+
+        //合并的结束相对复杂，由外部调用方先获取合并区的起止索引，根据正确规则将索引区内的编码全部
+        // 合并为一个音符对应的编码（如果产生延音则占据多个编码位）；拍结束、节结束要重新安置；
+        // 如果当中存在连音弧则也要处理；音高序列也需要处理（方案1,合并后的音高采用原绿框左端位对应
+        // 的音高；方案2，存在不同音高时拒绝合并（不太好啊，或者给提示后可以强行合并））
+        //——仍然是由外部负责编码序列的改写操作。完事后由本方法收尾（重置位置指针、刷新UI）
+
+
+        //合并后，框位指示器重置回绿框的左侧位置（合并区首位）
+        boxUnitIndex = green_A_BoxUnitIndex;
+        boxSectionIndex = green_A_BoxSectionIndex;
+
+        //添加在外部进行，对rbC的编码字段直接修改。
+        //此时编码已发生改变，需要重置绘制数据（至少各dU所对应的在原始编码中的索引值已变化，需重新计算）
+        codeChangedReDraw();//方法内自带invalidate()
+    }
 
 
 }

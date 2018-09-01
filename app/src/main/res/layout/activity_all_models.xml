@@ -35,11 +35,6 @@
         android:textSize="16sp"
         />
     <!--分割线-->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/myRhythm_light_green"
-        />
     <!--内容区-->
     <FrameLayout
         android:id="@+id/flt_rhythmsContentArea_AMA"
@@ -84,11 +79,6 @@
         android:text="@string/lyrics"
         android:textSize="16sp" />
     <!--分割线-->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/myRhythm_light_green"
-        />
     <!--内容区-->
     <FrameLayout
         android:id="@+id/flt_lyricContentArea_AMA"
@@ -179,9 +169,8 @@
         android:layout_height="32dp"
         android:gravity="center"
         android:layout_gravity="bottom"
-        android:background="#efefef"
-        android:text="@string/plh_groupAllInfo_AMA"
-        />
+        android:background="#efefef"/>
+        <!--android:text="@string/plh_groupAllInfo_AMA"/>-->
     <!--底边线-->
     <TextView
         android:layout_width="match_parent"

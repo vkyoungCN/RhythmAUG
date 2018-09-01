@@ -60,6 +60,10 @@ public class BaseRhythmView extends View {
     //当前位于第几行，从0起。（用于折行模式下该行Y值的计算）
     int lineCursor = 0;
 
+    int accumulationNumInCodeSerial = 0;//用于确定任意dU在原始编码中所对应的位置，某些功能（如确定连音弧选框位置）需要
+    //值传入按节初始的方法中，将所有code全部记录，包括112、127等特别编码。
+
+
     /* 用于放缩使用*/
     int codeSizeDip;
     int unitWidthDip;
@@ -306,7 +310,7 @@ public class BaseRhythmView extends View {
                     //注意，小节线绘制规则：起端没有小节线，小节线只存在于末尾
 
 
-                    //绘制连音弧线（延长音，不是均分多连）
+                    //绘制连音弧线（顶部弧形延长音，不是均分多连）
                     if (drawingUnit.isEndCodeOfLongCurve) {
                         float curveStart = 0;
                         float curveEnd = drawingUnit.right;//覆盖在起端left到末端right（全盖住）
@@ -556,6 +560,9 @@ public class BaseRhythmView extends View {
             twoLinesTopYBetween += unitHeight;
         }//两者皆不使用则高度差不做调整。
 
+        accumulationNumInCodeSerial = 0;//每次初始数据前，将该计数器重置为0
+        //在各按小节计算的方法中，对该全局变量直接操作；并将“当前”dU的对应位置（-1，索引位）存入dU。
+
     }
 
     //按小节计算（小节内各音符的）绘制数据（未对音序、词序处理（但预留了空间）；应在完整dUs列表生成后再处理词、音序列）
@@ -566,6 +573,7 @@ public class BaseRhythmView extends View {
         ArrayList<DrawingUnit> drawingUnitsInSection = new ArrayList<>();
 
         for (int j = 0; j < codesInThisSection.size(); j++) {
+            accumulationNumInCodeSerial++;
             byte code = codesInThisSection.get(j);
 
             if(code>112&&code<126) {
@@ -575,14 +583,14 @@ public class BaseRhythmView extends View {
                 if(j==0){
                     Toast.makeText(mContext, "该小节内，连音标记前没有音符，错误编码。略过该连音。", Toast.LENGTH_SHORT).show();
                 }else {
-                    drawingUnitsInSection.get(j - 1).isEndCodeOfLongCurve = true;
+                    drawingUnitsInSection.get(j-1).isEndCodeOfLongCurve = true;
                     drawingUnitsInSection.get(j-1).curveLength = curveSpanForward;
                 }
             }else {
                 DrawingUnit drawingUnit = new DrawingUnit();
                 drawingUnit.top = topDrawing_Y + lineCursor * twoLinesTopYBetween;
                 drawingUnit.bottomNoLyric = drawingUnit.top + (unitHeight + additionalPointsHeight * 2 + curveOrLinesHeight * 2);
-
+                drawingUnit.indexInCodeSerial = accumulationNumInCodeSerial;//在没有dU的Code下，该值直接递增；在有对应dU的时候，将值存给dU。
 
                 //判断计算起点位置（startX）
                 if (j == 0) {
@@ -820,8 +828,8 @@ public class BaseRhythmView extends View {
                 if(drawingUnit.mCurveNumber == 0){
                     //不是均分多连音,安置1个字符即可
                     if(drawingUnit.code.equals("-")||drawingUnit.code.equals("0")){
-                        charAmountAccumulation++;
-                        continue;//如果是空拍、延音符则跳过本次，索引同步增加因为是用%填充的。
+//                        charAmountAccumulation++;
+                        continue;//如果是空拍、延音符则跳过本次。（索引不再同步增加，因为是不再采用填充方案）
                     }
                     drawingUnit.lyricWord_1 = String.valueOf(lyricInString_1.charAt(charAmountAccumulation));
                     drawingUnit.lyricWord_1_BaseY = drawingUnit.bottomNoLyric+unitHeight;
@@ -848,8 +856,8 @@ public class BaseRhythmView extends View {
                 if(drawingUnit.mCurveNumber == 0){
                     //不是均分多连音,安置1个字符即可
                     if(drawingUnit.code.equals("-")||drawingUnit.code.equals("0")){
-                        charAmountAccumulation++;
-                        continue;//如果是空拍、延音符则跳过本次，索引同步增加因为是用%填充的。
+//                        charAmountAccumulation++;
+                        continue;//如果是空拍、延音符则跳过本次。
                     }
                     drawingUnit.lyricWord_2 = String.valueOf(lyricInString_2.charAt(charAmountAccumulation));
                     drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric+unitHeight;
@@ -878,8 +886,8 @@ public class BaseRhythmView extends View {
             for (int k=0;k<currentDuSection.size();k++){
                 DrawingUnit drawingUnit = currentDuSection.get(k);
                 if(drawingUnit.code.equals("-")||drawingUnit.code.equals("0")){
-                    charAmountAccumulation++;
-                    continue;//如果是空拍、延音符则跳过本次，索引同步增加因为是用0填充的。
+//                    charAmountAccumulation++;
+                    continue;//如果是空拍、延音符则跳过本次。
                 }
 
                 Charset cs = Charset.forName("UTF-8");
@@ -898,14 +906,13 @@ public class BaseRhythmView extends View {
                     ByteBuffer bb = ByteBuffer.allocate(drawingUnit.mCurveNumber);
                     byte b = pitchSerial.get(charAmountAccumulation);
                     for(int j=0;j<drawingUnit.mCurveNumber;j++){
-                        bb.put(b);//添加若干次
+                        bb.put(b);//添加若干次（但都是取自同一个编码位置）
                     }
                     bb.flip();
                     CharBuffer cb = cs.decode(bb);
                     drawingUnit.code = cb.toString();
                     charAmountAccumulation++;//均分多连音的音高只编码一次，因而仍然是+1（与词序不同）。
                 }
-
             }
         }
     }

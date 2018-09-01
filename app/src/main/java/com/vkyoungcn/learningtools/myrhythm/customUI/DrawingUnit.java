@@ -63,7 +63,7 @@ public class DrawingUnit {
     public int curveLength = 0;//如果要绘制上方连音弧线（且不是均分多连音），则需记录弧线向前跨越多少个音符。
 
     public boolean isLastCodeInSection = false;
-
+    public int indexInCodeSerial = 0;//某些功能下要求能从指定的dU快速/直接获取所对应的在原始编码中的索引位置。
 
     //一个字符的空间方案暂定如下：标志尺寸ss,字符区域占宽=ss（字体尺寸本身不足的留空即可），
     // 字符占高=展宽；字符上方预留半ss的顶弧线高度，其中保留一小层的高度作为上加点区域；
