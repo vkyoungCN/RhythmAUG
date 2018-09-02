@@ -32,7 +32,7 @@
         android:gravity="center"
         >
 
-        <TextView
+        <!--<TextView
             android:id="@+id/tv_addCurve_PEM"
             android:layout_width="48dp"
             android:layout_margin="2dp"
@@ -41,7 +41,7 @@
             android:text="@string/curve"
             android:textSize="12sp"
             android:background="#fff3e0"
-            />
+            />-->
 
         <!--分割线-->
         <TextView
@@ -57,7 +57,7 @@
             android:layout_margin="1dp"
             android:layout_height="32dp"
             android:gravity="center"
-            android:text="@string/merge_start"
+            android:text="@string/select_start"
             android:background="#e8f5e9"
             />
         <TextView
@@ -66,7 +66,7 @@
             android:layout_margin="1dp"
             android:layout_height="32dp"
             android:gravity="center"
-            android:text="@string/merge_end"
+            android:text="@string/select_end"
             android:layout_marginStart="1dp"
             android:layout_marginEnd="1dp"
             android:background="#e8f5e9"

@@ -85,7 +85,7 @@
     <string name="over_5">5</string>
     <string name="over_3">3</string>
     <string name="over_7">7</string>
-    <string name="zone_merge">倍数合并</string>
+    <string name="zone_merge">合并</string>
     <string name="merge_left"><![CDATA[+<<]]></string>
     <string name="merge_right"><![CDATA[>>+]]></string>
     <string name="merge_both_side">双向合并</string>
@@ -148,5 +148,10 @@
     <string name="merge_start">[.合</string>
     <string name="merge_end">并.]</string>
     <string name="addSection">节·新增</string>
+    <string name="select_start">[选.</string>
+    <string name="select_end">择.]</string>
+    <string name="zone_selection">选区操作</string>
+    <string name="copy">复制</string>
+    <string name="code_X">X</string>
 
 </resources>

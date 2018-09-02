@@ -70,7 +70,7 @@
                     android:background="#e0e0e0" />
 
 
-                <include layout="@layout/part_rhythm_merging" />
+                <include layout="@layout/part_rhythm_selecting_zone" />
 
                 <TextView
                     android:layout_width="1dp"
