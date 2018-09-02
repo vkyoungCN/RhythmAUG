@@ -2,9 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    tools:context=".fragments.MelodyEditorFragment"
-    >
+    android:layout_height="match_parent"
+    tools:context=".fragments.MelodyEditorFragment">
 
 
     <!--Title-->
@@ -12,39 +11,37 @@
         android:id="@+id/tv_titleMerge_part"
         android:layout_width="92dp"
         android:layout_height="24dp"
-        android:background="#f5f5f5"
-        android:text="@string/zone_merge"
-        android:gravity="center"
         android:layout_marginBottom="6dp"
-        />
+        android:background="#f5f5f5"
+        android:gravity="center"
+        android:text="@string/zone_merge" />
     <!--横分割线-->
     <TextView
         android:layout_width="92dp"
         android:layout_height="1dp"
-        android:background="@color/myRhythm_orange"
         android:layout_marginTop="22dp"
-        />
+        android:background="@color/myRhythm_orange" />
+
     <TextView
         android:id="@+id/tv_merge_2x"
-        android:layout_below="@+id/tv_titleMerge_part"
         android:layout_width="42dp"
         android:layout_height="36dp"
+        android:layout_below="@+id/tv_titleMerge_part"
         android:layout_margin="2dp"
-        android:gravity="center"
         android:background="#f5f5f5"
-        android:text="@string/merge_x2"
-        />
+        android:gravity="center"
+        android:text="@string/merge_x2" />
+
     <TextView
         android:id="@+id/tv_merge_4x"
-        android:layout_below="@+id/tv_titleMerge_part"
-        android:layout_toRightOf="@id/tv_merge_2x"
         android:layout_width="42dp"
         android:layout_height="36dp"
+        android:layout_below="@+id/tv_titleMerge_part"
         android:layout_margin="2dp"
-        android:gravity="center"
+        android:layout_toRightOf="@id/tv_merge_2x"
         android:background="#f5f5f5"
-        android:text="@string/merge_4x"
-        />
+        android:gravity="center"
+        android:text="@string/merge_4x" />
 
     <TextView
         android:id="@+id/tv_merge_mx"
@@ -52,8 +49,8 @@
         android:layout_height="36dp"
         android:layout_below="@+id/tv_merge_2x"
         android:layout_marginBottom="2dp"
-        android:layout_marginStart="2dp"
         android:layout_marginEnd="2dp"
+        android:layout_marginStart="2dp"
         android:layout_marginTop="6dp"
         android:background="#f5f5f5"
         android:gravity="center"
@@ -64,14 +61,13 @@
         android:layout_width="44dp"
         android:layout_height="42dp"
         android:layout_below="@+id/tv_merge_2x"
-        android:layout_toRightOf="@id/tv_merge_mx"
         android:layout_marginBottom="2dp"
         android:layout_marginStart="1dp"
         android:layout_marginTop="4dp"
+        android:layout_toRightOf="@id/tv_merge_mx"
         android:background="#e8f5e9"
         android:gravity="center"
         android:text="@string/confirm" />
-
 
 
 </RelativeLayout>

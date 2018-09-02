@@ -52,12 +52,12 @@
         <LinearLayout
             android:id="@+id/llt_buttonsPanel_ER"
             android:layout_width="match_parent"
-            android:layout_height="320dp"
+            android:layout_height="322dp"
             android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="118dp"
                 android:gravity="center"
                 android:orientation="horizontal">
 
@@ -68,7 +68,6 @@
                     android:layout_height="match_parent"
                     android:layout_margin="2dp"
                     android:background="#e0e0e0" />
-
 
 
                 <include layout="@layout/part_rhythm_merging" />
@@ -100,7 +99,12 @@
 
 
             <!--音高输入大区-->
-            <include layout="@layout/part_pitches_input" />
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="98dp">
+
+                <include layout="@layout/part_pitches_input" />
+            </FrameLayout>
 
             <!--横分割线-->
             <TextView
@@ -109,7 +113,12 @@
                 android:background="#e0e0e0" />
 
             <!--移动区-->
-            <include layout="@layout/part_edit_move" />
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="63dp">
+
+                <include layout="@layout/part_edit_move" />
+            </FrameLayout>
 
             <!--横分割线-->
             <TextView

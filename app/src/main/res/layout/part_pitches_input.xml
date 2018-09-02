@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="98dp"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".fragments.MelodyEditorFragment">
 
@@ -36,14 +36,14 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="24dp"
-            android:layout_marginStart="6dp"
-            android:layout_marginTop="1dp"
             android:layout_marginBottom="1dp"
             android:layout_marginEnd="2dp"
-            android:padding="1dp"
-            android:gravity="center"
+            android:layout_marginStart="6dp"
+            android:layout_marginTop="1dp"
             android:background="#fff9c4"
-            android:orientation="horizontal">
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="1dp">
 
             <!--<ImageView
                 android:id="@+id/imv_aPoint_minus_3"
@@ -55,67 +55,66 @@
 
             <ImageView
                 android:id="@+id/imv_aPoint_minus_2"
-                android:padding="2dp"
                 android:layout_width="24dp"
                 android:layout_height="match_parent"
                 android:layout_margin="1dp"
                 android:background="#f5f5f5"
-                android:src="@drawable/additional_points_2neg"
-                android:gravity="center" />
+                android:gravity="center"
+                android:padding="2dp"
+                android:src="@drawable/additional_points_2neg" />
 
             <ImageView
                 android:id="@+id/imv_aPoint_minus_1"
-                android:padding="2dp"
                 android:layout_width="32dp"
                 android:layout_height="match_parent"
                 android:layout_margin="1dp"
                 android:background="#f5f5f5"
-                android:src="@drawable/additional_points_1neg"
-                android:gravity="center" />
+                android:gravity="center"
+                android:padding="2dp"
+                android:src="@drawable/additional_points_1neg" />
 
             <ImageView
                 android:id="@+id/imv_aPoint_0"
                 android:layout_width="32dp"
-                android:padding="2dp"
                 android:layout_height="match_parent"
                 android:layout_margin="1dp"
                 android:background="#f5f5f5"
-                android:src="@drawable/additional_points_0"
-                android:gravity="center" />
+                android:gravity="center"
+                android:padding="2dp"
+                android:src="@drawable/additional_points_0" />
 
             <ImageView
                 android:id="@+id/imv_aPoint_pos_1"
-                android:padding="2dp"
                 android:layout_width="32dp"
                 android:layout_height="match_parent"
                 android:layout_margin="1dp"
                 android:background="#f5f5f5"
-                android:src="@drawable/additional_points_1plus"
-                android:gravity="center" />
+                android:gravity="center"
+                android:padding="2dp"
+                android:src="@drawable/additional_points_1plus" />
 
             <ImageView
                 android:id="@+id/imv_aPoint_pos_2"
                 android:layout_width="24dp"
                 android:layout_height="match_parent"
-                android:padding="2dp"
                 android:layout_margin="1dp"
                 android:background="#f5f5f5"
-                android:src="@drawable/additional_points_2plus"
-                android:gravity="center" />
+                android:gravity="center"
+                android:padding="2dp"
+                android:src="@drawable/additional_points_2plus" />
         </LinearLayout>
-
 
 
         <!--调外音节行（各种半音）-->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="32dp"
-            android:layout_marginStart="1dp"
             android:layout_marginEnd="1dp"
-            android:padding="2dp"
-            android:gravity="center"
+            android:layout_marginStart="1dp"
             android:background="#e0f2f1"
-            android:orientation="horizontal">
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="2dp">
 
             <TextView
                 android:id="@+id/tv_code_1sharp"

@@ -1,6 +1,7 @@
 package com.vkyoungcn.learningtools.myrhythm.models;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class CodeSerial_Rhythm {
     //为编码工作提供规则、校验、功能封装。
@@ -33,13 +34,21 @@ public class CodeSerial_Rhythm {
 
     /* 数据*/
     ArrayList<Byte> codeSerial = new ArrayList<>();
-    int valueOfBeat = 16;
+    int beatType = 44;
+    int valueOfBeat = 16;//可以通过bT设置自动生成
 
     public CodeSerial_Rhythm() {
     }
 
-    public CodeSerial_Rhythm(ArrayList<Byte> codeSerial, int valueOfBeat) {
+    public CodeSerial_Rhythm(ArrayList<Byte> codeSerial, int beatType) {
         this.codeSerial = codeSerial;
+        this.beatType = beatType;
+        this.valueOfBeat = RhythmHelper.calculateValueBeat(beatType);
+    }
+
+    public CodeSerial_Rhythm(ArrayList<Byte> codeSerial, int beatType, int valueOfBeat) {
+        this.codeSerial = codeSerial;
+        this.beatType = beatType;
         this.valueOfBeat = valueOfBeat;
     }
 
@@ -54,14 +63,19 @@ public class CodeSerial_Rhythm {
         }
     }
 
-    public int getValueOfBeat() {
-        return valueOfBeat;
+    public int getBeatType() {
+        return beatType;
     }
 
-    public void setValueOfBeat(int valueOfBeat) {
-        this.valueOfBeat = valueOfBeat;
+    public void setBeatType(int beatType) {
+        this.beatType = beatType;
+        this.valueOfBeat = RhythmHelper.calculateValueBeat(beatType);
     }
 
+
+
+    /* 业务方法*/
+    /* 单点替换*/
     public int replaceCodeAt(int index, byte newCode){
         //目标位置和主数据列表检查
        int checkNum = checkIndexAndList(index);
@@ -104,7 +118,6 @@ public class CodeSerial_Rhythm {
         //如果传入的新值（空拍值）不符合要求，相当于舍弃要求的值，按合理值替代处理。
 
     }
-
 
 
     //如果要替换为均分多连音，要求：
@@ -374,7 +387,7 @@ public class CodeSerial_Rhythm {
 
 
 
-    /* 一些辅助方法*/
+    /* 辅助方法*/
     //检测当前符号是否位于连音弧覆盖之下
     public boolean checkCurveCovering(int index){
         byte currentCode = codeSerial.get(index);
@@ -450,6 +463,7 @@ public class CodeSerial_Rhythm {
 
 
 
+    /* 单点拆分*/
 
     /* 四等分某音符，原音符可以是（空拍、延音符、正常非附点且大于等于8分（值8），均分多连音（大于等于8分，要用户确认））
     * 其中原符是正常、-时需要判定后续是否-。
@@ -598,6 +612,53 @@ public class CodeSerial_Rhythm {
     }
 
 
+    /* 添加 */
+    /* 在最后添加一个空拍小节*/
+    public boolean addSection(){
+        return codeSerial.addAll(generateEmptySection());//成功返回true
+    }
+
+    /* 按当前的节拍类型生成一个空拍小节编码*/
+    private ArrayList<Byte> generateEmptySection(){
+        int beatAmount = beatType/10;
+        ArrayList<Byte> newSection = new ArrayList<>(beatAmount*2+1);
+        for(int i=0;i<beatAmount;i++){
+            newSection.add((byte)(-valueOfBeat));
+            newSection.add((byte)126);
+        }
+        newSection.add((byte)127);
+        return newSection;
+    }
+
+    /*
+    * 在指定的位置添加一个新的空拍小节
+    * 传入的参数代表“全序列中的第N个小节”，1代表在开头插入，若传入0则代表从最后附加。
+    * */
+    public boolean addSection(int sectionOrderNumber){
+        if(sectionOrderNumber == 1){
+            //在开头插入
+            return codeSerial.addAll(0,generateEmptySection());//【index参数没问题，顺序待：doc指，iterator顺序】
+        }else if(sectionOrderNumber == 0){
+            //末尾追加
+            return codeSerial.addAll(generateEmptySection());
+        }
+
+        //不在开头,不在（手动指定的）末尾
+        int sectionAmount =1;//默认（初始）即有1节
+        int totalCodeIndex = -1;
+        for(byte b:codeSerial){
+            totalCodeIndex++;//进循环即开始累加（这样第一个b位置是0）
+            if(b==127){
+                sectionAmount++;
+            }
+            if(sectionAmount == sectionOrderNumber){
+                return codeSerial.addAll(totalCodeIndex+1,generateEmptySection());//注意要在该索引位的后面添加（因为该位置是127）
+            }
+        }
+
+        //能到此说明循环跑完了
+        return false;//指定的位置不对，可能超过了小节数量。【另一种方法是强行附加在最后，待】
+    }
 
 
 
@@ -612,7 +673,6 @@ public class CodeSerial_Rhythm {
 
 
 
-}
 
 
 

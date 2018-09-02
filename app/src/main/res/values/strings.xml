@@ -135,7 +135,7 @@
     <string name="zone_special">特别</string>
     <string name="code_0">0</string>
     <string name="code_Bar">-</string>
-    <string name="preFix">前缀音</string>
+    <string name="preFix">缀</string>
     <string name="zone_move_merge_curve">连音弧+/选区合并/移动控制</string>
     <string name="curve">连音弧</string>
     <string name="str_S">S</string>
@@ -147,5 +147,6 @@
     <string name="str_ok">OK</string>
     <string name="merge_start">[.合</string>
     <string name="merge_end">并.]</string>
+    <string name="addSection">节·新增</string>
 
 </resources>
