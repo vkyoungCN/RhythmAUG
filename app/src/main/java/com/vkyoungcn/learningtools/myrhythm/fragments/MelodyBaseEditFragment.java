@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,23 +30,35 @@ import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEdit
 public class MelodyBaseEditFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "RhythmBaseEditFragment";
     /* 逻辑*/
-    int valueOfBeat = 16;
-    int valueOfSection = 64;
-    int sectionSize = 4;
-    int availableValue = 0;
-    int span = 1;
-    int beatEndCursor;//在均分多连音设置前导之检测节拍内可用时值时，生成的副产品（拍内空字符最末索引）；
+
+    /* 当前选中区域的两端坐标，单code模式下选中的sI=eI*/
+    int selectStartIndex = 0;
+    int selectEndIndex = 0;
+
+
+//    int valueOfBeat = 16;
+//    int valueOfSection = 64;
+//    int sectionSize = 4;
+//    int availableValue = 0;
+//    int span = 1;
+//    int beatEndCursor;//在均分多连音设置前导之检测节拍内可用时值时，生成的副产品（拍内空字符最末索引）；
     // 跨方法使用且返回值已被其他字段占据，暂时采用全局处理。
 
     //交互发回Activity进行，简化复杂问题。
     OnGeneralDfgInteraction mListener;
 
-
-    RhythmBasedCompound rhythmBasedCompound;//【新建不需传递cr但会通过rhythmType构建一个新的comRh；
-    // 编辑需要传递comRh。无论如何，都需要将comRh提交给editor】
+    RhythmBasedCompound rhythmBasedCompound;
+    //【说明】编辑：传递既有comRh。新建：生成一个空Rh穿进来。
 //    int rhythmType;
+
+    /*
+    * 说明：
+    * 本FG负责编码选框的移动（以及选定所在的一个拍子，选择邻近的两个拍子）；
+    * UI控件负责显示
+    * 编码类负责处理“修改编码”时的逻辑正确
+    * */
     ArrayList<Byte> codes = new ArrayList<>();//都需要对comRh的编码序列进行编辑
-    ArrayList<ArrayList<Byte>> codesInSections = new ArrayList<>();//都要使用这个进行处理
+//    ArrayList<ArrayList<Byte>> codesInSections = new ArrayList<>();//都要使用这个进行处理
     //【RhEditor只是负责显示，逻辑部分其实需要由本fg负责】
 
     int currentSectionIndex = 0;
@@ -55,66 +66,68 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
 //    Rhythm rhythm ;
 
-    /* 自定义控件*/
-    RhythmSingleLineEditor rh_editor_ER;
+    /* Rh控件*/
+    RhythmSingleLineEditor rh_editor_EM;
 
-    /* 35个控件，其中33个（非edt的）有点击事件*/
-    TextView tv_x0;
-    TextView tv_xb1;
-    TextView tv_xb2;
-    TextView tv_xb3;
+    /* 节奏部分24个tv控件，2个edt控件*/
+    TextView tv_merge;
 
-    TextView tv_xp;
-    TextView tv_xpb1;
-    TextView tv_xpb2;
+    TextView tv_selectionAreaStart;
+    TextView tv_selectionAreaEnd;
+    TextView tv_selectionSingleCode;
 
-    TextView tv_xl1;
-    TextView tv_xl2;
-    TextView tv_xl3;
-
-    TextView tv_xm;
-    TextView tv_xm1;
-    TextView tv_xm2;
-
-    TextView tv_empty;
-
-    ImageView imv_x0;
-    ImageView imv_xb1;
-    ImageView imv_xb2;
-    ImageView imv_xb3;
-
-    ImageView imv_xp;
-    ImageView imv_xpb1;
-    ImageView imv_xpb2;
-
-    ImageView imv_xl1;
-    ImageView imv_xl2;
-    ImageView imv_xl3;
-
-    ImageView imv_xm;
-    ImageView imv_xm1;
-    ImageView imv_xm2;
-
-    EditText edt_xmNum;
-    EditText edt_longCurveNum;
-
-    ImageView imv_longCurve;
-
-    TextView tv_longCurve_remove;
-    TextView tv_allConfirm;
-    TextView tv_addSection;
+    TextView tv_selectionBeat;
+    TextView tv_selectionDualBeat;
 
     TextView tv_lastSection;
     TextView tv_nextSection;
     TextView tv_lastUnit;
     TextView tv_nextUnit;
 
-    /* 新增控件*/
-    TextView tv_InfoRhType;
-    TextView tv_InfoBV;
-    TextView tv_InfoSV;
-    TextView tv_InfoCPRV;
+    TextView tv_toZero;
 
+    TextView tv_over2;
+    TextView tv_over3;
+    TextView tv_toX;
+    TextView tv_to0;
+
+    TextView tv_toDvd;
+    TextView tv_toHavePoint;
+    TextView tv_fwd16;
+    TextView tv_rwd16;
+
+    TextView tv_curve;
+    TextView tv_copy;
+
+    TextView tv_toBar;
+    TextView tv_addPreFix;
+    TextView tv_addSection;
+    TextView tv_deleteSection;
+
+    EditText edt_topInfo;
+    EditText edt_bottomInfo;
+
+
+    /* 音高输入组件*/
+    TextView tv_pitch_1;
+    TextView tv_pitch_2;
+    TextView tv_pitch_3;
+    TextView tv_pitch_4;
+    TextView tv_pitch_5;
+    TextView tv_pitch_6;
+    TextView tv_pitch_7;
+
+    TextView tv_pitch_1s;
+    TextView tv_pitch_2s;
+    TextView tv_pitch_4s;
+    TextView tv_pitch_5s;
+    TextView tv_pitch_6s;
+
+    TextView tv_adPoint_1plus;
+    TextView tv_adPoint_2plus;
+    TextView tv_adPoint_0;
+    TextView tv_adPoint_1Neg;
+    TextView tv_adPoint_2Neg;
 
 
     public MelodyBaseEditFragment() {
@@ -133,138 +146,87 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //在各子类具体实现，或是要获取传入的cRh，或是根据传入cRh的rType新建一个空的。
+        this.rhythmBasedCompound = getArguments().getParcelable("RHYTHM");
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                 Bundle savedInstanceState) {
-        View rootView =  inflater.inflate(R.layout.fragment_edit_rhythm, container, false);
+        View rootView =  inflater.inflate(R.layout.fragment_edit_melody, container, false);
 
-        rh_editor_ER = rootView.findViewById(R.id.rh_editor_ER);
+        rh_editor_EM = rootView.findViewById(R.id.rh_editor_EM);
 
-        tv_x0 = rootView.findViewById(R.id.tv_x0_ER);
-        tv_xb1 = rootView.findViewById(R.id.tv_xb1_ER);
-        tv_xb2 = rootView.findViewById(R.id.tv_xb2_ER) ;
-        tv_xb3 = rootView.findViewById(R.id.tv_xb3_ER) ;
+        tv_selectionBeat = rootView.findViewById(R.id.tv_selectBeat) ;
+        tv_selectionDualBeat = rootView.findViewById(R.id.tv_selectDualBeat) ;
+        tv_selectionSingleCode = rootView.findViewById(R.id.tv_selectSingleCode) ;
 
-        tv_xp = rootView.findViewById(R.id.tv_xp_ER) ;
-        tv_xpb1 = rootView.findViewById(R.id.tv_xpb1_ER) ;
-        tv_xpb2 = rootView.findViewById(R.id.tv_xpb2_ER) ;
+        tv_merge = rootView.findViewById(R.id.tv_merge) ;
+        tv_selectionAreaStart = rootView.findViewById(R.id.tv_selectionAreaStart) ;
+        tv_selectionAreaEnd = rootView.findViewById(R.id.tv_selectionAreaEnd) ;
 
-        tv_xl1 = rootView.findViewById(R.id.tv_xl1_ER) ;
-        tv_xl2 = rootView.findViewById(R.id.tv_xl2_ER) ;
-        tv_xl3 = rootView.findViewById(R.id.tv_xl3_ER) ;
+        tv_over2 = rootView.findViewById(R.id.tv_over_2) ;
+        tv_over3 = rootView.findViewById(R.id.tv_over_3) ;
+        tv_toX = rootView.findViewById(R.id.tv_toX) ;
 
-        tv_xm = rootView.findViewById(R.id.tv_xm_ER) ;
-        tv_xm1 = rootView.findViewById(R.id.tv_xm1_ER) ;
-        tv_xm2 = rootView.findViewById(R.id.tv_xm2_ER) ;
+        tv_toZero = rootView.findViewById(R.id.tv_toZero);
 
-        tv_empty = rootView.findViewById(R.id.tv_empty_ER);
+        tv_toDvd = rootView.findViewById(R.id.tv_toDv);
+        tv_toHavePoint = rootView.findViewById(R.id.tv_toHaveSpot);
+        tv_rwd16 = rootView.findViewById(R.id.tv_rwd16);
+        tv_fwd16 = rootView.findViewById(R.id.tv_fwd16);
 
-        imv_x0 = rootView.findViewById(R.id.imv_x0_ER);
-        imv_xb1 = rootView.findViewById(R.id.imv_xb1_ER) ;
-        imv_xb2 = rootView.findViewById(R.id.imv_xb2_ER) ;
-        imv_xb3 = rootView.findViewById(R.id.imv_xb3_ER) ;
-
-        imv_xp = rootView.findViewById(R.id.imv_xp_ER) ;
-        imv_xpb1 = rootView.findViewById(R.id.imv_xpb1_ER) ;
-        imv_xpb2 = rootView.findViewById(R.id.imv_xpb2_ER) ;
-
-        imv_xl1 = rootView.findViewById(R.id.imv_xl1_ER) ;
-        imv_xl2 = rootView.findViewById(R.id.imv_xl2_ER) ;
-        imv_xl3 = rootView.findViewById(R.id.imv_xl3_ER) ;
-
-        imv_xm = rootView.findViewById(R.id.imv_xm_ER) ;
-        imv_xm1 = rootView.findViewById(R.id.imv_xm1_ER) ;
-        imv_xm2 = rootView.findViewById(R.id.imv_xm2_ER) ;
+        tv_lastSection = rootView.findViewById(R.id.tv_lastSection_EM);
+        tv_nextSection = rootView.findViewById(R.id.tv_nextSection_EM);
+        tv_lastUnit=rootView.findViewById(R.id.tv_lastUnit_EM);
+        tv_nextUnit = rootView.findViewById(R.id.tv_nextUnit_EM);
 
 
-        edt_xmNum = rootView.findViewById(R.id.edt_xmNum_ER);
-        edt_longCurveNum = rootView.findViewById(R.id.edt_longCurveSpan_ER);
+        tv_curve =rootView.findViewById(R.id.tv_curve);
+        tv_copy =rootView.findViewById(R.id.tv_copy);
 
-        imv_longCurve = rootView.findViewById(R.id.imv_longCurveEnd_ER);
+        tv_toBar =rootView.findViewById(R.id.tv_bar);
+        tv_addPreFix =rootView.findViewById(R.id.tv_prefix);
+        tv_addSection =rootView.findViewById(R.id.tv_sectionAdd);
+        tv_deleteSection =rootView.findViewById(R.id.tv_sectionMinus);
 
-        tv_longCurve_remove =rootView.findViewById(R.id.tv_longCurveRemove_ER) ;
-        tv_allConfirm = rootView.findViewById(R.id.tv_confirmAddRhythm_ER);
-        tv_addSection = rootView.findViewById(R.id.tv_addEmptySection_ER);
-
-        tv_lastSection = rootView.findViewById(R.id.tv_lastSection_ER);
-        tv_nextSection = rootView.findViewById(R.id.tv_nextSection_ER);
-        tv_lastUnit=rootView.findViewById(R.id.tv_lastUnit_ER);
-        tv_nextUnit = rootView.findViewById(R.id.tv_nextUnit_ER);
-
-        tv_InfoRhType = rootView.findViewById(R.id.tv_Info_rhType_ER);
-        tv_InfoBV = rootView.findViewById(R.id.tv_Info_beatValue_ER);
-        tv_InfoSV = rootView.findViewById(R.id.tv_Info_sectionValue_ER);
-        tv_InfoCPRV = rootView.findViewById(R.id.tv_Info_currentPlaceRestValue_ER);
-
+        edt_topInfo =rootView.findViewById(R.id.tv_infoTop_EM);
+        edt_bottomInfo case(R.id.tv_infoBottom_EM);
 
 
         //设监听
-        imv_x0.setOnClickListener(this);
-        imv_xb1.setOnClickListener(this);
-        imv_xb2.setOnClickListener(this);
-        imv_xb3.setOnClickListener(this);
+        tv_merge.setOnClickListener(this);
 
-        imv_xp.setOnClickListener(this) ;
-        imv_xpb1.setOnClickListener(this);
-        imv_xpb2.setOnClickListener(this);
+        tv_selectionAreaStart.setOnClickListener(this);
+        tv_selectionAreaEnd.setOnClickListener(this);
+        tv_selectionSingleCode.setOnClickListener(this);
 
-        imv_xl1.setOnClickListener(this);
-        imv_xl2.setOnClickListener(this);
-        imv_xl3.setOnClickListener(this);
-
-        imv_xm.setOnClickListener(this);
-        imv_xm1.setOnClickListener(this);
-        imv_xm2.setOnClickListener(this);
-
-//        edt_xmNum.setOnClickListener(this);
-//        edt_longCurveNum.setOnClickListener(this);
-
-        imv_longCurve.setOnClickListener(this);
-
-        tv_longCurve_remove.setOnClickListener(this);
-        tv_addSection.setOnClickListener(this);
+        tv_selectionBeat.setOnClickListener(this);
+        tv_selectionDualBeat.setOnClickListener(this);
 
         tv_lastSection.setOnClickListener(this);
         tv_nextSection.setOnClickListener(this);
         tv_lastUnit.setOnClickListener(this);
         tv_nextUnit.setOnClickListener(this);
 
-        tv_empty.setOnClickListener(this);
+        tv_over2.setOnClickListener(this);
+        tv_over3.setOnClickListener(this);
+        tv_toX.setOnClickListener(this);
+        tv_toZero.setOnClickListener(this);
 
-//        tv_allConfirm.setOnClickListener(this);
+        tv_toDvd.setOnClickListener(this);
+        tv_toHavePoint.setOnClickListener(this);
+        tv_fwd16.setOnClickListener(this);
+        tv_rwd16.setOnClickListener(this);
 
+        tv_curve.setOnClickListener(this);
+        tv_copy.setOnClickListener(this);
 
-        //给下方的tv区设置值（对应时值的值的说明区域）
-        tv_x0.setText(String.valueOf(valueOfBeat));
-        tv_xb1.setText(String.valueOf(valueOfBeat/2));
-        tv_xb2.setText(String.valueOf(valueOfBeat/4));
-        tv_xb3.setText(String.valueOf(valueOfBeat/8));
+        tv_toBar.setOnClickListener(this);
+        tv_addPreFix.setOnClickListener(this);
+        tv_addSection.setOnClickListener(this);
+        tv_deleteSection.setOnClickListener(this);
 
-        tv_xp.setText(String.valueOf(valueOfBeat+valueOfBeat/2));
-        tv_xpb1.setText(String.valueOf(valueOfBeat/2+valueOfBeat/4));
-        tv_xpb2.setText(String.valueOf(valueOfBeat/4+valueOfBeat/8));
-
-        tv_xl1.setText(String.valueOf(valueOfBeat*2));
-        tv_xl2.setText(String.valueOf(valueOfBeat*3));
-        tv_xl3.setText(String.valueOf(valueOfBeat*4));
-
-        tv_xm.setText(String.valueOf(valueOfBeat));
-        tv_xm1.setText(String.valueOf(valueOfBeat/2));
-        tv_xm2.setText(String.valueOf(valueOfBeat/4));
-
-        tv_InfoRhType.setText(String.format(getContext().getResources().getString(R.string.plh_rh_type), rhythmBasedCompound.getRhythmType()));
-        tv_InfoBV.setText(String.format(getContext().getResources().getString(R.string.plh_beat_value),valueOfBeat));
-        //onCV在onC之后(在实现类中，onC之后就已经初始化了cRh和编码因而可以设置下列值)
-//        Log.i(TAG, "onCreateView: comRh="+rhythmBasedCompound.toString());
-        checkCodeValue(codesInSections.get(0).get(0));
-        tv_InfoSV.setText(String.format(getContext().getResources().getString(R.string.plh_section_value),valueOfSection));
-        tv_InfoCPRV.setText(String.format(getContext().getResources().getString(R.string.plh_currentPlaceRest_value),availableValue));
-
-
-//        rh_editor_ER.setRhythm(rhythmBasedCompound);rh编辑器的设置由实现类负责
+//        rh_editor_EM.setRhythm(rhythmBasedCompound);rh编辑器的设置由实现类负责
 
         return rootView;
 
@@ -274,6 +236,43 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     @Override
     public void onClick(View v) {
         switch (v.getId()){
+            case R.id.rh_editor_EM:
+
+            case R.id.tv_selectBeat:
+                //点击后，从默认的选中单个code变为选中所在的Beat
+
+
+            case R.id.tv_selectDualBeat:
+            case R.id.tv_selectSingleCode:
+
+            case R.id.tv_merge:
+            case R.id.tv_selectionAreaStart:
+            case R.id.tv_selectionAreaEnd:
+
+            case R.id.tv_over_2:
+            case R.id.tv_over_3:
+            case R.id.tv_toX:
+
+            case R.id.tv_toZero:
+
+            case R.id.tv_toDv:
+            case R.id.tv_toHaveSpot:
+            case R.id.tv_rwd16:
+            case R.id.tv_fwd16:
+
+            case R.id.tv_lastSection_EM:
+            case R.id.tv_nextSection_EM:
+            case R.id.tv_lastUnit_EM:
+            case R.id.tv_nextUnit_EM:
+
+            case R.id.tv_curve:
+            case R.id.tv_copy:
+
+            case R.id.tv_bar:
+            case R.id.tv_prefix:
+            case R.id.tv_sectionAdd:
+            case R.id.tv_sectionMinus:
+
             case R.id.imv_x0_ER :
                 changeCode((byte)valueOfBeat);
                 break;
@@ -392,7 +391,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
             changeCodeAndNext(newCode,currentSectionIndex,currentUnitIndexInSection,false,0);
 
             //通知到UI改变
-            rh_editor_ER.codeChangedReDraw(codesInSections);
+            rh_editor_EM.codeChangedReDraw(codesInSections);
 
         }
     }
@@ -754,7 +753,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
         if(b==valueOfBeat|| b==valueOfBeat+valueOfBeat/2){
             //独占一拍，不存在合并情形
-            rh_editor_ER.codeChangedReDraw(codesInSections);
+            rh_editor_EM.codeChangedReDraw(codesInSections);
             return;
         }
 
@@ -762,7 +761,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         byte newCode = codesInSections.get(currentSectionIndex).get(temp_centerCursor);
         if(temp_centerCursor==(codesInSections.get(currentSectionIndex).size()-1)){
             //已到小节最末
-            rh_editor_ER.codeChangedReDraw(codesInSections);
+            rh_editor_EM.codeChangedReDraw(codesInSections);
             return;
         }
         byte nextCode = codesInSections.get(currentSectionIndex).get(temp_centerCursor+1);
@@ -772,7 +771,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         }
         if(temp_centerCursor==0){
             //首符
-            rh_editor_ER.codeChangedReDraw(codesInSections);
+            rh_editor_EM.codeChangedReDraw(codesInSections);
             return;
         }
         byte lastCode = codesInSections.get(currentSectionIndex).get(temp_centerCursor-1);
@@ -886,7 +885,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
         //通知到UI改变
 //        Log.i(TAG, "changeToEmpty: 1st code="+codesInSections.get(0).get(0));
-        rh_editor_ER.codeChangedReDraw(codesInSections);
+        rh_editor_EM.codeChangedReDraw(codesInSections);
 
 
     }
@@ -909,7 +908,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         }*/
 
         //通知到UI改变
-        rh_editor_ER.codeChangedReDraw(codesInSections);
+        rh_editor_EM.codeChangedReDraw(codesInSections);
 
 
     }
@@ -931,7 +930,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                         if(notifyUI){
                             //需要刷新（手动点击取消连音弧按钮时调用）
                             //当由其他方法调用时，由于调用方本身通常自带刷新逻辑，因而不必刷新。
-                            rh_editor_ER.codeChangedReDraw(codesInSections);
+                            rh_editor_EM.codeChangedReDraw(codesInSections);
                         }
                     } else {
                         numForReturn = -1;//代表不在弧线覆盖范围内
@@ -995,13 +994,13 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
             }
 
             //通知到UI改变
-            rh_editor_ER.codeChangedReDraw(codesInSections);
+            rh_editor_EM.codeChangedReDraw(codesInSections);
         }
     }
 
 
     void moveBox(int moveType){
-        int result = rh_editor_ER.moveBox(moveType);
+        int result = rh_editor_EM.moveBox(moveType);
 
         switch (result){
             case 1:

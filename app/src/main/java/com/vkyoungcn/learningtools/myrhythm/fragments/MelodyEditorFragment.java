@@ -13,7 +13,7 @@ import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInterac
 
 
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
-public class MelodyEditorFragment extends RhythmBaseEditFragment {
+public class MelodyEditorFragment extends MelodyBaseEditFragment {
     private static final String TAG = "MelodyEditorFragment";
 
     public MelodyEditorFragment() {

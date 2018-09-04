@@ -8,14 +8,14 @@
     >
 
     <android.support.v7.widget.CardView
-        android:id="@+id/card_ER"
+        android:id="@+id/card_EM"
         android:layout_width="match_parent"
         android:layout_height="145dp"
         app:cardCornerRadius="8dp"
         android:layout_margin="2dp"
         >
         <com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor
-            android:id="@+id/rh_editor_ER"
+            android:id="@+id/rh_editor_EM"
             android:layout_margin="4dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -29,7 +29,7 @@
     <!--下方按键区-->
 
     <!--<TextView
-        android:id="@+id/tv_Info_rhType_ER"
+        android:id="@+id/tv_Info_rhType_EM"
         android:layout_width="match_parent"
         android:layout_height="24dp"
         android:textSize="12sp"
@@ -41,37 +41,42 @@
         />-->
 
     <ScrollView
-        android:id="@+id/scv_buttonsPanel_ER"
+        android:id="@+id/scv_buttonsPanel_EM"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/card_ER"
-        android:layout_marginTop="52dp"
+        android:layout_below="@+id/card_EM"
+        android:layout_marginTop="8dp"
         >
 
         <!--具体内容开始-->
         <LinearLayout
-            android:id="@+id/llt_buttonsPanel_ER"
+            android:id="@+id/llt_buttonsPanel_EM"
             android:layout_width="match_parent"
-            android:layout_height="322dp"
+            android:layout_height="350dp"
             android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_infoTop_EM"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="2dp"
+                android:textColor="@color/myRhythm_orange"
+                android:text="@string/str_sharp8"
+                android:background="#e0e0e0"
+                />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="118dp"
-                android:gravity="center"
+                android:layout_height="112dp"
+                android:gravity="center_horizontal"
                 android:orientation="horizontal">
 
-                <include layout="@layout/part_rhythm_short_cut" />
+                <include layout="@layout/part_rhythm_merge" />
 
-                <TextView
-                    android:layout_width="1dp"
-                    android:layout_height="match_parent"
-                    android:layout_margin="2dp"
-                    android:background="#e0e0e0" />
+                <include layout="@layout/part_edit_move" />
 
-
-                <include layout="@layout/part_rhythm_selecting_zone" />
-
+                <!--分割线-->
                 <TextView
                     android:layout_width="1dp"
                     android:layout_height="match_parent"
@@ -81,22 +86,51 @@
                 <include layout="@layout/part_rhythm_dividing" />
 
 
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="110dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <include layout="@layout/part_rhythm_trans" />
+
                 <TextView
                     android:layout_width="1dp"
                     android:layout_height="match_parent"
                     android:layout_margin="2dp"
                     android:background="#e0e0e0" />
 
-                <include layout="@layout/part_rhythm_special_1" />
+
+                <include layout="@layout/part_rhythm_area" />
+
+
+                <TextView
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:layout_margin="2dp"
+                    android:background="#e0e0e0" />
+
+                <include layout="@layout/part_rhythm_special" />
 
 
             </LinearLayout>
+
+
             <!--横分割线-->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="#e0e0e0" />
 
+            <!--移动区-->
+
+            <!--横分割线-->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#e0e0e0" />
 
             <!--音高输入大区-->
             <FrameLayout
@@ -106,19 +140,6 @@
                 <include layout="@layout/part_pitches_input" />
             </FrameLayout>
 
-            <!--横分割线-->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#e0e0e0" />
-
-            <!--移动区-->
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="63dp">
-
-                <include layout="@layout/part_edit_move" />
-            </FrameLayout>
 
             <!--横分割线-->
             <TextView
@@ -127,6 +148,7 @@
                 android:background="#e0e0e0" />
 
             <TextView
+                android:id="@+id/tv_infoBottom_EM"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
@@ -135,6 +157,7 @@
 
 
         </LinearLayout>
+
     </ScrollView>
 
 

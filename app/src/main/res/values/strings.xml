@@ -137,7 +137,7 @@
     <string name="code_Bar">-</string>
     <string name="preFix">缀</string>
     <string name="zone_move_merge_curve">连音弧+/选区合并/移动控制</string>
-    <string name="curve">连音弧</string>
+    <string name="curve">弧</string>
     <string name="str_S">S</string>
     <string name="str_E">E</string>
     <string name="merge_x2">2x</string>
@@ -148,10 +148,29 @@
     <string name="merge_start">[.合</string>
     <string name="merge_end">并.]</string>
     <string name="addSection">节·新增</string>
-    <string name="select_start">[选.</string>
-    <string name="select_end">择.]</string>
+    <string name="select_start">[S.</string>
+    <string name="select_end">E.]</string>
     <string name="zone_selection">选区操作</string>
     <string name="copy">复制</string>
     <string name="code_X">X</string>
+    <string name="zone_move_select">移动和选区</string>
+    <string name="mode">模式</string>
+    <string name="singleCode">1x.</string>
+    <string name="singleBeat">1Bt</string>
+    <string name="doubleBeats">2Bt</string>
+    <string name="vb_over_2">Bt./2</string>
+    <string name="vb_over_3">Bt./3</string>
+    <string name="divide_change">拆分/0-X</string>
+    <string name="merge_X">合.X</string>
+    <string name="merge_zero">合.0</string>
+    <string name="str_X">X</string>
+    <string name="str_0">0</string>
+    <string name="sectionAdd">空节+</string>
+    <string name="sectionMinus">空节-</string>
+    <string name="translate">节奏变型</string>
+    <string name="str_toDv">切分</string>
+    <string name="str_withSpot">附点</string>
+    <string name="fwd_16">前16</string>
+    <string name="str_rd16">后16</string>
 
 </resources>

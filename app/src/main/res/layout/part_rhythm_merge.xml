@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="40dp"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".fragments.MelodyEditorFragment">
+
+    <!--Title-->
+    <TextView
+        android:id="@+id/tv_title_partMR"
+        android:layout_width="match_parent"
+        android:layout_height="22dp"
+        android:background="#f5f5f5"
+        android:gravity="center"
+        />
+
+    <!--横分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_cyan" />
+
+
+    <TextView
+        android:id="@+id/tv_merge"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="6dp"
+        android:layout_marginEnd="2dp"
+        android:background="#e8f5e9"
+        android:gravity="center"
+        android:text="@string/merge" />
+
+
+</LinearLayout>
