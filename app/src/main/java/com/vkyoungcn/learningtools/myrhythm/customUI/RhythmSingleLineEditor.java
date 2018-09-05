@@ -12,6 +12,10 @@ import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
 
 import java.util.ArrayList;
 
+import static com.vkyoungcn.learningtools.myrhythm.fragments.MelodyBaseEditFragment.BOX_TYPE_BLUE;
+import static com.vkyoungcn.learningtools.myrhythm.fragments.MelodyBaseEditFragment.BOX_TYPE_GREEN_END;
+import static com.vkyoungcn.learningtools.myrhythm.fragments.MelodyBaseEditFragment.BOX_TYPE_GREEN_START;
+
 public class RhythmSingleLineEditor extends RhythmSingleLineView{
 //* 如果数据源为空，自动显示一个空的小节；如果有数据显示数据，并将第一音符标蓝框；
 //* 在所有小节之后标示一个+号。
@@ -20,20 +24,37 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
     /*特有*/
     //逻辑
-    private int boxSectionIndex = 0;//（dUs中的）音符单元的选框位置指针，小节索引。
+//    private int boxSectionIndex = 0;//（dUs中的）音符单元的选框位置指针，小节索引。
     // （通常模式下，就是蓝框的位置；在锁定模式下蓝框指针与之脱离，用于为绿框左右端、橘框提供索引。）
-    private int boxUnitIndex = 0;//(小节内du的索引)
+//    private int boxUnitIndex = 0;//(小节内du的索引)
 //    private boolean lockBlueBox = false;//某些模式下（加连音弧、合并区域选择等）蓝框位置要固定不动。【改用两个布尔变量判断】
 
     private int blueBoxSectionIndex = 0;//蓝框位置，小节的索引【注意，是针对dU列表而言的索引，由于code中多一个延音弧尾端标记，所以无法对应。】
     private int blueBoxUnitIndex = 0;//蓝框位置(小节内du的索引)
 
     private boolean curveModeOn = false;
+    private boolean selectionAreaMode = false;
+
+    private int tempDuSectionIndex = 0;
+    private int tempDuUnitIndex = 0;
+
+    private int sAreaStartSectionIndex = 0;
+    private int sAreaStartUnitIndex = 0;
+    private int sAreaEndSectionIndex = 0;
+    private int sAreaEndUnitIndex = 0;
+
+//    private float h_shiftedAmount = 0;//记录移动产生的累计量（可增可减），
+    // 用于当编码更新发生在移动后从而要求重新计算绘制数据时，避免位移被重置
+
+    private DrawingUnit selectingAreaEndDU;
+    private int selectingAreaStartIndex = 0;//直接在onDraw()中使用
+    private int selectingAreaEndIndex = 0;
+
 //    private int curveOrangeBoxSpan = -1;//进入连音弧绘制模式后，绘制蓝框+黄框，其中黄框可移动以便选定弧线起止位置。
     //负值记录向左侧dU的偏移量；正值记录向右侧的偏移量；0为蓝框位置，默认向左一个（即蓝框前一个）
 
-    private int orangeBoxSectionIndex = 0;//连音弧插入模式下，橘框位置，小节的索引【注意，是针对dU列表而言的索引，由于code中多一个延音弧尾端标记，所以无法对应。】
-    private int orangeBoxUnitIndex = 0;//连音弧插入模式下，橘框位置(小节内du的索引)
+//    private int orangeBoxSectionIndex = 0;//连音弧插入模式下，橘框位置，小节的索引【注意，是针对dU列表而言的索引，由于code中多一个延音弧尾端标记，所以无法对应。】
+//    private int orangeBoxUnitIndex = 0;//连音弧插入模式下，橘框位置(小节内du的索引)
 
 
     private boolean mergeFreeModeOn = false;
@@ -66,12 +87,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
     /* 滑动交互所需变量*/
     /* 移动蓝框交互常量*/
-    public static final int MOVE_NEXT_UNIT = 2901;
-    public static final int MOVE_NEXT_SECTION = 2902;
-    public static final int MOVE_LAST_UNIT = 2903;
-    public static final int MOVE_LAST_SECTION = 2904;
-    public static final int MOVE_FINAL_SECTION = 2905;
-    public static final int DELETE_MOVE_LAST_SECTION = 2906;
+
 
 
     public RhythmSingleLineEditor(Context context) {
@@ -127,11 +143,21 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        //本类特有：蓝框【各种模式下，蓝框均绘制】
-        DrawingUnit blue_dU = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
-            canvas.drawRect(blue_dU.left, blue_dU.top, blue_dU.right, blue_dU.bottomNoLyric, blueBoxPaint);
+        //本类特有：蓝框、绿框。【各种模式下，蓝框均绘制】
+        if(!selectionAreaMode){
+            //单点选择模式，绘制蓝框
+            DrawingUnit drawingUnit = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
+            canvas.drawRect(drawingUnit.left, drawingUnit.top, drawingUnit.right, drawingUnit.bottomNoLyric, blueBoxPaint);
+        }else {
+            //选区模式
+            DrawingUnit duStart = drawingUnits.get(sAreaStartSectionIndex).get(sAreaStartUnitIndex);
+            DrawingUnit duEnd = drawingUnits.get(sAreaEndSectionIndex).get(sAreaEndUnitIndex);
+            canvas.drawRect(duStart.left, duStart.top, duEnd.right, duEnd.bottomNoLyric, greenBoxPaint);
+
+        }
 
         //橘框仅在添加连音弧线时绘制
+/*
         if(curveModeOn){
             DrawingUnit orange_dU = drawingUnits.get(orangeBoxSectionIndex).get(orangeBoxUnitIndex);
             canvas.drawRect(orange_dU.left-2, orange_dU.top+additionalPointsHeight+curveOrLinesHeight, orange_dU.right+2, orange_dU.bottomNoLyric+2, blueBoxPaint);
@@ -145,8 +171,10 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
             }
 
         }
+*/
 
         //绿框仅在合并情形下绘制；（蓝框仍然绘制）【单行模式下没有跨行问题，不需考虑绿框的跨行处理逻辑】
+/*
         if (mergeFreeModeOn){
             DrawingUnit green_dU_A = drawingUnits.get(green_A_BoxSectionIndex).get(green_A_BoxUnitIndex);
             //绿框需要由两端的两个dU分别提供左右坐标（其实也可能二者指向同一位置）
@@ -154,6 +182,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
             canvas.drawRect(green_dU_A.left-4, green_dU_A.top-4, green_dU_B.right+4, green_dU_B.bottomNoLyric+4, blueBoxPaint);
             //暂定比橘色框还大一圈，万一重合也能分辨。
         }
+*/
 
 //            invalidate();
     }
@@ -169,6 +198,77 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         this.codesInSections = RhythmHelper.codeParseIntoSections(bcRhythm.getCodeSerialByte(), rhythmType);
         initDrawingUnits(false);
     }
+
+    public void boxMovedSuccessReDraw(int indexAfterMove,int boxType,boolean toRight){
+        if(boxType == BOX_TYPE_BLUE){
+            //一致，蓝框模式
+            selectionAreaMode = false;
+            changeOneDimCsIndexToTwoDimDuIndex(indexAfterMove);
+            blueBoxSectionIndex = tempDuSectionIndex;
+            blueBoxUnitIndex = tempDuUnitIndex;
+
+            //判断是否超出绘制区
+            checkAndShiftWhenOutOfUI(blueBoxSectionIndex,blueBoxUnitIndex);
+
+        }else if(boxType == BOX_TYPE_GREEN_START) {
+            selectionAreaMode = true;
+            changeOneDimCsIndexToTwoDimDuIndex(indexAfterMove);
+            sAreaStartSectionIndex = tempDuSectionIndex;
+            sAreaStartUnitIndex = tempDuUnitIndex;
+
+            //判断被移动的端头是否超出绘制区，如是则以其为标志（令其移到中心）对整体duList进行移动
+            checkAndShiftWhenOutOfUI(sAreaStartSectionIndex,sAreaStartUnitIndex);
+
+        }else if(boxType == BOX_TYPE_GREEN_END){
+            selectionAreaMode = true;
+            changeOneDimCsIndexToTwoDimDuIndex(indexAfterMove);
+            sAreaEndSectionIndex = tempDuSectionIndex;
+            sAreaEndUnitIndex = tempDuUnitIndex;
+
+            checkAndShiftWhenOutOfUI(sAreaEndSectionIndex,sAreaEndUnitIndex);
+
+        }
+
+        invalidate();
+    }
+
+
+    void checkAndShiftWhenOutOfUI(int sectionIndex, int unitIndex){
+        DrawingUnit drawingUnit = drawingUnits.get(sectionIndex).get(unitIndex);
+        if(drawingUnit.checkIsOutOfUi(padding,padding,sizeChangedWidth-padding,sizeChangedHeight-padding)){
+            //如果超出绘制区，则要对所有du元素平移
+            float hAmount = drawingUnit.shiftAmountToCenterX;
+            h_shiftedAmount += hAmount;
+
+            float vAmount = drawingUnit.shiftAmountToCenterY;
+            for(int i=0; i<drawingUnits.size();i++){
+                ArrayList<DrawingUnit> duList = drawingUnits.get(i);
+                for(int j=0;j<duList.size();j++){
+                    DrawingUnit du = duList.get(j);
+                    du.shiftEntirely(hAmount,vAmount,padding,padding,sizeChangedWidth-padding,sizeChangedHeight-padding));
+                }
+            }
+        }
+    }
+
+    private void changeOneDimCsIndexToTwoDimDuIndex(int index){
+        //遍历查找正确位置上的dU,以及其二维坐标
+        for(int i=0; i<drawingUnits.size();i++){
+            ArrayList<DrawingUnit> duList = drawingUnits.get(i);
+            for(int j=0;j<duList.size();j++){
+                DrawingUnit drawingUnit = duList.get(j);
+                if(drawingUnit.indexInCodeSerial == index){
+                    tempDuUnitIndex = j;
+                    tempDuSectionIndex = i;
+                    return;
+                }
+            }
+        }
+        tempDuSectionIndex =-1;
+        tempDuUnitIndex = -1;
+        return ;//找不到
+    }
+
 
 
     //只改位置，不改编码数据

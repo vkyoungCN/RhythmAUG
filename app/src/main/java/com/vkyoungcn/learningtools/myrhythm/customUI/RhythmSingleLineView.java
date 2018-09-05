@@ -16,40 +16,42 @@ import java.util.ArrayList;
 
 public class RhythmSingleLineView extends BaseRhythmView {
 //* 单行模式，绘制中的小节位于屏幕中。
-    private static final String TAG = "RhythmSingleLineView";
+    static final String TAG = "RhythmSingleLineView";
 
     //以下是基类没有，而本类特有的画笔
     /* 用于滑动*/
-    private Paint maskPaint;
-    private Paint slidingBallPaint;
-    private Paint slidingVerticalBarPaint;
-    private Paint slidingVerticalBarCenterBoxPaint;
+    Paint maskPaint;
+    Paint slidingBallPaint;
+    Paint slidingVerticalBarPaint;
+    Paint slidingVerticalBarCenterBoxPaint;
+
+    float h_shiftedAmount = 0;//记录移动产生的累计量（可增可减），
 
 
     /* 尺寸组，特有：用于滑动 */
-    private float slidingVerticalBarShort;
-    private float slidingVerticalBarMedium;
-//    private float slidingVerticalBarLong;
-    private float slidingVerticalBarGap;
-    private float slidingBallDiameter;
+    float slidingVerticalBarShort;
+    float slidingVerticalBarMedium;
+//    float slidingVerticalBarLong;
+    float slidingVerticalBarGap;
+    float slidingBallDiameter;
 
 
     /* 色彩组，特有：用于滑动 */
-    private int slidingMask_white;
-    private int slidingBall_pink;
-    private int slidingVerticalBar_black;
+    int slidingMask_white;
+    int slidingBall_pink;
+    int slidingVerticalBar_black;
 
 
     /* 滑动交互所需变量*/
-    private boolean isSlidingModeOn =false;
-    private float totalRequiredLength = 0;
-    private boolean noNeedToSliding = false;
+    boolean isSlidingModeOn =false;
+    float totalRequiredLength = 0;
+    boolean noNeedToSliding = false;
 
-    private ArrayList<VerticalBar> verticalBars;//滑动时的刻度
-    private RectF clickingBallRectF;
-    private RectF slidingBarCenterBox;
-    private int leftEndAddedAmount = 0;//判断刻度位置（以便绘制长线的移动后位置）
-    private int slidingAmount =0;//累加量（用于记录滑动量，在反向滑回时，最多滑回到0；向后滑动时最大滑动到所需总长值（sA*uW））
+    ArrayList<VerticalBar> verticalBars;//滑动时的刻度
+    RectF clickingBallRectF;
+    RectF slidingBarCenterBox;
+    int leftEndAddedAmount = 0;//判断刻度位置（以便绘制长线的移动后位置）
+    int slidingAmount =0;//累加量（用于记录滑动量，在反向滑回时，最多滑回到0；向后滑动时最大滑动到所需总长值（sA*uW））
 
 
 
@@ -167,12 +169,24 @@ public class RhythmSingleLineView extends BaseRhythmView {
 //            invalidate();
     }
 
+    @Override
+    void initDrawingUnits(boolean isTriggerFromSC){
+        initDrawingUnits_step1(h_shiftedAmount);//因为要调用的方法虽然与基类同名但实际签名不同从而无法由基类直接调用。
+        //所以在此重写了主iDU
+        initDrawingUnits_step2();
+
+        if(!isTriggerFromSC){
+            invalidate();
+        }//onSC方法返回后会自动调用onD因而没必要调用invalidate方法。
+
+    }
+
 
     /* 设置方法使用基类的;绘制信息的入口方法也使用基类的*/
 
     /* 以下方法是对基类同名方法的覆写（绘制信息计算第一部分方法）
     【注意如果基类方法保留的private，而前一调用方法又是基类的，则将会直接调用基类同名方法】*/
-    void initDrawingUnits_step1() {
+    void initDrawingUnits_step1(float h_shiftedAmount) {
         super.initDrawingUnits_step1();
 
         totalRequiredLength = 0;//每次重新计算绘制信息前要清空。
@@ -193,7 +207,7 @@ public class RhythmSingleLineView extends BaseRhythmView {
             //如果不换行，则不需复杂的计算逻辑，直接向后扩展即可
             if(i == 0){
                 //第一小节
-                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, 1,padding, unitWidth);
+                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, 1,padding+h_shiftedAmount, unitWidth);
                 drawingUnits.add(sectionDrawingUnit);
 
             }else {

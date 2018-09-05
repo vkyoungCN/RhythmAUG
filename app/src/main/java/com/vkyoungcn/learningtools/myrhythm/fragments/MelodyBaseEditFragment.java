@@ -32,8 +32,21 @@ import static com.vkyoungcn.learningtools.myrhythm.helper.CodeSerial_Rhythm.merg
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
 public class MelodyBaseEditFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "RhythmBaseEditFragment";
-    /* 逻辑*/
 
+    public static final int BOX_TYPE_BLUE = 8001;
+    public static final int BOX_TYPE_GREEN_START = 8002;
+    public static final int BOX_TYPE_GREEN_END = 8003;
+
+    public static final int MOVE_NEXT_UNIT = 2901;
+    public static final int MOVE_NEXT_SECTION = 2902;
+    public static final int MOVE_LAST_UNIT = 2903;
+    public static final int MOVE_LAST_SECTION = 2904;
+    public static final int MOVE_FINAL_SECTION = 2905;
+    public static final int DELETE_MOVE_LAST_SECTION = 2906;
+
+
+
+    /* 逻辑*/
     CodeSerial_Rhythm csRhythmHelper;
 
     /* 当前选中区域的两端坐标，单code模式下，sI==eI（暂定需要这样判断实际选择区域）*/
@@ -44,6 +57,8 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
     boolean dualForward = true;//选定两个拍子时，存在朝向问题；选定其一为正另一为反。暂定向右为正，默认方向。
 
+    boolean moveAreaStart = false;
+    boolean moveAreaEnd = false;
 
 //    int valueOfBeat = 16;
 //    int valueOfSection = 64;
@@ -70,8 +85,8 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 //    ArrayList<ArrayList<Byte>> codesInSections = new ArrayList<>();//都要使用这个进行处理
     //【RhEditor只是负责显示，逻辑部分其实需要由本fg负责】
 
-    int currentSectionIndex = 0;
-    int currentUnitIndexInSection = 0;//在act中依靠这两各变量来确定编辑框位置。
+//    int currentSectionIndex = 0;
+//    int currentUnitIndexInSection = 0;//在act中依靠这两各变量来确定编辑框位置。
 
 //    Rhythm rhythm ;
 
@@ -171,8 +186,8 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         tv_selectionSingleCode = rootView.findViewById(R.id.tv_selectSingleCode) ;
 
         tv_merge = rootView.findViewById(R.id.tv_merge) ;
-        tv_selectionAreaStart = rootView.findViewById(R.id.tv_selectionAreaStart) ;
-        tv_selectionAreaEnd = rootView.findViewById(R.id.tv_selectionAreaEnd) ;
+        tv_selectionAreaStart = rootView.findViewById(R.id.tv_selectAreaStart) ;
+        tv_selectionAreaEnd = rootView.findViewById(R.id.tv_selectAreaEnd) ;
 
         tv_over2 = rootView.findViewById(R.id.tv_over_2) ;
         tv_over3 = rootView.findViewById(R.id.tv_over_3) ;
@@ -246,20 +261,22 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.rh_editor_EM:
-
             case R.id.tv_selectBeat:
                 //点击后，从默认的选中单个code变为选中所在的Beat
                 resetSelectionAreaToTotalBeat();
                 //通知UI（改框色、改起止范围）
 
+                break;
             case R.id.tv_selectDualBeat:
                 resetSelectionAreaToDualBeat();
                 //通知自定义UI改用双拍框的颜色样式
 
+                break;
             case R.id.tv_selectSingleCode:
                 selectStartIndex = selectEndIndex =currentUnitIndex;
+                //通知控件
 
+                break;
             case R.id.tv_merge:
                 //调用编码辅助类的合并方法（暂定只允许对一拍、不足一拍的选区进行合并；跨拍的（含超1拍，2拍多拍的）暂不处理）
                 int resultCodeMerge = csRhythmHelper.mergeArea(selectStartIndex,selectEndIndex);
@@ -270,8 +287,14 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                     //失败，给出提示
                     Toast.makeText(getContext(),"失败代码："+resultCodeMerge,Toast.LENGTH_SHORT).show();
                 }
-            case R.id.tv_selectionAreaStart:
-            case R.id.tv_selectionAreaEnd:
+            case R.id.tv_selectAreaStart:
+                moveAreaStart = true;
+                moveAreaEnd = false;
+                //然后在move方法中通过布尔情况判定移动的目标是谁。
+
+            case R.id.tv_selectAreaEnd:
+                moveAreaStart = false;
+                moveAreaEnd = false;
 
             case R.id.tv_over_2:
             case R.id.tv_over_3:
@@ -285,9 +308,21 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
             case R.id.tv_fwd16:
 
             case R.id.tv_lastSection_EM:
+                checkMoveModeAndGetCurrentIndex();
+                checkMoveModeAndSetResultIndex(moveBox(currentIndex,MOVE_LAST_SECTION));
+                break;
+
             case R.id.tv_nextSection_EM:
-            case R.id.tv_lastUnit_EM:
+                checkMoveModeAndSetResultIndex(moveBox(currentIndex,MOVE_NEXT_SECTION));
+                break;
+
+                case R.id.tv_lastUnit_EM:
+                    checkMoveModeAndSetResultIndex(moveBox(currentIndex,MOVE_LAST_UNIT));
+                    break;
             case R.id.tv_nextUnit_EM:
+                checkMoveModeAndSetResultIndex(moveBox(currentIndex,MOVE_NEXT_UNIT));
+                break;
+
 
             case R.id.tv_curve:
             case R.id.tv_copy:
@@ -391,6 +426,20 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
                 break;
 
+        }
+    }
+
+
+    private void checkMoveModeAndSetResultIndex(int resultIndex) {
+        if (moveAreaStart) {
+            //选区起端移动模式
+            selectStartIndex = resultIndex;
+        } else if (moveAreaEnd) {
+            //选区末端移动模式
+            selectEndIndex = resultIndex;
+        } else {
+            //单点移动模式
+            selectStartIndex = selectEndIndex = currentUnitIndex = resultIndex;
         }
     }
 
@@ -1133,36 +1182,209 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     }
 
 
-    void moveBox(int moveType){
-        int result = rh_editor_EM.moveBox(moveType);
-
-        switch (result){
-            case 1:
-                currentUnitIndexInSection++;
-                break;
-            case 11:
-                currentUnitIndexInSection =0;
-                currentSectionIndex++;
-                break;
-            case -1:
-                currentUnitIndexInSection--;
-                break;
-            case -11:
-                currentSectionIndex--;
-                currentUnitIndexInSection =(codesInSections.get(currentSectionIndex).size()-1);
-                break;
-            case -19:
-                currentSectionIndex--;
-                currentUnitIndexInSection = 0;
-                break;
-            case -18:
-                currentSectionIndex = 0;
-                currentUnitIndexInSection = 0;
-                break;
-            case 20:
-                currentSectionIndex = codesInSections.size()-1;
-                currentUnitIndexInSection = 0;
+    private boolean checkIsLastRealUnit(int currentIndex){
+        for(int i=currentIndex; i<codes.size();i++){
+            if(codes.get(i)<110){
+                //其后仍然 有实际音符
+                return false;
+            }
         }
+        //循环完了都没找到则是最后一个了
+        return true;
     }
+
+    private boolean checkIsFirstRealUnit(int currentIndex){
+        for(int i=currentIndex; i>0;i--){
+            if(codes.get(i)<110){
+                //左侧仍然 有实际音符
+                return false;
+            }
+        }
+        //循环完了都没找到
+        return true;
+    }
+
+
+    private int getNextRealUnitIndex(int currentIndex){
+        for(int i=currentIndex; i<codes.size();i++){
+            if(codes.get(i)<110){
+                //其后的首个实际音符
+                return i;
+            }
+        }
+        //循环完了都没找到则是最后一个了
+        return -1;
+    }
+
+    private int getLastRealUnitIndex(int currentIndex){
+        for(int i=currentIndex; i>0;i--){
+            if(codes.get(i)<110){
+                //左侧首个相邻的实际音符
+                return i;
+            }
+        }
+        //循环完了都没找到则是最后一个了
+        return -1;
+    }
+
+    private int getRealUnitIndexOfNextSection(int currentIndex) {
+        boolean afterSelf127 = false;//越过本节的节尾127后，置真
+        for (int i = currentIndex; i < codes.size(); i++) {
+            if (codes.get(i) == 127 && !afterSelf127) {
+                //本节结尾
+                afterSelf127 = true;
+            } else if (afterSelf127&&codes.get(i)<110) {
+                //已跨节，且首个实际音符。
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private boolean checkIsLastSection(int currentIndex){
+        boolean afterSelf127 = false;//越过本节的节尾127后，置真
+        for(int i=currentIndex; i<codes.size();i++){
+            if(codes.get(i)==127&&!afterSelf127){
+                //本节结尾
+                afterSelf127 = true;
+            }else if(codes.get(i)==127&&afterSelf127){
+                //
+                return false;
+            }
+        }
+        //循环完了都没找到则是最后一个了
+        return true;
+/*
+        int endIndexOfThisSection = -1;
+        for(int i=currentIndex; i<codes.size();i++){
+            if(codes.get(i)==127){
+                //本节结尾
+                endIndexOfThisSection = i;
+                break;
+            }
+        }
+        //本节一定有节尾127编码，否则是错误的。（是否要考虑错误处理？）
+        for(int i=endIndexOfThisSection; i<codes.size();i++){
+            if(codes.get(i)<110){
+                //有普通音符
+                return false;
+            }
+        }
+*/
+
+
+
+    }
+
+    private boolean checkIsFirstSection(int currentIndex) {
+        for (int i = currentIndex; i >0; i--) {
+            if (codes.get(i) == 127) {
+                //只要左侧还有127则表明不是首节
+                return false;
+            }
+        }
+        //循环完了都没找到则是首个节
+        return true;
+    }
+
+
+    private int getLastRealUnitIndexOfLastSection(int currentIndex) {
+        boolean passed127 = false;
+//        boolean passed127By2 = false;
+        for (int i = currentIndex; i>0; i--) {
+            if (codes.get(i) == 127&&!passed127) {
+                //左侧紧邻小节的末尾
+                passed127 = true;
+            } else if (passed127 && codes.get(i)<110) {
+                //是左侧小节的末尾实际音符【如果要找该节的节首，比较复杂；还要考虑是否全编码首位问题等，以简化方案执行】
+                return i;
+//                passed127By2 = true;
+            }
+        }
+        return -1;
+    }
+
+
+    public int moveBox(int currentIndex,int moveType){
+        //注意移动完毕后，①更新自定义UI；②如果蓝框位置超出绘制区，要根据移动方向做平移(已处理，在UI中进行)
+        //③绿框选区状态下，跟随指定的端移动。（已处理，本方法只负责对指定的索引执行移动，并返回移动后的索引位置）
+        switch (moveType){
+            case MOVE_NEXT_UNIT:
+                if(checkIsLastRealUnit(currentIndex)){
+                    Toast.makeText(getContext(), "已在最后", Toast.LENGTH_SHORT).show();
+                    return 3401; //已在最后，不移动
+                }else {
+                    return getNextRealUnitIndex(currentIndex);
+
+                }
+                break;
+            case MOVE_NEXT_SECTION:
+                if(checkIsLastSection(currentIndex)){
+                    //已在最后，不移动
+                    Toast.makeText(getContext(), "已在最后一节", Toast.LENGTH_SHORT).show();
+                    return 0 ;
+                }else {
+                    return getRealUnitIndexOfNextSection(currentIndex);
+
+                }
+                break;
+            case MOVE_LAST_UNIT:
+                if(checkIsFirstRealUnit(currentIndex)){
+                    Toast.makeText(getContext(), "已在最前", Toast.LENGTH_SHORT).show();
+                    return 3042;//已在最前，不移动
+
+                }else{
+                    return getLastRealUnitIndex(currentIndex);
+                }
+
+            case MOVE_LAST_SECTION:
+                if(checkIsFirstSection(currentIndex)){
+                    //已在最前节，不移动
+                    Toast.makeText(getContext(), "已在第一小节", Toast.LENGTH_SHORT).show();
+                    return 3043 ;
+                }else{
+                    return getLastRealUnitIndexOfLastSection(currentIndex);
+                }
+/*
+            case DELETE_MOVE_LAST_SECTION:
+                if(boxSectionIndex ==0){
+                    //已在最前（删除的是第一小节）,小节索引不需改变，只改单元索引。
+                    boxUnitIndex =0;
+                    invalidate();
+
+                    return -18;
+                }else {
+                    //跨节移到上节首
+                    boxSectionIndex--;
+                    maxUnitIndexCurrentSection = drawingUnits.get(boxSectionIndex).size() - 1;
+                    boxUnitIndex = 0;
+
+                    //移动到中心（如果超出绘制区）
+                    checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(boxSectionIndex).get(0)));
+
+                    invalidate();
+
+                    return -19;
+                }
+            case MOVE_FINAL_SECTION:
+                //移到最后一节的节首（用于添加一个新的小节后）
+                boxSectionIndex = maxSectionIndex;//基于“引用数据源自动修改”的设想
+                maxUnitIndexCurrentSection = drawingUnits.get(boxSectionIndex).size()-1;
+
+                boxUnitIndex = 0;
+
+                //移动到中心（如果超出绘制区）
+                checkIsBoxOutOfUiAndShiftAllHorizontally((drawingUnits.get(boxSectionIndex).get(0)));
+                invalidate();
+
+                return 20;
+
+*/
+
+        }
+        return 0;
+    }
+
 
 }

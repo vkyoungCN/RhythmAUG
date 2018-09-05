@@ -183,6 +183,35 @@ public class DrawingUnit {
         return isOutOfUi;
     }
 
+    /* 仅在已超出绘制边缘时起作用（因为需要在超出检测方法中获取需要移动的量）*/
+    /*public void shiftToCenter(){
+        this.codeCenterX +=shiftAmountToCenterX;//用于字符绘制（字符底边中点）
+        this.codeBaseY+=shiftAmountToCenterY;//字符底边【待？基线还是底边？】
+
+        for (BottomLine bl :this.bottomLines) {
+            bl.startX+=shiftAmountToCenterX;
+            bl.startY+=shiftAmountToCenterY;
+            bl.toX+=shiftAmountToCenterX;
+            bl.toY+=shiftAmountToCenterY;
+        }
+
+        for (RectF rf :additionalPoints) {
+            rf.left+=shiftAmountToCenterX;
+            rf.right+=shiftAmountToCenterX;
+            rf.top+=shiftAmountToCenterY;
+            rf.bottom+=shiftAmountToCenterY;
+        }
+
+        this.mCurveNumCenterX +=shiftAmountToCenterX;
+        this.mCurveNumBaseY +=shiftAmountToCenterY;
+
+        this.lyricWord_1_CenterX +=shiftAmountToCenterX;
+        this.lyricWord_1_BaseY +=shiftAmountToCenterY;
+
+        this.lyricWord_2_CenterX +=shiftAmountToCenterX;
+        this.lyricWord_2_BaseY +=shiftAmountToCenterY;
+    }*/
+
     public void shiftEntirely(float h_shiftAmount, float v_shiftAmount, float availableStart, float availableTop,float availableEnd, float availableBottom){
         //【*注意：绘制时，如果小于0，原则上不予绘制。】
 
