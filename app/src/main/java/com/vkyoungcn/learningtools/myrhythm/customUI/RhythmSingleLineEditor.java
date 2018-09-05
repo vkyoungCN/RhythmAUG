@@ -199,9 +199,32 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         initDrawingUnits(false);
     }
 
-    public void boxMovedSuccessReDraw(int indexAfterMove,int boxType,boolean toRight){
-        if(boxType == BOX_TYPE_BLUE){
-            //一致，蓝框模式
+    public void boxAreaChangedReDraw(int startIndex, int endIndex){
+        if(startIndex!=endIndex) {
+            //一定是选区模式了
+            selectionAreaMode = true;
+            changeOneDimCsIndexToTwoDimDuIndex(startIndex);
+            sAreaStartSectionIndex = tempDuSectionIndex;
+            sAreaStartUnitIndex = tempDuUnitIndex;
+
+            changeOneDimCsIndexToTwoDimDuIndex(endIndex);
+            sAreaEndSectionIndex = tempDuSectionIndex;
+            sAreaEndUnitIndex = tempDuUnitIndex;
+            //原来的蓝框必然（？）在画面中，因而在此不移动du列表。（暂简化）
+        }else {
+            selectionAreaMode = false;
+            changeOneDimCsIndexToTwoDimDuIndex(startIndex);
+            blueBoxSectionIndex = tempDuSectionIndex;
+            blueBoxUnitIndex = tempDuUnitIndex;
+            //判断是否超出绘制区
+            checkAndShiftWhenOutOfUI(blueBoxSectionIndex,blueBoxUnitIndex);
+        }
+        invalidate();
+    }
+
+    public void boxMovedSuccessReDraw(int indexAfterMove,boolean saStart, boolean saEnd){
+        if(!saStart && !saEnd){
+            //蓝框模式
             selectionAreaMode = false;
             changeOneDimCsIndexToTwoDimDuIndex(indexAfterMove);
             blueBoxSectionIndex = tempDuSectionIndex;
@@ -210,7 +233,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
             //判断是否超出绘制区
             checkAndShiftWhenOutOfUI(blueBoxSectionIndex,blueBoxUnitIndex);
 
-        }else if(boxType == BOX_TYPE_GREEN_START) {
+        }else if(saStart) {
             selectionAreaMode = true;
             changeOneDimCsIndexToTwoDimDuIndex(indexAfterMove);
             sAreaStartSectionIndex = tempDuSectionIndex;
@@ -219,7 +242,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
             //判断被移动的端头是否超出绘制区，如是则以其为标志（令其移到中心）对整体duList进行移动
             checkAndShiftWhenOutOfUI(sAreaStartSectionIndex,sAreaStartUnitIndex);
 
-        }else if(boxType == BOX_TYPE_GREEN_END){
+        }else {
             selectionAreaMode = true;
             changeOneDimCsIndexToTwoDimDuIndex(indexAfterMove);
             sAreaEndSectionIndex = tempDuSectionIndex;
@@ -245,7 +268,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
                 ArrayList<DrawingUnit> duList = drawingUnits.get(i);
                 for(int j=0;j<duList.size();j++){
                     DrawingUnit du = duList.get(j);
-                    du.shiftEntirely(hAmount,vAmount,padding,padding,sizeChangedWidth-padding,sizeChangedHeight-padding));
+                    du.shiftEntirely(hAmount,vAmount,padding,padding,sizeChangedWidth-padding,sizeChangedHeight-padding);
                 }
             }
         }
@@ -273,7 +296,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
     //只改位置，不改编码数据
     //①改变蓝框指针的位置；②改变绘制中心【目前只是简单的处理为：如果超绘制区域，则将新指针所在du绘制到（水平）中心（即对所有du进行平移）】
-    public int moveBox(int moveType){
+    /*public int moveBox(int moveType){
         //按照模式将移动的结果传给相应选框；
 
 
@@ -410,7 +433,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
         }
         return 0;
-        /*解释
+        *//*解释
         * 1,：移动到下一个位置
         * -1：向上，同理；
         * 11：移动到下一节节首
@@ -420,10 +443,10 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         *  0：未发生移动
         *  20：最后一节的节首
         *  -25：处于锁定模式不能移动蓝框
-        * */
+        * *//*
 
 
-    }
+    }*/
 
     public void checkIsBoxOutOfUiAndShiftAllHorizontally(DrawingUnit drawingUnit){
         if(drawingUnit.isOutOfUi) {//判断蓝框所在位置是否超出绘制区域

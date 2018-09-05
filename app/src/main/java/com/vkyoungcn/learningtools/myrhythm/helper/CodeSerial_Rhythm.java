@@ -31,6 +31,8 @@ public class CodeSerial_Rhythm {
      * 3021，无意义操作，改变前后一致
      * 3022;//过小+附点不能拆分两种情况。
      *
+     * 3023:连音弧不允许拆分,延音不许拆分。
+     *
      * */
 
     private volatile static CodeSerial_Rhythm sCodeSerialRhythm = null;
@@ -111,10 +113,7 @@ public class CodeSerial_Rhythm {
             }
         }//通过了检测，没有跨拍（选定的是1拍或不足1拍）
 
-        int areaTotalValue = 0;
-        for(int i=startIndex;i<=endIndex;i++) {
-            areaTotalValue += getCodeValue(codeSerial.get(i),valueOfBeat);
-        }
+        int areaTotalValue = getAreaValue(startIndex,endIndex);
 
         if(!isValueValidForSingleCode(areaTotalValue)){
             return 3202;//选定区域的值无法以单个符号替换。【逻辑版本v1。后期可能会调整逻辑】
@@ -130,6 +129,13 @@ public class CodeSerial_Rhythm {
         }
     }
 
+    public int getAreaValue(int startIndex,int endIndex){
+        int areaTotalValue = 0;
+        for(int i=startIndex;i<=endIndex;i++) {
+            areaTotalValue += getCodeValue(codeSerial.get(i),valueOfBeat);
+        }
+        return areaTotalValue;
+    }
     //获取选定编码的值
     private int getCodeValue(byte code,int valueOfBeat){
         if(code>111){
@@ -271,6 +277,39 @@ public class CodeSerial_Rhythm {
 
     }
 
+    public void replaceAreaToMultiDivided(int startIndex,int endIndex){
+        if(checkAreaUnderCurve(startIndex,endIndex)){
+            return;//被连音弧覆盖，退出。
+        }
+
+        int areaValue = 0;
+        areaValue = getAreaValue(startIndex,endIndex);
+        if(areaValue == valueOfBeat ||areaValue==valueOfBeat/2||areaValue==valueOfBeat/4){
+            //几种可以替换的情形
+            int multiCode = (areaValue/4+6)*10+3;
+
+            //逐个删除
+            for(int i=startIndex;i<=endIndex;i++){
+                codeSerial.remove(startIndex);
+            }
+
+            //添加一个均分多连音
+            codeSerial.add(startIndex,(byte)multiCode);
+        }
+    }
+
+    private boolean checkAreaUnderCurve(int startIndex,int endIndex){
+        //检测内部
+        for(int i=startIndex;i<=endIndex;i++){
+            if(codeSerial.get(i)>111&&codeSerial.get(i)<126){
+                return true;
+            }
+        }
+
+        //检测后方
+        return checkCurveCovering(endIndex);
+
+    }
 
     //如果要替换为延音符，要求：①独占整拍(不能位于序列的首位，前后紧邻的应该是拍尾（前方紧邻节尾也合理）)，
     // ②前一音符需要也是独占整拍
@@ -470,21 +509,23 @@ public class CodeSerial_Rhythm {
     /* 辅助方法*/
     //检测当前符号是否位于连音弧覆盖之下
     public boolean checkCurveCovering(int index){
-        byte currentCode = codeSerial.get(index);
         int span = 0;
         int curveEndIndex = -1; //初始值采用不可能值
         int curveStartIndex = -1;
         for(int i=index;i<codeSerial.size();i++){
             //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
+            byte currentCode = codeSerial.get(i);
             if(currentCode>111&&currentCode<126){
                 //112~125是连音弧结束标记
                 span = currentCode-110;
                 curveEndIndex = i;//结尾index是curve结束标记所在位置。
                 curveStartIndex = i-span;
-                break;//一定不要忘记，找到就终止循环
+
+                return ((curveStartIndex<index)&&(curveEndIndex>index));
+                //前提是不允许多层连音弧。
             }
         }
-        return ((curveStartIndex<index)&&(curveEndIndex>index));
+        return false;
     }
 
     /* 检测指定位置上的代码是否独占整拍*/
@@ -619,8 +660,8 @@ public class CodeSerial_Rhythm {
          return codeDivided;
      }
 
-
-    public int binaryDividingAt(int index){
+    /* 即使选定的位置上是均分多连音、延音符也能修改*/
+    public int forceBinaryDividingAt(int index){
         //目标位置和主数据列表检查
         int checkNum = checkIndexAndList(index);
         if(checkNum!=2000){
@@ -637,7 +678,6 @@ public class CodeSerial_Rhythm {
         if (checkCurveCovering(index)) {
             return 3016;
         }
-
 
         //以下几种情况，都可以对音符做出修改，但是要分别做一些其他操作
         int codeDivided = valueOfBeat/2;//备用（稍后根据具体情况生成）
@@ -677,6 +717,71 @@ public class CodeSerial_Rhythm {
             checkAndChangeNextWhenZero(index);
 
         }
+
+        if(currentCode<0){
+            //空拍，【要拆成2个空拍（用于进一步将细分的空拍改为正常或其他多种操作）】
+            codeDivided = currentCode/2;//仍然是空拍
+        }
+
+        //修改
+        codeSerial.set(index,(byte)codeDivided);
+        //再添加1次
+        codeSerial.add(index,(byte)codeDivided);
+
+        return codeDivided;
+    }
+
+    /* 只有在选定处是音符、空拍两种情形下可以修改，且不能位于连音弧下*/
+    public int binaryDividingAt(int index){
+        //目标位置和主数据列表检查
+        int checkNum = checkIndexAndList(index);
+        if(checkNum!=2000){
+            return checkNum;
+        }//=2000时成功，则继续。
+
+        byte currentCode = codeSerial.get(index);
+
+        if (currentCode > 111) {
+            //如果要修改的位置原本是112+(连音弧结束标记),126，127，则不允许修改
+            return 3015;
+        }
+        //不能位于连音弧下方
+        if (checkCurveCovering(index)) {
+            return 3016;
+        }
+
+        //均分多连音
+        if(currentCode>73&&currentCode<110){
+            return 3023;
+        }
+
+        if(currentCode == 0){
+            //延音
+            return 3023;
+        }
+
+        //以下几种情况，都可以对音符做出修改，但是要分别做一些其他操作
+        int codeDivided = valueOfBeat/2;//备用（稍后根据具体情况生成）
+
+
+        //（说明）在拆分时，拆分后的音符也不能作为延音的首位音符，故而其后如果是延音符也要处理。
+        //原本是正常音符，判定时值
+        // 修改后续-。
+        if (currentCode > 0 && currentCode < 25) {
+            if (currentCode == 16) {
+                codeDivided = 8;
+                checkAndChangeNextWhenZero(index);
+            } else if (currentCode == 8) {
+                codeDivided = 4;
+                checkAndChangeNextWhenZero(index);
+            } else if(currentCode == 4){
+                codeDivided = 2;
+//                checkAndChangeNextWhenZero(index);【当前音符是1/16时后续必然不是延音符】
+            }else {
+                return 3022;//过小+附点不能拆分两种情况。(不可对1/32再做拆分)             }
+            }
+        }
+
 
         if(currentCode<0){
             //空拍，【要拆成2个空拍（用于进一步将细分的空拍改为正常或其他多种操作）】

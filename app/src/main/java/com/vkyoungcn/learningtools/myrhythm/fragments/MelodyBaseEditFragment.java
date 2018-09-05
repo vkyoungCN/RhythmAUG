@@ -60,6 +60,10 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     boolean moveAreaStart = false;
     boolean moveAreaEnd = false;
 
+    int generalCurrentIndex;//不区分哪个指针（仅用在方法中的特殊场景）
+    int fakeResultIndex;
+    int indexAfterMove;
+
 //    int valueOfBeat = 16;
 //    int valueOfSection = 64;
 //    int sectionSize = 4;
@@ -265,18 +269,24 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                 //点击后，从默认的选中单个code变为选中所在的Beat
                 resetSelectionAreaToTotalBeat();
                 //通知UI（改框色、改起止范围）
-
+                rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex);
                 break;
+
             case R.id.tv_selectDualBeat:
                 resetSelectionAreaToDualBeat();
                 //通知自定义UI改用双拍框的颜色样式
-
+                rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex);
                 break;
+
             case R.id.tv_selectSingleCode:
+                moveAreaStart = false;
+                moveAreaEnd = false;
+
                 selectStartIndex = selectEndIndex =currentUnitIndex;
                 //通知控件
-
+                rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex);
                 break;
+
             case R.id.tv_merge:
                 //调用编码辅助类的合并方法（暂定只允许对一拍、不足一拍的选区进行合并；跨拍的（含超1拍，2拍多拍的）暂不处理）
                 int resultCodeMerge = csRhythmHelper.mergeArea(selectStartIndex,selectEndIndex);
@@ -287,17 +297,39 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                     //失败，给出提示
                     Toast.makeText(getContext(),"失败代码："+resultCodeMerge,Toast.LENGTH_SHORT).show();
                 }
+                break;
+
             case R.id.tv_selectAreaStart:
                 moveAreaStart = true;
                 moveAreaEnd = false;
                 //然后在move方法中通过布尔情况判定移动的目标是谁。
+                break;
 
             case R.id.tv_selectAreaEnd:
                 moveAreaStart = false;
                 moveAreaEnd = false;
+                break;
 
             case R.id.tv_over_2:
+                if(moveAreaStart||moveAreaEnd){
+                    return;//仅限单点模式下起作用。
+                }
+                if(csRhythmHelper.binaryDividingAt(currentUnitIndex)<25){
+                    //拆分完成，应刷新控件
+                    rh_editor_EM.codeChangedReDraw();
+                }//否则无反映
+                break;
+
             case R.id.tv_over_3:
+                //改均分多连音
+                if(!checkAreaInsideBeat(selectStartIndex,selectEndIndex)){
+                    //跨拍子，不符合要求；
+                    return;
+                }
+                //在拍子内部，还需要判断选区是否在弧下；时值是否合理，合理则替换（相关逻辑由编码类负责）
+                csRhythmHelper.replaceAreaToMultiDivided(selectStartIndex,selectEndIndex);
+
+
             case R.id.tv_toX:
 
             case R.id.tv_toZero:
@@ -308,19 +340,31 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
             case R.id.tv_fwd16:
 
             case R.id.tv_lastSection_EM:
-                checkMoveModeAndGetCurrentIndex();
-                checkMoveModeAndSetResultIndex(moveBox(currentIndex,MOVE_LAST_SECTION));
+                generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
+                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_LAST_SECTION);
+                indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
+                rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
                 break;
 
             case R.id.tv_nextSection_EM:
-                checkMoveModeAndSetResultIndex(moveBox(currentIndex,MOVE_NEXT_SECTION));
+                generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
+                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_NEXT_SECTION);
+                indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
+                rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
                 break;
 
-                case R.id.tv_lastUnit_EM:
-                    checkMoveModeAndSetResultIndex(moveBox(currentIndex,MOVE_LAST_UNIT));
-                    break;
+            case R.id.tv_lastUnit_EM:
+                generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
+                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_LAST_UNIT);
+                indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
+                rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
+                break;
+
             case R.id.tv_nextUnit_EM:
-                checkMoveModeAndSetResultIndex(moveBox(currentIndex,MOVE_NEXT_UNIT));
+                generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
+                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_NEXT_UNIT);
+                indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
+                rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
                 break;
 
 
@@ -332,47 +376,12 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
             case R.id.tv_sectionAdd:
             case R.id.tv_sectionMinus:
 
-            case R.id.imv_x0_ER :
-                changeCode((byte)valueOfBeat);
-                break;
-            case R.id.imv_xb1_ER :
-                changeCode((byte)(valueOfBeat/2));
-                break;
-            case R.id.imv_xb2_ER :
-                changeCode((byte)(valueOfBeat/4));
-                break;
-            case R.id.imv_xb3_ER:
-                changeCode((byte)(valueOfBeat/8));
-                break;
-            case R.id.imv_xp_ER :
-                changeCode((byte)(valueOfBeat+valueOfBeat/2));
-                break;
-            case R.id.imv_xpb1_ER :
-                changeCode((byte)(valueOfBeat/2+valueOfBeat/4));
-                break;
-            case R.id.imv_xpb2_ER :
-                changeCode((byte)(valueOfBeat/4+valueOfBeat/8));
-                break;
-            case R.id.imv_xl1_ER :
-                changeCode((byte)(valueOfBeat*2));
-                break;
-            case R.id.imv_xl2_ER :
-                changeCode((byte)(valueOfBeat*3));
-                break;
             case R.id.imv_xl3_ER :
                 changeCode((byte)(valueOfBeat*3));
                 break;
             case R.id.imv_xm1_ER :
                 int fraction = Integer.parseInt(edt_xmNum.getText().toString());
                 changeCodeToMultiDivided(8,fraction);
-                break;
-            case R.id.imv_xm2_ER :
-                int fraction_2 = Integer.parseInt(edt_xmNum.getText().toString());
-                changeCodeToMultiDivided(9,fraction_2);
-                break;
-            case R.id.imv_xm_ER :
-                int fraction_3 = Integer.parseInt(edt_xmNum.getText().toString());
-                changeCodeToMultiDivided(7,fraction_3);
                 break;
             case R.id.tv_empty_ER :
                 changeToEmpty();
@@ -392,20 +401,6 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                 if(returnNum<0){
                     Toast.makeText(getContext(), "不在连音弧覆盖的范围，没有删除的目标", Toast.LENGTH_SHORT).show();
                 }
-                break;
-
-            case R.id.tv_lastSection_ER:
-                moveBox(MOVE_LAST_SECTION);
-                break;
-            case R.id.tv_lastUnit_ER:
-                moveBox(MOVE_LAST_UNIT);
-
-                break;
-            case R.id.tv_nextSection_ER:
-                moveBox(MOVE_NEXT_SECTION);
-                break;
-            case R.id.tv_nextUnit_ER:
-                moveBox(MOVE_NEXT_UNIT);
                 break;
 
            /* case R.id.tv_confirmAddRhythm_ER:
@@ -430,17 +425,59 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     }
 
 
-    private void checkMoveModeAndSetResultIndex(int resultIndex) {
+
+    private boolean checkAreaInsideBeat(int startIndex, int endIndex){
+        for(int i=startIndex;i<=endIndex;i++){
+            if(codes.get(i)==126){
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+
+
+
+    /* 返回的值是移动后的索引值（或者在移动无效时是移动前的值），但都是当前模式对应的正确的索引项的值
+    * 增加一个返回值的原因是便于后续的利用（不必再判断模式）
+    * */
+    private int checkMoveModeAndSetResultIndex(int resultIndex) {
         if (moveAreaStart) {
             //选区起端移动模式
+            if(resultIndex>selectEndIndex){
+                Toast.makeText(getContext(), "不允许交叉起止端。", Toast.LENGTH_SHORT).show();
+                return selectStartIndex;//选区的起端不允许越过选区末端(仍旧返回旧值)
+            }
             selectStartIndex = resultIndex;
+            return selectStartIndex;//返回新值
         } else if (moveAreaEnd) {
             //选区末端移动模式
+            if(resultIndex<selectStartIndex){
+                Toast.makeText(getContext(), "不允许交叉起止端。", Toast.LENGTH_SHORT).show();
+                return selectEndIndex;//不允许交叉起止端。返回的是旧值
+            }
             selectEndIndex = resultIndex;
+            return selectEndIndex;
+        } else {
+            //单点移动模式
+            selectStartIndex = selectEndIndex = currentUnitIndex = resultIndex;
+            return currentUnitIndex;
+        }
+    }
+
+    private int checkMoveModeAndGetCurrentIndex(){
+        if (moveAreaStart) {
+            //选区起端移动模式
+            return selectStartIndex;
+        } else if (moveAreaEnd) {
+            //选区末端移动模式
+            return selectEndIndex;
         } else {
             //单点移动模式
             selectStartIndex = selectEndIndex = currentUnitIndex = resultIndex;
         }
+
     }
 
     /* 选定当前光标所在的单个整拍子，将区域选定标记的起止坐标记录器设置为结果值*/
@@ -512,6 +549,8 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
 
     /* 找到当前光标所在拍子的后界限*/
+    //在此“多此一举”地传入一个与全局变量同名的变量原因：方法的另一处应用场景中，传入的不是这个全局量而是另外的量，
+    // 因而必须设置一个形参。
     private int findBeatEndIndex(int currentUnitIndex){
         for(int k=currentUnitIndex;k<codes.size();k++){
             byte b2 = codes.get(k);
@@ -1257,7 +1296,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         return true;
 /*
         int endIndexOfThisSection = -1;
-        for(int i=currentIndex; i<codes.size();i++){
+        for(int i=generalCurrentIndex; i<codes.size();i++){
             if(codes.get(i)==127){
                 //本节结尾
                 endIndexOfThisSection = i;
@@ -1307,8 +1346,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
 
     public int moveBox(int currentIndex,int moveType){
-        //注意移动完毕后，①更新自定义UI；②如果蓝框位置超出绘制区，要根据移动方向做平移(已处理，在UI中进行)
-        //③绿框选区状态下，跟随指定的端移动。（已处理，本方法只负责对指定的索引执行移动，并返回移动后的索引位置）
+        //移动完毕后，先经过检查（在调用方法中进行）再更新自定义UI；
         switch (moveType){
             case MOVE_NEXT_UNIT:
                 if(checkIsLastRealUnit(currentIndex)){
@@ -1318,7 +1356,6 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                     return getNextRealUnitIndex(currentIndex);
 
                 }
-                break;
             case MOVE_NEXT_SECTION:
                 if(checkIsLastSection(currentIndex)){
                     //已在最后，不移动
@@ -1328,7 +1365,6 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                     return getRealUnitIndexOfNextSection(currentIndex);
 
                 }
-                break;
             case MOVE_LAST_UNIT:
                 if(checkIsFirstRealUnit(currentIndex)){
                     Toast.makeText(getContext(), "已在最前", Toast.LENGTH_SHORT).show();
