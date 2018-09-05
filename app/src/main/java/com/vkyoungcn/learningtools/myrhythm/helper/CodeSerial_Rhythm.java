@@ -1,4 +1,6 @@
-package com.vkyoungcn.learningtools.myrhythm.models;
+package com.vkyoungcn.learningtools.myrhythm.helper;
+
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,25 +33,42 @@ public class CodeSerial_Rhythm {
      *
      * */
 
+    private volatile static CodeSerial_Rhythm sCodeSerialRhythm = null;
+
 
     /* 数据*/
-    ArrayList<Byte> codeSerial = new ArrayList<>();
-    int beatType = 44;
-    int valueOfBeat = 16;//可以通过bT设置自动生成
+    static ArrayList<Byte> codeSerial;
+    static int beatType = 44;
+    static int valueOfBeat = 16;//可以通过bT设置自动生成
 
-    public CodeSerial_Rhythm() {
+
+
+    //DCL模式单例获取方法【双检查锁定？】
+    public static CodeSerial_Rhythm getInstance(ArrayList<Byte> codeSerial,int beatType,int valueOfBeat){
+        if(sCodeSerialRhythm == null){
+            synchronized (CodeSerial_Rhythm.class){
+                if(sCodeSerialRhythm == null){
+                    sCodeSerialRhythm = new CodeSerial_Rhythm(codeSerial,beatType,valueOfBeat);
+                }
+            }
+        }
+        return sCodeSerialRhythm;
+    }
+
+
+ /*   public CodeSerial_Rhythm() {
     }
 
     public CodeSerial_Rhythm(ArrayList<Byte> codeSerial, int beatType) {
-        this.codeSerial = codeSerial;
-        this.beatType = beatType;
-        this.valueOfBeat = RhythmHelper.calculateValueBeat(beatType);
-    }
+        codeSerial = codeSerial;
+        beatType = beatType;
+        valueOfBeat = RhythmHelper.calculateValueBeat(beatType);
+    }*/
 
     public CodeSerial_Rhythm(ArrayList<Byte> codeSerial, int beatType, int valueOfBeat) {
-        this.codeSerial = codeSerial;
-        this.beatType = beatType;
-        this.valueOfBeat = valueOfBeat;
+        CodeSerial_Rhythm.codeSerial = codeSerial;//静态的，直接赋给类。
+        CodeSerial_Rhythm.beatType = beatType;
+        CodeSerial_Rhythm.valueOfBeat = valueOfBeat;
     }
 
     public ArrayList<Byte> getCodeSerial() {
@@ -59,7 +78,7 @@ public class CodeSerial_Rhythm {
     /* setter方法用于将“从DB获取的编码数据”存入*/
     public void setCodeSerial(ArrayList<Byte> codeSerial) {
         if(serialValidationCheck()) {
-            this.codeSerial = codeSerial;
+            codeSerial = codeSerial;
         }
     }
 
@@ -75,6 +94,67 @@ public class CodeSerial_Rhythm {
 
 
     /* 业务方法*/
+
+    /* 区域合并*/
+    public int mergeArea(int startIndex, int endIndex){
+        //先进行各种“不合法”检测
+        if(startIndex==endIndex){
+            return 3300;//单个符号，没必要“合并”
+        }
+        if(startIndex>endIndex){
+            return 3033;//起止反序。
+        }
+        for(int i=startIndex;i<=endIndex;i++){
+            if(codeSerial.get(i)==126){
+                //不允许跨拍合并
+                return 3301;//不允许跨拍合并
+            }
+        }//通过了检测，没有跨拍（选定的是1拍或不足1拍）
+
+        int areaTotalValue = 0;
+        for(int i=startIndex;i<=endIndex;i++) {
+            areaTotalValue += getCodeValue(codeSerial.get(i),valueOfBeat);
+        }
+
+        if(!isValueValidForSingleCode(areaTotalValue)){
+            return 3202;//选定区域的值无法以单个符号替换。【逻辑版本v1。后期可能会调整逻辑】
+        }else {
+            //可以调整
+            //原位置的删掉
+            for(int k=startIndex;k<=endIndex;k++){
+                codeSerial.remove(startIndex);//游标不动，循环数动
+            }
+            //添加
+            codeSerial.add(startIndex,(byte)areaTotalValue);
+            return areaTotalValue;
+        }
+    }
+
+    //获取选定编码的值
+    private int getCodeValue(byte code,int valueOfBeat){
+        if(code>111){
+            return 0;
+        }
+        if(code>73||code==0){
+            return valueOfBeat;
+        }
+
+        if(code>0){
+            return code;
+        }else {
+            return -code;
+        }
+    }
+
+    /* 检测选定区域的值是否能替换成单个合法符号*/
+    private boolean isValueValidForSingleCode(int value){
+        //如果单个X的值（包括X·）符合如下的值，则合法
+        return (value==valueOfBeat)||(value==valueOfBeat/2)||(value==valueOfBeat/4)||(value==valueOfBeat/8)|| (value==valueOfBeat+valueOfBeat/2)||(value==valueOfBeat/2+valueOfBeat/4)||(value==valueOfBeat/4+valueOfBeat/8);
+        //否则均是false.
+
+    }
+
+
     /* 单点替换*/
     public int replaceCodeAt(int index, byte newCode){
         //目标位置和主数据列表检查

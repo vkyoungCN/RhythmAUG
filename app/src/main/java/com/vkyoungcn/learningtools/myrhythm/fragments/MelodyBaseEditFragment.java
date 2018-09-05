@@ -13,7 +13,9 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor;
+import com.vkyoungcn.learningtools.myrhythm.helper.CodeSerial_Rhythm;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,7 @@ import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEdit
 import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor.MOVE_LAST_UNIT;
 import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor.MOVE_NEXT_SECTION;
 import static com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineEditor.MOVE_NEXT_UNIT;
+import static com.vkyoungcn.learningtools.myrhythm.helper.CodeSerial_Rhythm.mergeArea;
 
 
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
@@ -31,9 +34,15 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     private static final String TAG = "RhythmBaseEditFragment";
     /* 逻辑*/
 
-    /* 当前选中区域的两端坐标，单code模式下选中的sI=eI*/
+    CodeSerial_Rhythm csRhythmHelper;
+
+    /* 当前选中区域的两端坐标，单code模式下，sI==eI（暂定需要这样判断实际选择区域）*/
+    int currentUnitIndex = 0;
     int selectStartIndex = 0;
     int selectEndIndex = 0;
+    //注意，由于界限索引需要同UI控件交互，需要指示到可绘制的code上（所以126、127、112+都是不能指向的）
+
+    boolean dualForward = true;//选定两个拍子时，存在朝向问题；选定其一为正另一为反。暂定向右为正，默认方向。
 
 
 //    int valueOfBeat = 16;
@@ -147,6 +156,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.rhythmBasedCompound = getArguments().getParcelable("RHYTHM");
+        this.csRhythmHelper = CodeSerial_Rhythm.getInstance(rhythmBasedCompound.getCodeSerialByte(),rhythmBasedCompound.getRhythmType(), RhythmHelper.calculateValueBeat(rhythmBasedCompound.getRhythmType()))
     }
 
     @Override
@@ -240,12 +250,26 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
             case R.id.tv_selectBeat:
                 //点击后，从默认的选中单个code变为选中所在的Beat
-
+                resetSelectionAreaToTotalBeat();
+                //通知UI（改框色、改起止范围）
 
             case R.id.tv_selectDualBeat:
+                resetSelectionAreaToDualBeat();
+                //通知自定义UI改用双拍框的颜色样式
+
             case R.id.tv_selectSingleCode:
+                selectStartIndex = selectEndIndex =currentUnitIndex;
 
             case R.id.tv_merge:
+                //调用编码辅助类的合并方法（暂定只允许对一拍、不足一拍的选区进行合并；跨拍的（含超1拍，2拍多拍的）暂不处理）
+                int resultCodeMerge = csRhythmHelper.mergeArea(selectStartIndex,selectEndIndex);
+                if(resultCodeMerge<3300){
+                    //成功，通知自定义UI改变
+                    rh_editor_EM.codeChangedReDraw();
+                }else {
+                    //失败，给出提示
+                    Toast.makeText(getContext(),"失败代码："+resultCodeMerge,Toast.LENGTH_SHORT).show();
+                }
             case R.id.tv_selectionAreaStart:
             case R.id.tv_selectionAreaEnd:
 
@@ -370,6 +394,116 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         }
     }
 
+    /* 选定当前光标所在的单个整拍子，将区域选定标记的起止坐标记录器设置为结果值*/
+    private void resetSelectionAreaToTotalBeat(){
+
+        selectStartIndex = findBeatStartIndex();
+        selectEndIndex = findBeatEndIndex(currentUnitIndex);
+
+
+    }
+
+    /* 选定当前光标所在的两个整拍子，将区域选定标记的起止坐标记录器设置为结果值*/
+    private void resetSelectionAreaToDualBeat(){
+        if(!dualForward){
+            //执行向右扩展
+            //切换扩展方向（从当前光标所在拍开始）
+            dualForward = true;
+
+            selectStartIndex= findBeatStartIndex();//区域开头仍然是本拍拍首
+            int tempAreaEndIndex = findBeatEndIndex(currentUnitIndex);//拍尾要选用下一拍（除非跨节（不允许））
+            int fakeNextBeatStartIndex = isNextBeatInSameSection(tempAreaEndIndex);
+            if(fakeNextBeatStartIndex == -1||fakeNextBeatStartIndex==tempAreaEndIndex){
+                //会跨节或已到序列尾部，只实际选定单拍
+                selectEndIndex = tempAreaEndIndex;
+            }else {
+                //选定下一拍的拍尾
+                selectEndIndex = findBeatEndIndex(fakeNextBeatStartIndex);
+            }
+        }
+    }
+
+    /* 为了能利用直接获取下拍的起坐标，跨节时返回-1。其余返回下节节首坐标
+    * 如果返回值与当前节的拍末坐标一致，则说明后方不足一拍*/
+    int isNextBeatInSameSection(int currentBeatEndIndex){
+        int nextBeatStartIndex = currentBeatEndIndex;
+        for(int i=currentBeatEndIndex;i<codes.size();i++){
+            if(codes.get(i)<111){
+                nextBeatStartIndex = i;
+                break;
+            }
+        }
+        for(int k=nextBeatStartIndex;k>=currentBeatEndIndex;k--){
+            if(codes.get(k)==127)
+                return -1;
+        }
+        return nextBeatStartIndex;
+
+    }
+
+
+
+
+    /* 找到当前光标所在拍子的前界限*/
+    private int findBeatStartIndex(){
+        for(int i=currentUnitIndex;i>=0;i--){
+            byte b1 = codes.get(i);
+            if((b1==127)||(b1==126)){
+                //（上一拍的结尾，上一节的结尾）
+                return i+1;
+            }
+            if(i==0){
+                //遍历到头（本身位于首拍）
+                return i;
+            }
+        }
+        return -1;
+    }
+
+
+
+    /* 找到当前光标所在拍子的后界限*/
+    private int findBeatEndIndex(int currentUnitIndex){
+        for(int k=currentUnitIndex;k<codes.size();k++){
+            byte b2 = codes.get(k);
+            if(b2 == 126){
+                //末尾即使在节尾也必然要存在126符号，不需考虑127
+                if(codes.get(k-1)>111){
+                    //剔除连音弧尾
+                    return k-2;
+                }
+                return k-1;
+                //【126/127都是控制编码，无法转成独立dU，不应被实际指向计入】
+            }
+        }
+        return  -1;
+    }
+
+
+
+
+
+
+
+
+
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnGeneralDfgInteraction) {
+            mListener = (OnGeneralDfgInteraction) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnGeneralDfgInteraction");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
     void changeCode(Byte newCode){
         //【逻辑修改】①要先确定当前框框套住的音符（原值）及原值+其后紧邻的所有空值的总值（可用总值）
         //新值=原值：直接改变该位置上的编码
@@ -398,7 +532,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
 
     /* 改变当前位置上的编码，根据新旧时值的不同，产生多种不同的处理情况；可能涉及对后续空拍位置的处理
-    * 需要提前判断好后面有多少空余可用值，只要是调用到本方法的情形需要都是在可用可改动的时值总值内的*/
+     * 需要提前判断好后面有多少空余可用值，只要是调用到本方法的情形需要都是在可用可改动的时值总值内的*/
     void changeCodeAndNext(byte toCode,int sectionIndex, int unitIndex,boolean isRecursive,int recursiveTime){
         //一般：需要改成的编码和该位置上编码的情况（仅考虑该位置上的情况）
         byte oldCode = codesInSections.get(sectionIndex).get(unitIndex);
@@ -505,7 +639,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                     sectionIndex++;
                     //小节首个编码不可能是连音弧结尾（即使连音弧线的末端在小节首音符，该结束标记也必然在第二个编码上；
                     // 如果连音弧线在上一节节末音符结束，则结束标记需要位于上一节末尾；如果出现首编码>112实际是出错情形）
-                            changeCodeAndNext((byte) (toCode - valueOfBeat), sectionIndex, tempCursor,true,recursiveTime);
+                    changeCodeAndNext((byte) (toCode - valueOfBeat), sectionIndex, tempCursor,true,recursiveTime);
                 }
             }else if(oldValue == valueOfBeat+valueOfBeat/2){
                 //旧拍子是大附点
@@ -779,7 +913,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         if(newCode == lastCode){
             //仅在前一或后一存在与本音符等值的空拍时，合并
             //如果此时未跨拍，则合并
-        //【寻找拍子边界，②可能要进一步递归调用（多个可合并时（每两个合并的符号，都要值对等））】
+            //【寻找拍子边界，②可能要进一步递归调用（多个可合并时（每两个合并的符号，都要值对等））】
         }
 
         //②临近且不超过一个拍子的空拍合并
@@ -947,7 +1081,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
     }
 
-//【设计原则5：给指定蓝框设置新字符时，可以向后面的空拍扩展借用空间，但不能向前面的空拍扩展。】
+    //【设计原则5：给指定蓝框设置新字符时，可以向后面的空拍扩展借用空间，但不能向前面的空拍扩展。】
     void changeCodeToMultiDivided(int ten, int fraction){
         byte newCode = (byte)(ten*10+fraction);
         int newValue = checkCodeValue(newCode);//原则上，newCode在此一定是大于零的。
@@ -1031,21 +1165,4 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         }
     }
 
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnGeneralDfgInteraction) {
-            mListener = (OnGeneralDfgInteraction) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnGeneralDfgInteraction");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
 }

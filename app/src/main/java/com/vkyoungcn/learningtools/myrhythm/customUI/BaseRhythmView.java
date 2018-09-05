@@ -578,10 +578,10 @@ public class BaseRhythmView extends View {
             accumulationNumInCodeSerial++;
             byte code = codesInThisSection.get(j);
 
-            if(code>112&&code<126) {
-                //大于112的没有实体绘制单元，而是在其前一单元中设置专用字段
-                int curveSpanForward = code-111;//跨越的单元数量（比如，code=112时，指弧线覆盖本身及本身前的1个音符）
-                //连音线末端可以在小节首音符上，但是连音线标志必然不能是小节第一个，从而可以获取前一du进行设置
+            if(code>111&&code<126) {
+                //112~125的没有实体绘制单元，而是在其前一单元中设置专用字段(126/127则纯粹为控制编码，没有UI信息)
+                int curveSpanForward = code-110;//跨越的单元数量（比如，code=112时，指弧线覆盖本身及本身前的1个音符，跨度2）
+                //连音线末端可以在小节首音符后，但是末端标记必然不能是小节第一个code，可以-1。
                 if(j==0){
                     Toast.makeText(mContext, "该小节内，连音标记前没有音符，错误编码。略过该连音。", Toast.LENGTH_SHORT).show();
                 }else {
@@ -589,6 +589,7 @@ public class BaseRhythmView extends View {
                     drawingUnitsInSection.get(j-1).curveLength = curveSpanForward;
                 }
             }else {
+                /* 从这里的逻辑设计可明确：仅在111以内的编码才有dU对应，所以外部调用方的索引不应指向112+编码位*/
                 DrawingUnit drawingUnit = new DrawingUnit();
                 drawingUnit.top = topDrawing_Y + lineCursor * twoLinesTopYBetween;
                 drawingUnit.bottomNoLyric = drawingUnit.top + (unitHeight + additionalPointsHeight * 2 + curveOrLinesHeight * 2);
@@ -600,7 +601,7 @@ public class BaseRhythmView extends View {
                 } else {
                     //非首位音符,根据前一音符是否是拍尾，而紧靠或有拍间隔。
                     if (codesInThisSection.get(j-1) > 125) {//【新判断方式（126拍尾，127节尾），原来是加总时值判断】
-                        //前一音符为拍尾
+                        //前一音符为拍尾【注，即使前符有连音弧结尾标记，该标记也必须紧邻从而位于拍尾之前】
                         //如果不是首音符，则前面必然是有音符的，所以下句可行
                         drawingUnit.left = drawingUnitsInSection.get(j - 1).right + beatGap;//要加入拍间隔
                         //注意间隔要计算在du的外面。因为下划线布满du内的宽度。
@@ -629,7 +630,7 @@ public class BaseRhythmView extends View {
                     charForCode = "0";
                 } else if (code == 0) {
                     charForCode = "-";
-                }
+                }//按节奏方式初始（后有独立遍历初始音高和词序）
 
                 //字符位置（字符按照给定左下起点方式绘制）
                 //【为了保证①字符基本位于水平中央、②字符带不带附点时的起始位置基本不变，因而采用：左+三分之一单位宽度折半值 方式，后期据情况调整】
@@ -685,7 +686,7 @@ public class BaseRhythmView extends View {
 
                 //均分多连音画法（仅数字部分，顶部圆弧在onDraw中根据弧线结束位置和跨度直接计算）
                 //音符跨度处理（跨度数字、跨度数字的绘制位置）
-                if (code > 73 && code < 99) {
+                if (code > 73 && code < 109) {
                     //有几个音符
                     StringBuilder codeBuilder = new StringBuilder();
                     int codeNum = code % 10;
@@ -700,17 +701,17 @@ public class BaseRhythmView extends View {
 
                     //下划线处理
                     if (valueOfBeat == 16) {
-                        //73~79之间无下划线不处理。
+                        //103~109之间无下划线不处理。（原来是7=16，现在是10=16）
                         if (code > 83 && code < 89) {
                             //一条下划线
                             drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalPointsHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottomNoLyric - additionalPointsHeight - curveOrLinesHeight));
-                        } else if (code > 93) {//外层if有<99判断
+                        } else if (code <79) {//外层if有>73判断
                             //两条下划线
                             drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalPointsHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottomNoLyric - additionalPointsHeight - curveOrLinesHeight));
                             drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalPointsHeight - curveOrLinesHeight + 10, drawingUnit.right, drawingUnit.bottomNoLyric - additionalPointsHeight - curveOrLinesHeight + 10));
                         }//不支持三条的
-                    } else if (valueOfBeat == 8) {//外层if有<99判断
-                        if (code > 93) {
+                    } else if (valueOfBeat == 8) {
+                        if (code <79 ) {
                             //一条下划线
                             drawingUnit.bottomLines.add(new BottomLine(drawingUnit.left, drawingUnit.bottomNoLyric - additionalPointsHeight - curveOrLinesHeight, drawingUnit.right, drawingUnit.bottomNoLyric - additionalPointsHeight - curveOrLinesHeight));
                         }//无下划线的不处理；八分音符下不可能有四分时值的均分多连音，不处理。
