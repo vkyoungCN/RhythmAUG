@@ -155,9 +155,11 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
         switch (dfgType){
             case CREATE_RHYTHM:
                 //准备进入第二步（新增、编辑Rh）
+                int rhythmTypeChose = data.getInt("RHYTHM_TYPE");
+
                 Intent intentToRhStep_2 = new Intent(this,CreateRhythmActivity.class);
                 intentToRhStep_2.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-                intentToRhStep_2.putExtra("BUNDLE",data);
+                intentToRhStep_2.putExtra("RHYTHM_TYPE",rhythmTypeChose);
                 this.startActivityForResult(intentToRhStep_2,REQUEST_CODE_RH_CREATE);
                 break;
             case DELETE_RHYTHM:
@@ -194,7 +196,7 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
                 new Thread(new FetchDataRunnable()).start();
                 break;
             case RESULT_CODE_RH_CREATE_FAILURE:
-            default:
+            case DELIVER_ERROR:
                 Toast.makeText(this, "添加失败。", Toast.LENGTH_SHORT).show();
                 //什么都不做，暂时只有一个提示。
                 break;

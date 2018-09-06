@@ -6,6 +6,7 @@ public interface MyRhythmConstants {
     int RESULT_CODE_RH_CREATE_DONE = 702;
     int RESULT_CODE_RH_CREATE_FAILURE = 703;
 
+    int DELIVER_ERROR = 799;
 
     int REQUEST_CODE_RH_EDIT = 711;
     int REQUEST_CODE_RH_OVERALL_EDIT = 712;

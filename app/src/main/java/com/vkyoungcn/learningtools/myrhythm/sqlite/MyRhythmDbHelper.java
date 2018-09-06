@@ -12,7 +12,7 @@ import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 import com.vkyoungcn.learningtools.myrhythm.models.PitchSequence;
 import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
+import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
 
 import java.util.ArrayList;
 
@@ -84,6 +84,14 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
                     MyRhythmContract.ActionRecord._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     MyRhythmContract.ActionRecord.COLUMN_ACTION_TIME + " INTEGER, "+
                     MyRhythmContract.ActionRecord.COLUMN_ACTION_TYPE + " INTEGER)";
+
+    //创建标签表
+    public static final String SQL_CREATE_SINGLE_TAG =
+            "CREATE TABLE " + MyRhythmContract.SingleTag.TABLE_NAME + " (" +
+                    MyRhythmContract.SingleTag._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    MyRhythmContract.SingleTag.COLUMN_TITLE + " TEXT, "+
+                    MyRhythmContract.SingleTag.COLUMN_DESCRIPTION + " TEXT)";
+
 
 
     //创建分组表

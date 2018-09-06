@@ -49,6 +49,7 @@ public class RhythmView extends BaseRhythmView {
      * 如果音符后即是126、127，则弧结束标记要在126、127之前（以免影响节的判断。）】【某些判断可能要修改（如独占整拍的检测逻辑【待】）】
      * ⑥126：拍尾标记
      * ⑦127：小节尾标记
+     * ⑧111：前缀音（有独立绘制单元（只是尺寸较小，除字符外格式固定）；占据pitch中的一个单位；不占Lyric中的单位；不占时值。）
      * */
     void initDrawingUnits_step1() {
         //【如果本方法是从onSc中触发的调用，则最后不进行invalidate()】

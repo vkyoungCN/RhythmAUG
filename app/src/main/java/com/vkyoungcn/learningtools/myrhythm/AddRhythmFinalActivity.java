@@ -18,13 +18,14 @@ import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
+import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.DELIVER_ERROR;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_DONE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_FAILURE;
-import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_24;
-import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_34;
-import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_38;
-import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_44;
-import static com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper.RHYTHM_TYPE_68;
+import static com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper.RHYTHM_TYPE_24;
+import static com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper.RHYTHM_TYPE_34;
+import static com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper.RHYTHM_TYPE_38;
+import static com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper.RHYTHM_TYPE_44;
+import static com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper.RHYTHM_TYPE_68;
 
 public class AddRhythmFinalActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
 
@@ -40,7 +41,7 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
 
 
     //操作结果，是否成功（根据DB返回确定）
-    boolean resultOk = true;
+    boolean isResultOk = true;
 
 
 
@@ -57,11 +58,11 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
         edt_description = findViewById(R.id.edt_descriptionInput_ARFA);
         tv_confirm = findViewById(R.id.tv_confirm_ARFA);
 
-        Bundle bundle = getIntent().getBundleExtra("COMPOUND_RHYTHM_BUNDLE");
-        rhythmBasedCompound = bundle.getParcelable("COMPOUND_RHYTHM");
-
+        rhythmBasedCompound = getIntent().getParcelableExtra("COMPOUND_RHYTHM");
         if(rhythmBasedCompound == null){
             Toast.makeText(this, "出错，节奏数据传递为空", Toast.LENGTH_SHORT).show();
+            setResult(DELIVER_ERROR);
+            this.finish();
             return;
         }
 
@@ -106,7 +107,7 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
                 //根据返回的结果（布尔值——成败。），向dfg传递成功或失败。
                 if(l<0){
                     //失败
-                    resultOk =false;
+                    isResultOk =false;
                 }
                 //dfg中展示结果（从DB重新获取）
                 FragmentTransaction transaction = getFragmentManager().beginTransaction();
@@ -116,7 +117,7 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
                     Toast.makeText(getApplicationContext(), "Old DialogFg still there, removing first...", Toast.LENGTH_SHORT).show();
                     transaction.remove(prev);
                 }
-                DialogFragment dfg = FinalAddRhythmDiaFragment.newInstance(resultOk);
+                DialogFragment dfg = FinalAddRhythmDiaFragment.newInstance(isResultOk);
                 dfg.show(transaction, "FINAL_ADD_RHYTHM");
 
             }
@@ -129,7 +130,7 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
         switch (dfgType){
             case RHYTHM_CREATE_DONE:
                 //在提示成功或失败的dfg中点击了确定后，依次返回原来的各调用页，无需传递数据。
-                if(resultOk){
+                if(isResultOk){
                     setResult(RESULT_CODE_RH_CREATE_DONE,null);
                 }else{
                     setResult(RESULT_CODE_RH_CREATE_FAILURE,null);

@@ -22,16 +22,17 @@
         android:background="@color/myRhythm_cyan" />
 
 
+
     <TextView
-        android:id="@+id/tv_merge"
+        android:id="@+id/tv_confirmAddRhythm_EM"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="2dp"
         android:layout_marginBottom="6dp"
         android:layout_marginEnd="2dp"
-        android:background="#e8f5e9"
+        android:background="#e57373"
         android:gravity="center"
-        android:text="@string/merge" />
-
+        android:text="@string/confirm"
+        />
 
 </LinearLayout>

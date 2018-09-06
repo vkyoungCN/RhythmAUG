@@ -196,7 +196,7 @@
         android:background="#111111"
         android:clickable="true"
         android:translationZ="4dp"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <!--FAB组（音+、词+）的解释性文本组，位于FAB下方。-->
         <LinearLayout

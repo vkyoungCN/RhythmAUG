@@ -172,5 +172,6 @@
     <string name="str_withSpot">附点</string>
     <string name="fwd_16">前16</string>
     <string name="str_rd16">后16</string>
+    <string name="end">末</string>
 
 </resources>

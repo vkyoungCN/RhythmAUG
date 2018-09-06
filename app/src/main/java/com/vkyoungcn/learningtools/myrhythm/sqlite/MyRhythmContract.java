@@ -98,11 +98,21 @@ public class MyRhythmContract {
 
 
 
+
+
     /* 操作记录表*/
     public static class ActionRecord implements BaseColumns {
         public static final String TABLE_NAME = "action_records";
         public static final String COLUMN_ACTION_TIME ="action_time";
         public static final String COLUMN_ACTION_TYPE ="action_type";
     }
+
+    /* 标签表【暂不启用，先用各资源的描述字段顶着】*/
+    public static class SingleTag implements BaseColumns {
+        public static final String TABLE_NAME = "single_tag";
+        public static final String COLUMN_TITLE ="title";
+        public static final String COLUMN_DESCRIPTION = "description";
+    }
+
 
 }

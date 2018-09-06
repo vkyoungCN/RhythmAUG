@@ -1,4 +1,4 @@
-package com.vkyoungcn.learningtools.myrhythm.models;
+package com.vkyoungcn.learningtools.myrhythm.helper;
 
 import android.util.Log;
 
@@ -161,5 +161,55 @@ public class RhythmHelper {
         return requiredSectionLength;
     }
 
+    public static ArrayList<Byte> getStandardEmptySection(int rhythmType){
+        ArrayList<Byte> emptySection = new ArrayList<>();
+
+        int valueOfBeat = 16;
+        int beatAmount = 4;
+        switch (rhythmType) {
+            case RHYTHM_TYPE_24:
+                //此时beat值==16无需修改
+                beatAmount = 2;
+                break;
+            case RHYTHM_TYPE_34:
+                beatAmount = 3;
+                break;
+            case RHYTHM_TYPE_44:
+                break;
+            case RHYTHM_TYPE_38:
+                valueOfBeat = 8;
+                beatAmount = 3;
+                break;
+            case RHYTHM_TYPE_68:
+                valueOfBeat = 8;
+                beatAmount = 6;
+                break;
+        }
+
+        for(int i=0;i<beatAmount;i++){
+            emptySection.add((byte)valueOfBeat);
+            emptySection.add((byte)126);
+        }
+        emptySection.add((byte)127);
+
+        return emptySection;
+    }
+
+
+    public static String getStrRhythmType(int rhythmType){
+        switch (rhythmType) {
+            case RHYTHM_TYPE_24:
+                return "2/4";
+            case RHYTHM_TYPE_34:
+                return "3/4";
+            case RHYTHM_TYPE_44:
+                return "4/4";
+            case RHYTHM_TYPE_38:
+                return "3/8";
+            case RHYTHM_TYPE_68:
+                return "6/8";
+        }
+        return "";
+    }
 
 }

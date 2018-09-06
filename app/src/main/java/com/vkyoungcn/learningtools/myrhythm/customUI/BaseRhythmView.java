@@ -12,7 +12,7 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
+import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;

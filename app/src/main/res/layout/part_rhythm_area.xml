@@ -57,13 +57,13 @@
         >
 
         <TextView
-            android:id="@+id/tv_2"
+            android:id="@+id/tv_merge"
             android:layout_width="52dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
-            android:background="#efefef"
+            android:background="#e8f5e9"
             android:gravity="center"
-            />
+            android:text="@string/merge" />
 
         <TextView
             android:id="@+id/tv_3"

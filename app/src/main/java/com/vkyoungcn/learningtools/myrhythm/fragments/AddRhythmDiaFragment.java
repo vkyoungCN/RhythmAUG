@@ -10,8 +10,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
-import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
+import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
 
 /*
  * 作者：杨胜 @中国海洋大学

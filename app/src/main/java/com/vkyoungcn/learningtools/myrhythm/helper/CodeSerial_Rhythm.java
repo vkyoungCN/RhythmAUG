@@ -1,15 +1,16 @@
 package com.vkyoungcn.learningtools.myrhythm.helper;
 
-import com.vkyoungcn.learningtools.myrhythm.models.RhythmHelper;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import java.util.ArrayList;
 
 public class CodeSerial_Rhythm {
     //为编码工作提供规则、校验、功能封装。
     // 改动（单个位置字符替换、添加、删除；连续位置上的字符替换、添加、）提交到本类，由本类负责判断提交是否合法，合法则按规则进行修改，否则拒绝。
-
+//【两种方案：①静态；②实例（每条节奏编码对应单独的csR类）；按说应该采用后者；
+// 否则编码序列应该是难以改变引用的，从而只对第一条rh有效】]
     /*
-     * 返回值解释:
+     * 返回值解释:【尚未完全】
      * 0，成功
      * 3001;//未能成功。下标越界（小于0）
      * 3002;//未能成功，主数据源空
@@ -38,68 +39,24 @@ public class CodeSerial_Rhythm {
      *
      * */
 
-    private volatile static CodeSerial_Rhythm sCodeSerialRhythm = null;
-
-
     /* 数据*/
-    static ArrayList<Byte> codeSerial;
-    static int beatType = 44;
-    static int valueOfBeat = 16;//可以通过bT设置自动生成
+    ArrayList<Byte> codeSerial;
+    int beatType = 44;
+    int valueOfBeat = 16;//可以通过bT设置自动生成
 
-
-
-    //DCL模式单例获取方法【双检查锁定？】
-    public static CodeSerial_Rhythm getInstance(ArrayList<Byte> codeSerial,int beatType,int valueOfBeat){
-        if(sCodeSerialRhythm == null){
-            synchronized (CodeSerial_Rhythm.class){
-                if(sCodeSerialRhythm == null){
-                    sCodeSerialRhythm = new CodeSerial_Rhythm(codeSerial,beatType,valueOfBeat);
-                }
-            }
-        }
-        return sCodeSerialRhythm;
-    }
-
-
- /*   public CodeSerial_Rhythm() {
-    }
-
-    public CodeSerial_Rhythm(ArrayList<Byte> codeSerial, int beatType) {
-        codeSerial = codeSerial;
-        beatType = beatType;
+    /* 为指定的rh生成其编码的管理类*/
+    public CodeSerial_Rhythm(RhythmBasedCompound rhythm) {
+        codeSerial = rhythm.getCodeSerialByte();
+        beatType = rhythm.getRhythmType();
         valueOfBeat = RhythmHelper.calculateValueBeat(beatType);
-    }*/
-
-    public CodeSerial_Rhythm(ArrayList<Byte> codeSerial, int beatType, int valueOfBeat) {
-        CodeSerial_Rhythm.codeSerial = codeSerial;//静态的，直接赋给类。
-        CodeSerial_Rhythm.beatType = beatType;
-        CodeSerial_Rhythm.valueOfBeat = valueOfBeat;
     }
 
     public ArrayList<Byte> getCodeSerial() {
         return codeSerial;
     }
 
-    /* setter方法用于将“从DB获取的编码数据”存入*/
-    public void setCodeSerial(ArrayList<Byte> codeSerial) {
-        if(serialValidationCheck()) {
-            codeSerial = codeSerial;
-        }
-    }
-
-    public int getBeatType() {
-        return beatType;
-    }
-
-    public void setBeatType(int beatType) {
-        this.beatType = beatType;
-        this.valueOfBeat = RhythmHelper.calculateValueBeat(beatType);
-    }
-
-
 
     /* 业务方法*/
-
     /* 区域合并*/
     public int mergeArea(int startIndex, int endIndex){
         //先进行各种“不合法”检测
@@ -443,8 +400,6 @@ public class CodeSerial_Rhythm {
         return checkCurveCovering(endIndex);
 
     }
-
-
 
 
     //如果要替换为延音符，要求：①独占整拍(不能位于序列的首位，前后紧邻的应该是拍尾（前方紧邻节尾也合理）)，
@@ -797,6 +752,38 @@ public class CodeSerial_Rhythm {
         }
         return 3077;
     }
+
+
+    public int removeSection(int currentIndex){
+        int startIndex = findSectionStart(currentIndex);
+        int endIndex = findSectionEnd(currentIndex);
+        if(endIndex == -1){
+            return -1;
+        }
+        for(int i=startIndex;i<=endIndex;i++) {
+            codeSerial.remove(startIndex);
+        }
+        return 0;
+    }
+
+    public int findSectionEnd(int currentIndex){
+        for(int i=currentIndex+1;i<codeSerial.size();i++){
+            if(codeSerial.get(i)==127){
+                return i;
+            }
+        }
+        return -1;//【待定】(直接返回最后的话，万一误把整个列删掉了)
+    }
+
+    public int findSectionStart(int currentIndex){
+        for(int i=currentIndex-1;i>=0;i--){
+            if(codeSerial.get(i)==127){
+                return i+1;
+            }
+        }
+        return 0;//【待定】
+    }
+
 
 
     /* 检测指定位置上的代码是否独占整拍*/
@@ -1154,10 +1141,290 @@ public class CodeSerial_Rhythm {
     }
 
 
+    /* 空节可以直接删除；非空节需要dfg提示用户*/
+    public boolean checkSectionEmpty(int currentIndex) {
+        boolean rearEmpty = true;//向后检测结果
+        boolean forwardEmpty = true;//向前检测结果
+        for (int i = currentIndex; i < codeSerial.size(); i++) {
+            //先向后检测（本身也要检查）
+            byte b = codeSerial.get(i);
+            if (b >= 0 && b < 110) {
+                //实际音符，非空
+                rearEmpty = false;
+            }
+            if (b == 127) {
+                break;//向后检测结束
+            }
+        }
+
+        //向前检测
+        for (int k = currentIndex; k >= 0; k--) {
+            //先向后检测（包括本身）
+            byte b_forward = codeSerial.get(k);
+            if (b_forward >= 0 && b_forward < 110) {
+                //实际音符，非空
+                forwardEmpty = false;
+            }
+            if (b_forward == 127) {
+                break;//向前检测结束
+            }
+        }
+
+        //无论是结束还是到头，都进行最后判断
+        return rearEmpty && forwardEmpty;
+
+    }
+
+    public boolean checkAllListEmpty() {
+        for (int i=0; i < codeSerial.size(); i++) {
+            //从前向后检测
+            byte b = codeSerial.get(i);
+            if (b >0 && b < 110) {
+                //实际音符，非空（仅有-的情况也排除了）
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /* 检测选区不跨拍子（仅用在生成均分多连音）*/
+    public boolean checkAreaInsideBeat(int startIndex, int endIndex){
+        for(int i=startIndex;i<=endIndex;i++){
+            if(codeSerial.get(i)==126){
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    /* 在当前小节之后增加新小节（空节）时判断本节结尾位置*/
+    public int findNext127(int currentIndex){
+        for(int i = currentIndex+1; i< codeSerial.size(); i++){
+            if(codeSerial.get(i)==127){
+                return i;
+            }
+        }
+        return codeSerial.size()-1;
+    }
 
 
 
+    /* 为了能利用直接获取下拍的起坐标，跨节时返回-1。其余返回下节节首坐标
+     * 如果返回值与当前节的拍末坐标一致，则说明后方不足一拍*/
+    public int getRealNextBeatStartIndexIfInSameSection(int currentBeatEndIndex){
+        int nextBeatStartIndex = currentBeatEndIndex;
+        for(int i = currentBeatEndIndex+1; i< codeSerial.size(); i++){
+            if(codeSerial.get(i)<111){
+                nextBeatStartIndex = i;
+                break;
+            }
+        }
+        for(int k=nextBeatStartIndex;k>=currentBeatEndIndex;k--){
+            if(codeSerial.get(k)==127)
+                return -1;//跨节了
+        }
+        return nextBeatStartIndex;
 
+    }
+
+    /* 找到当前光标所在拍子的前界限*/
+    public int findBeatStartIndex(int currentIndex){
+        for(int i=currentIndex;i>=0;i--){
+            byte b1 = codeSerial.get(i);
+            if((b1==127)||(b1==126)){
+                //（上一拍的结尾，上一节的结尾）
+                return i+1;
+            }
+            if(i==0){
+                //遍历到头（本身位于首拍）
+                return i;
+            }
+        }
+        return -1;
+    }
+
+
+    /* 找到当前光标所在拍子的后界限*/
+    //在此“多此一举”地传入一个与全局变量同名的变量原因：方法的另一处应用场景中，传入的不是这个全局量而是另外的量，
+    // 因而必须设置一个形参。
+    public int findBeatEndIndex(int currentUnitIndex){
+        for(int i = currentUnitIndex; i< codeSerial.size(); i++){
+            byte b = codeSerial.get(i);
+            if(b == 126){
+                //末尾即使在节尾也必然要存在126符号，不需考虑127
+                if(codeSerial.get(i-1)>111){
+                    //剔除连音弧尾
+                    return i-2;
+                }
+                return i-1;
+                //【126/127暂定不计入当前音符范围，连音弧尾标记也不计入。】
+            }
+        }
+        return  -1;
+    }
+
+
+    public int checkCodeValue(byte code) {
+        if (code > 111) {
+            //上弧连音专用符号，不记时值
+            return 0;//但是由于实际上不会选中结束符，因而这种状态是错误的
+        }else if(code>92){
+            return 16;//三类均分多连音的时值的定值，不随内容数量改变，也与vb无关。
+        }else if(code>82){
+            return 8;
+        }else if (code > 72) {
+            //时值计算
+            return 4;
+        } else if (code > 0) {
+            //时值计算
+            return code;
+        }else if(code==0){
+            return valueOfBeat;
+        }else {//b<0
+            //时值计算：空拍带时值，时值绝对值与普通音符相同
+            return -code;
+        }
+    }
+
+
+    public boolean checkIsFinalRealUnit(int currentIndex){
+        for(int i = currentIndex+1; i< codeSerial.size(); i++){
+            if(codeSerial.get(i)<110){
+                //其后仍然 有实际音符
+                return false;
+            }
+        }
+        //循环完了都没找到则是最后一个了
+        return true;
+    }
+
+    public boolean checkIsFirstRealUnit(int currentIndex){
+        for(int i=currentIndex-1; i>=0;i--){
+            if(codeSerial.get(i)<110){
+                //左侧仍然 有实际音符
+                return false;
+            }
+        }
+        //循环完了都没找到
+        return true;
+    }
+
+
+    public int getNextRealUnitIndex(int currentIndex){
+        for(int i = currentIndex+1; i< codeSerial.size(); i++){
+            if(codeSerial.get(i)<110){
+                //其后的首个实际音符
+                return i;
+            }
+        }
+        //循环完了都没找到则是最后一个了
+        return -1;
+    }
+
+    public int getLastRealUnitIndex(int currentIndex){
+        for(int i=currentIndex-1; i>=0;i--){
+            if(codeSerial.get(i)<110){
+                //左侧首个相邻的实际音符
+                return i;
+            }
+        }
+        //循环完了都没找到则是最后一个了
+        return -1;
+    }
+
+    public int getRealUnitIndexOfNextSection(int currentIndex) {
+        boolean afterSelf127 = false;//越过本节的节尾127后，置真
+        for (int i = currentIndex+1; i < codeSerial.size(); i++) {
+            if (codeSerial.get(i) == 127 && !afterSelf127) {
+                //本节结尾
+                afterSelf127 = true;
+            } else if (afterSelf127&& codeSerial.get(i)<110) {
+                //已跨节，且首个实际音符。
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public int getRealUnitIndexOfLastSection() {
+        boolean passFinal127 = false;//越过本节的节尾127后，置真
+        int reverseSecondEndIndex = 0;
+        for (int i = codeSerial.size()-1; i >0; i--) {
+            if (codeSerial.get(i) == 127 && !passFinal127) {
+                //最后结尾
+                passFinal127 = true;
+            } else if (passFinal127&& codeSerial.get(i)==127) {
+                //倒数第二节的127结束标记。
+                reverseSecondEndIndex = i;
+            }
+        }
+        return getNextRealUnitIndex(reverseSecondEndIndex);
+    }
+
+    public boolean checkIsFinalSection(int currentIndex){
+        boolean afterSelf127 = false;//越过本节的节尾127后，置真
+        for(int i = currentIndex; i< codeSerial.size(); i++){
+            if(codeSerial.get(i)==127&&!afterSelf127){
+                //本节结尾
+                afterSelf127 = true;
+            }else if(codeSerial.get(i)==127&&afterSelf127){
+                //
+                return false;
+            }
+        }
+        //循环完了都没找到则是最后一个了
+        return true;
+/*
+        int endIndexOfThisSection = -1;
+        for(int i=generalCurrentIndex; i<codeSerial.size();i++){
+            if(codeSerial.get(i)==127){
+                //本节结尾
+                endIndexOfThisSection = i;
+                break;
+            }
+        }
+        //本节一定有节尾127编码，否则是错误的。（是否要考虑错误处理？）
+        for(int i=endIndexOfThisSection; i<codeSerial.size();i++){
+            if(codeSerial.get(i)<110){
+                //有普通音符
+                return false;
+            }
+        }
+*/
+
+
+
+    }
+
+    public boolean checkIsFirstSection(int currentIndex) {
+        for (int i = currentIndex; i >=0; i--) {
+            if (codeSerial.get(i) == 127) {
+                //只要左侧还有127则表明不是首节
+                return false;
+            }
+        }
+        //循环完了都没找到则是首个节
+        return true;
+    }
+
+
+    public int getLastRealUnitIndexOfLastSection(int currentIndex) {
+        boolean passed127 = false;
+//        boolean passed127By2 = false;
+        for (int i = currentIndex; i>=0; i--) {
+            if (codeSerial.get(i) == 127&&!passed127) {
+                //左侧紧邻小节的末尾
+                passed127 = true;
+            } else if (passed127 && codeSerial.get(i)<110) {
+                //是左侧小节的末尾实际音符【如果要找该节的节首，比较复杂；还要考虑是否全编码首位问题等，以简化方案执行】
+                return i;
+//                passed127By2 = true;
+            }
+        }
+        return -1;
+    }
 
 
 
