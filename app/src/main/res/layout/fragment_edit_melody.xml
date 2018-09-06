@@ -83,7 +83,7 @@
                     android:layout_margin="2dp"
                     android:background="#e0e0e0" />
 
-                <include layout="@layout/part_rhythm_dividing" />
+                <include layout="@layout/part_rhythm_single_code" />
 
 
             </LinearLayout>

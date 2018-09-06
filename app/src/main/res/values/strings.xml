@@ -160,14 +160,14 @@
     <string name="doubleBeats">2Bt</string>
     <string name="vb_over_2">Bt./2</string>
     <string name="vb_over_3">Bt./3</string>
-    <string name="divide_change">拆分/0-X</string>
+    <string name="singlePoint">单点转换</string>
     <string name="merge_X">合.X</string>
     <string name="merge_zero">合.0</string>
     <string name="str_X">X</string>
     <string name="str_0">0</string>
     <string name="sectionAdd">空节+</string>
     <string name="sectionMinus">空节-</string>
-    <string name="translate">节奏变型</string>
+    <string name="translate">单（双）拍变型</string>
     <string name="str_toDv">切分</string>
     <string name="str_withSpot">附点</string>
     <string name="fwd_16">前16</string>

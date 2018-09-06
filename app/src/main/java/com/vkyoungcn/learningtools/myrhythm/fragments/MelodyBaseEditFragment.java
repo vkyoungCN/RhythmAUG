@@ -53,6 +53,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     int currentUnitIndex = 0;
     int selectStartIndex = 0;
     int selectEndIndex = 0;
+    int realIndex = 0;//临时使用。
     //注意，由于界限索引需要同UI控件交互，需要指示到可绘制的code上（所以126、127、112+都是不能指向的）
 
     boolean dualForward = true;//选定两个拍子时，存在朝向问题；选定其一为正另一为反。暂定向右为正，默认方向。
@@ -60,11 +61,15 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     boolean moveAreaStart = false;
     boolean moveAreaEnd = false;
 
+    boolean oneBeatModeOn = false;//转切分、转附点在单、双拍选区下起作用；(或则单点恰=vb)
+    boolean dualBeatModeOn = false;//转前后十六尽在单拍模式下起作用。
+    //切换到单点（单符）模式、或者移动后置否；进入到选定单拍、双拍后置真。
+
     int generalCurrentIndex;//不区分哪个指针（仅用在方法中的特殊场景）
     int fakeResultIndex;
     int indexAfterMove;
 
-//    int valueOfBeat = 16;
+    int valueOfBeat = 16;
 //    int valueOfSection = 64;
 //    int sectionSize = 4;
 //    int availableValue = 0;
@@ -175,7 +180,8 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.rhythmBasedCompound = getArguments().getParcelable("RHYTHM");
-        this.csRhythmHelper = CodeSerial_Rhythm.getInstance(rhythmBasedCompound.getCodeSerialByte(),rhythmBasedCompound.getRhythmType(), RhythmHelper.calculateValueBeat(rhythmBasedCompound.getRhythmType()))
+        this.csRhythmHelper = CodeSerial_Rhythm.getInstance(rhythmBasedCompound.getCodeSerialByte(),rhythmBasedCompound.getRhythmType(), RhythmHelper.calculateValueBeat(rhythmBasedCompound.getRhythmType()));
+        this.valueOfBeat = RhythmHelper.calculateValueBeat(rhythmBasedCompound.getRhythmType());
     }
 
     @Override
@@ -268,12 +274,14 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
             case R.id.tv_selectBeat:
                 //点击后，从默认的选中单个code变为选中所在的Beat
                 resetSelectionAreaToTotalBeat();
+                oneBeatModeOn = true;
                 //通知UI（改框色、改起止范围）
                 rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex);
                 break;
 
             case R.id.tv_selectDualBeat:
                 resetSelectionAreaToDualBeat();
+                dualBeatModeOn = true;
                 //通知自定义UI改用双拍框的颜色样式
                 rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex);
                 break;
@@ -281,6 +289,8 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
             case R.id.tv_selectSingleCode:
                 moveAreaStart = false;
                 moveAreaEnd = false;
+                oneBeatModeOn = false;
+                dualBeatModeOn = false;
 
                 selectStartIndex = selectEndIndex =currentUnitIndex;
                 //通知控件
@@ -311,10 +321,19 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                 break;
 
             case R.id.tv_over_2:
-                if(moveAreaStart||moveAreaEnd){
-                    return;//仅限单点模式下起作用。
+                if(selectStartIndex!=selectEndIndex){//高兼容，即使不在单点模式，但是二者相等也可。
+                    Toast.makeText(getContext(), "仅对单个符号进行操作。", Toast.LENGTH_SHORT).show();
+                    return;//三种合法情形均不满足，不能执行操作
                 }
-                if(csRhythmHelper.binaryDividingAt(currentUnitIndex)<25){
+
+                //【注意，单点模式下ss必=se，故!=必是选区模式；而反过来==并不一定是单点模式且ss==se并不一定与cI
+                // 一致；逻辑上只要求ss/se不交叉跨越，未要求不跨越cI！】(另外考虑高兼容要求，设计如下逻辑选择实际意图下的索引值)
+                if(moveAreaStart||moveAreaEnd){
+                    realIndex = selectStartIndex;
+                }else {
+                    realIndex = currentUnitIndex;
+                }
+                if(csRhythmHelper.binaryDividingAt(realIndex)<25){
                     //拆分完成，应刷新控件
                     rh_editor_EM.codeChangedReDraw();
                 }//否则无反映
@@ -322,24 +341,110 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
             case R.id.tv_over_3:
                 //改均分多连音
+                //只要①不跨拍子，②选区时值符合，实际上度允许操作【暂定】
                 if(!checkAreaInsideBeat(selectStartIndex,selectEndIndex)){
                     //跨拍子，不符合要求；
                     return;
                 }
                 //在拍子内部，还需要判断选区是否在弧下；时值是否合理，合理则替换（相关逻辑由编码类负责）
-                csRhythmHelper.replaceAreaToMultiDivided(selectStartIndex,selectEndIndex);
+                if(csRhythmHelper.replaceAreaToMultiDivided(selectStartIndex,selectEndIndex)<25){
+                    rh_editor_EM.codeChangedReDraw();
+                }
 
+                break;
 
             case R.id.tv_toX:
+                if(selectStartIndex!=selectEndIndex){//高兼容，即使不在单点模式，但是二者相等也可。
+                    Toast.makeText(getContext(), "仅对单个符号进行操作。", Toast.LENGTH_SHORT).show();
+                    return;//三种合法情形均不满足，不能执行操作
+                }else {
+                    //选区或单点之一符合，统一暂按选区模式转变（兼容）
+                    if(moveAreaStart||moveAreaEnd){
+                        realIndex = selectStartIndex;
+                    }else {
+                        realIndex = currentUnitIndex;
+                    }
+                    if(csRhythmHelper.changeCodeToXAt(realIndex)<25){
+                        rh_editor_EM.codeChangedReDraw();
+
+                    }
+                }
+                break;
 
             case R.id.tv_toZero:
+                if(selectStartIndex!=selectEndIndex){//高兼容，即使不在单点模式，但是二者相等也可。
+                    Toast.makeText(getContext(), "仅对单个符号进行操作。", Toast.LENGTH_SHORT).show();
+                    return;//三种合法情形均不满足，不能执行操作
+                }else {
+                    //选区或单点之一符合，统一暂按选区模式转变（兼容）
+                    if(moveAreaStart||moveAreaEnd){
+                        realIndex = selectStartIndex;
+                    }else {
+                        realIndex = currentUnitIndex;
+                    }
+                    if(csRhythmHelper.changeCodeToZeroAt(realIndex)<25){
+                        rh_editor_EM.codeChangedReDraw();
+
+                    }
+                }
+                break;
 
             case R.id.tv_toDv:
+                //选定的拍子或区域转为切分（仅在：①选区是整拍、双拍；②单点选择恰=vb 时有效果）
+                if(!oneBeatModeOn&&!dualBeatModeOn&&checkCodeValue(codes.get(currentUnitIndex))!=valueOfBeat){
+                    Toast.makeText(getContext(), "需选定整拍、整双拍后才可执行转换。", Toast.LENGTH_SHORT).show();
+                    return;//三种合法情形均不满足，不能执行操作
+                }else {
+                    //选区或单点之一符合，统一暂按选区模式转变（兼容）
+                    if(csRhythmHelper.changeAreaToDvd(selectStartIndex,selectEndIndex)<33){//允许双整拍
+                        rh_editor_EM.codeChangedReDraw();
+
+                    }
+                }
+                break;
+
             case R.id.tv_toHaveSpot:
+                if(!oneBeatModeOn&&!dualBeatModeOn&&checkCodeValue(codes.get(currentUnitIndex))!=valueOfBeat){
+                    Toast.makeText(getContext(), "需选定整拍、整双拍后才可执行转换。", Toast.LENGTH_SHORT).show();
+                    return;//三种合法情形均不满足，不能执行操作
+                }else {
+                    //选区或单点之一符合，统一暂按选区模式转变（兼容）
+                    if(csRhythmHelper.changeAreaToHaveSpot(selectStartIndex,selectEndIndex)<33){//允许双整拍
+                        rh_editor_EM.codeChangedReDraw();
+
+                    }
+                }
+                break;
+
             case R.id.tv_rwd16:
+                if(!oneBeatModeOn&&checkCodeValue(codes.get(currentUnitIndex))!=valueOfBeat){
+                    Toast.makeText(getContext(), "需选定整拍后才可执行转换。", Toast.LENGTH_SHORT).show();
+                    return;//合法情形均不满足，不能执行操作
+                }else {
+                    //选区或单点之一符合，统一暂按选区模式转变（兼容）
+                    if(csRhythmHelper.changeAreaToRwd16(selectStartIndex,selectEndIndex)<25){
+                        rh_editor_EM.codeChangedReDraw();
+
+                    }
+                }
+                break;
+
             case R.id.tv_fwd16:
+                if(!oneBeatModeOn&&checkCodeValue(codes.get(currentUnitIndex))!=valueOfBeat){
+                    Toast.makeText(getContext(), "需选定整拍后才可执行转换。", Toast.LENGTH_SHORT).show();
+                    return;//合法情形均不满足，不能执行操作
+                }else {
+                    //选区或单点之一符合，统一暂按选区模式转变（兼容）
+                    if(csRhythmHelper.changeAreaToFwd16(selectStartIndex,selectEndIndex)<25){
+                        rh_editor_EM.codeChangedReDraw();
+
+                    }
+                }
+                break;
 
             case R.id.tv_lastSection_EM:
+                oneBeatModeOn = false;
+                dualBeatModeOn = false;
                 generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
                 fakeResultIndex = moveBox(generalCurrentIndex,MOVE_LAST_SECTION);
                 indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
@@ -347,6 +452,8 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                 break;
 
             case R.id.tv_nextSection_EM:
+                oneBeatModeOn = false;
+                dualBeatModeOn = false;
                 generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
                 fakeResultIndex = moveBox(generalCurrentIndex,MOVE_NEXT_SECTION);
                 indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
@@ -354,6 +461,8 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                 break;
 
             case R.id.tv_lastUnit_EM:
+                oneBeatModeOn = false;
+                dualBeatModeOn = false;
                 generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
                 fakeResultIndex = moveBox(generalCurrentIndex,MOVE_LAST_UNIT);
                 indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
@@ -361,6 +470,8 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                 break;
 
             case R.id.tv_nextUnit_EM:
+                oneBeatModeOn = false;
+                dualBeatModeOn = false;
                 generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
                 fakeResultIndex = moveBox(generalCurrentIndex,MOVE_NEXT_UNIT);
                 indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
@@ -369,32 +480,58 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
 
             case R.id.tv_curve:
+                //单点模式，只能删除：（如果有）则取消当前上方的连音弧
+                //选区模式（且s不等e）只能新增；如果有，不允许增加
+                if(selectStartIndex!=selectEndIndex){
+                    if(csRhythmHelper.checkAreaUnderCurve(selectStartIndex,selectEndIndex)){
+                        Toast.makeText(getContext(), "选区模式仅支持新增。且暂不允许层叠。用单点模式删除。", Toast.LENGTH_SHORT).show();
+                    }else {
+                        if(csRhythmHelper.addCurveForArea(selectStartIndex,selectEndIndex)<126){
+                            rh_editor_EM.codeChangedReDraw();
+                        }
+                    }
+                }else {
+                    //实质单点模式（但是此时选区的坐标和单点坐标可能不一致，判断到底是谁）
+                    if(moveAreaStart||moveAreaEnd){
+                        realIndex = selectStartIndex;//决定暂时允许对选区实际单点的情形下执行删除操作。
+                    }else {
+                        realIndex = currentUnitIndex;
+                    }
+                    if(csRhythmHelper.checkCurveCovering(realIndex)){
+                        //删除
+                        if(csRhythmHelper.removeCurveOver(realIndex)<3000){
+                            rh_editor_EM.codeChangedReDraw();
+                        }
+                    }else {
+                        Toast.makeText(getContext(), "上方无连音弧。", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                break;
             case R.id.tv_copy:
-
+                Toast.makeText(getContext(), "功能开发中……", Toast.LENGTH_SHORT).show();
             case R.id.tv_bar:
+                //仅限：左侧是X或- ；区域单个整拍、单点单个整拍 【实际单点时的坐标和手动单点持有的坐标可能不一致，采用实际坐标】
+                if(!oneBeatModeOn && csRhythmHelper.getAreaValue(selectStartIndex,selectEndIndex)!=valueOfBeat){
+                    Toast.makeText(getContext(), "选定整拍才可执行转换。", Toast.LENGTH_SHORT).show();
+                    return;//合法情形均不满足，不能执行操作
+                }
+                if(!csRhythmHelper.checkLeftRealIsXOrBar(selectStartIndex)){
+                    //不满足，不可修改
+                    Toast.makeText(getContext(), "左侧实际音符需要是X或-才可执行。", Toast.LENGTH_SHORT).show();
+
+                }else {
+                    if(csRhythmHelper.changeAreaToBar(selectStartIndex,selectEndIndex)==0){
+                        rh_editor_EM.codeChangedReDraw();
+
+                    }
+                }
+                break;
+
             case R.id.tv_prefix:
+
             case R.id.tv_sectionAdd:
             case R.id.tv_sectionMinus:
 
-            case R.id.imv_xl3_ER :
-                changeCode((byte)(valueOfBeat*3));
-                break;
-            case R.id.imv_xm1_ER :
-                int fraction = Integer.parseInt(edt_xmNum.getText().toString());
-                changeCodeToMultiDivided(8,fraction);
-                break;
-            case R.id.tv_empty_ER :
-                changeToEmpty();
-                break;
-            case R.id.imv_longCurveEnd_ER:
-                int spanNum = Integer.parseInt(edt_longCurveNum.getText().toString());
-                if(spanNum>7||spanNum<2){
-                    //不合理的跨度
-                    Toast.makeText(getContext(), "连音跨度不合理，请检查输入", Toast.LENGTH_SHORT).show();
-                    break;
-                }
-                insertCurveEndAfterCurrent(spanNum);
-                break;
             case R.id.tv_longCurveRemove_ER:
 
                 int returnNum = checkAndRemoveLongCurve(true);
@@ -434,9 +571,6 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         }
         return true;
     }
-
-
-
 
 
     /* 返回的值是移动后的索引值（或者在移动无效时是移动前的值），但都是当前模式对应的正确的索引项的值
@@ -528,8 +662,6 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     }
 
 
-
-
     /* 找到当前光标所在拍子的前界限*/
     private int findBeatStartIndex(){
         for(int i=currentUnitIndex;i>=0;i--){
@@ -561,16 +693,11 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                     return k-2;
                 }
                 return k-1;
-                //【126/127都是控制编码，无法转成独立dU，不应被实际指向计入】
+                //【126/127暂定不计入当前音符范围，连音弧尾标记也不计入。】
             }
         }
         return  -1;
     }
-
-
-
-
-
 
 
 
@@ -592,354 +719,18 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         super.onDetach();
         mListener = null;
     }
-    void changeCode(Byte newCode){
-        //【逻辑修改】①要先确定当前框框套住的音符（原值）及原值+其后紧邻的所有空值的总值（可用总值）
-        //新值=原值：直接改变该位置上的编码
-        //新输入的值<原值，则“拆分”(实际是：删除编码*1，新增编码*2，其中后一音符要与原音符的字符一致)
-        //新值>原值，但小于等于总可用值，按所占用的空间生成若干个音符（如果与整拍值不对等，则还要拆分）
-        //新值>总可用值，提示先删除。
-
-        //【可以向后面的空拍扩展，但不能向前；前面的空拍子要保留】
-        int newValue = checkCodeValue(newCode);//原则上，newCode一定是大于零的。
-        Log.i(TAG, "changeCode: newV="+newValue);
-
-        availableValue();//此方法会自动更新availableValue和span
-
-        if(newValue>availableValue){
-            //所需空间比总可用都大，不改变编码
-            Toast.makeText(getContext(), "剩余空时值不足，请考虑删除后续临近的既有音符", Toast.LENGTH_SHORT).show();
-        }else {
-            //可以改变编码
-            changeCodeAndNext(newCode,currentSectionIndex,currentUnitIndexInSection,false,0);
-
-            //通知到UI改变
-            rh_editor_EM.codeChangedReDraw(codesInSections);
-
-        }
-    }
-
-
-    /* 改变当前位置上的编码，根据新旧时值的不同，产生多种不同的处理情况；可能涉及对后续空拍位置的处理
-     * 需要提前判断好后面有多少空余可用值，只要是调用到本方法的情形需要都是在可用可改动的时值总值内的*/
-    void changeCodeAndNext(byte toCode,int sectionIndex, int unitIndex,boolean isRecursive,int recursiveTime){
-        //一般：需要改成的编码和该位置上编码的情况（仅考虑该位置上的情况）
-        byte oldCode = codesInSections.get(sectionIndex).get(unitIndex);
-        int toValue = checkCodeValue(toCode);
-        Log.i(TAG, "changeCodeAndNext: toV="+toValue);
-        int oldValue = checkCodeValue(oldCode);
-        //递归标记置真时，一般会产生连音、延音，需要处理。【只在新值小于或等于旧值的情况下，后方才会添加连音结束标记，
-        // 而大于时仍然会继续递归，若添加连音结束符会产生错误的多层连音（注：多层连音本身在记谱中并不错误，但此递归中的是另外情形。）】
-        //首次调用时，应当手动传入值为0的递归次数
-
-        //如果当前的改变位于旧有连音线内且递归产生新连音线【上递归必然大于一个位置的时值，而如果递归则后面必有空拍或-，理论上这种情形下没有旧连音线】
-
-        int tempCursor = unitIndex;
-
-        if(toValue==oldValue){
-            //等时值，直接替换
-            codesInSections.get(sectionIndex).set(unitIndex, toCode);
-            if(isRecursive){
-                //递归调用要在后面添加连音线
-                //（但是如果连音的开头一个音符是完整的，则似乎要将中间的完整音符改为-，但逻辑较复杂且并不是很确定乐谱记法暂略，
-                // 毕竟不影响谱子的视唱。）
-                codesInSections.get(sectionIndex).add(unitIndex+1,(byte)(111+recursiveTime));
-            }
-
-        }else if(toValue<oldValue){
-            //新值小于旧值
-            //又分两种情况（旧值如果是大附点（唯一大于基本节拍的允许编码）则改成一个）
-            // 【但是好像没区别，都是改一个，然后剩余部分生成新的（只是大附点下，后续的音符会呈现为至少两半的
-            // 但是可以另行手动合并，而不必直接自动合并之。也不应自动合并）】
-
-            //【待+】①valueToCode()，对于X拆成X(3b)形式，16→2，余14；此剩余的14需要生成为2+4+8；
-            // ②当节奏是8分型时，X(3b)应当取消显示、
-            //【toEmpty，X改0，得到的是 - 0；需要修改。】
-
-
-
-            //当前位置改变
-//            Log.i(TAG, "changeCodeAndNext: Old code in position="+codesInSections.get(sectionIndex).get(unitIndex));
-            codesInSections.get(sectionIndex).set(unitIndex, toCode);
-//            Log.i(TAG, "changeCodeAndNext: New code in position="+codesInSections.get(sectionIndex).get(unitIndex));
-            if(isRecursive){
-                tempCursor++;
-                //递归调用要在后面添加连音线
-                codesInSections.get(sectionIndex).add(tempCursor,(byte)(111+recursiveTime));
-            }
-            //根据旧值是空拍还是实拍填充不同的新编码（实际为原旧拍剩余）
-            if(oldCode>0){
-                tempCursor++;
-                //后面是实际拍子
-                //在后面添加一个剩余时值的拍子
-                codesInSections.get(sectionIndex).add(tempCursor,(byte)(oldValue-toValue));
-                //指定索引+1位置上（即cUIIS+2）开始的元素都会右移。（添加到指定的索引位置上，即cUIIS+1）
-
-            }else {
-                tempCursor++;
-                //oldCode<0||oldCode==0都填空拍
-                //空拍子，在后面添加一个剩余时值的空拍
-                codesInSections.get(sectionIndex).add(tempCursor,(byte)-(oldValue-toValue));
-                //【如果进入过递归if分支，则在此临时游标实际=+2】
-            }
-        }else {
-            //新大于旧
-            //【原则上，位置上原来是什么时值，新值只能小于或等于原值。即使后方可用总空间大，但由多个小空拍组成也只能拆成“按萝卜坑填入”形式，
-            // 若要安排一个更整体的音符，只能先删除后方细分音符（即合并成空拍）】
-
-            //新拍子大于原来的一个位置，要产生连音弧。此时如果后面一个字符是112+也即连音符结尾，则①取消该标记，
-            // ②将该标记的跨度增加到新标记的跨度之上，其和作为新弧的跨度。③新弧的结尾标记位于适当的新位置。
-
-            if(oldValue==valueOfBeat){
-                //旧拍子占整拍
-                codesInSections.get(sectionIndex).set(unitIndex, (byte)valueOfBeat);
-                //剩余的待填入部分递归调用
-                tempCursor++;
-                recursiveTime++;//准备递归，递归次数+1。
-
-                if(tempCursor<codesInSections.get(sectionIndex).size()) {
-                    byte tempCursorCode = codesInSections.get(sectionIndex).get(tempCursor);
-                    if(tempCursorCode>=112){
-                        //后一个字符，是旧连音弧结尾标记
-                        recursiveTime+=(tempCursorCode-111);//把之前的“额外跨度”加总到新弧，取消旧弧
-
-                        //旧弧结束标记删除
-                        codesInSections.get(sectionIndex).remove(tempCursor);
-
-//                        tempCursor++;[因为移除了该字符，因而不必再+1]
-                        if(tempCursor<codesInSections.get(sectionIndex).size()) {
-                            //仍未超节
-                            //【原则上不再是连音弧结尾标记，因为暂不支持多层连音弧嵌套。不检查】
-                            //改变该编码
-                            changeCodeAndNext((byte) (toCode - valueOfBeat), sectionIndex, tempCursor,true,recursiveTime);
-                        }else {
-                            //跨节
-                            tempCursor=0;
-                            sectionIndex++;
-                            changeCodeAndNext((byte) (toCode - valueOfBeat), sectionIndex, tempCursor,true,recursiveTime);
-                        }
-                    }else {
-                        //后续是正常音符
-                        changeCodeAndNext((byte) (toCode - valueOfBeat), sectionIndex, tempCursor,true,recursiveTime);
-                    }
-                }else {
-                    //跨节
-                    tempCursor=0;
-                    sectionIndex++;
-                    //小节首个编码不可能是连音弧结尾（即使连音弧线的末端在小节首音符，该结束标记也必然在第二个编码上；
-                    // 如果连音弧线在上一节节末音符结束，则结束标记需要位于上一节末尾；如果出现首编码>112实际是出错情形）
-                    changeCodeAndNext((byte) (toCode - valueOfBeat), sectionIndex, tempCursor,true,recursiveTime);
-                }
-            }else if(oldValue == valueOfBeat+valueOfBeat/2){
-                //旧拍子是大附点
-                // 原位置改为整拍
-                codesInSections.get(sectionIndex).set(unitIndex, (byte)valueOfBeat);
-
-                //后半按旧值是空拍还是实拍填充不同新编码（实际为新拍子的一部分的后一部分）
-                if(oldCode>0){
-                    tempCursor++;
-                    //后面是实际拍子
-                    //在后面添加一个剩余时值(附点部分)的拍子
-                    codesInSections.get(sectionIndex).add(tempCursor,(byte)(valueOfBeat/2));
-                    //指定索引+1位置上（即cUIIS+2）开始的元素都会右移。（添加到指定的索引位置上，即cUIIS+1）
-
-                }else {
-                    tempCursor++;
-                    //oldCode<0||oldCode==0都填空拍
-                    //空拍子，在后面添加一个剩余时值的空拍
-                    codesInSections.get(sectionIndex).add(tempCursor,(byte)-(valueOfBeat/2));
-                    //【如果进入过递归if分支，则在此临时游标实际=+2】
-                }
-
-                //剩余的新时值，递归处理
-                tempCursor++;
-                recursiveTime++;//准备递归，递归次数+1。
-
-                if(tempCursor<codesInSections.get(sectionIndex).size()) {
-                    byte tempCursorCode = codesInSections.get(sectionIndex).get(tempCursor);
-                    if(tempCursorCode>=112) {
-                        //后一个字符，是旧连音弧结尾标记
-                        recursiveTime += (tempCursorCode - 110);//把之前的“额外跨度”加总到新弧，取消旧弧
-                        // 【而且由于之前的大附点1符变两符，跨度要多+1，在此-110】
-
-                        //旧弧结束标记删除
-                        codesInSections.get(sectionIndex).remove(tempCursor);
-                        //删除后，索引不必递增
-                        if (tempCursor < codesInSections.get(sectionIndex).size()) {
-                            //仍未超节
-                            //【原则上不再是连音弧结尾标记，因为暂不支持多层连音弧嵌套。不检查】
-                            //改变该编码
-                            changeCodeAndNext((byte) (toCode - oldValue), sectionIndex, tempCursor, true, recursiveTime);
-                        } else {
-                            //跨节
-                            tempCursor = 0;
-                            sectionIndex++;
-                            changeCodeAndNext((byte) (toCode - oldValue), sectionIndex, tempCursor, true, recursiveTime);
-                        }
-                    }else {
-                        //后续是正常音符
-                        changeCodeAndNext((byte) (toCode - oldValue), sectionIndex, tempCursor, true, recursiveTime);
-                    }
-                }else {
-                    //跨节
-                    tempCursor=0;
-                    sectionIndex++;
-                    changeCodeAndNext((byte) (toCode - oldValue), sectionIndex, tempCursor,true,recursiveTime);
-                }
-
-            }else {
-                //旧符一定小于一整拍了
-                // 原位置改为可用时值（根据旧值的大小）
-                if(oldCode<0){
-                    //空拍子，以和原码相反（等于原码的值）的编码填充
-                    codesInSections.get(sectionIndex).set(tempCursor,(byte)oldValue);
-                }//实拍子，占据该时值的拍子（相当于不动）
-
-                //剩余时值到下一个拍子处理
-                //剩余的新时值，递归处理
-                tempCursor++;
-                recursiveTime++;//准备递归，递归次数+1。
-
-
-                if(tempCursor<codesInSections.get(sectionIndex).size()) {
-
-                    byte tempCursorCode = codesInSections.get(sectionIndex).get(tempCursor);
-                    if(tempCursorCode>=112) {
-                        //后一个字符，是旧连音弧结尾标记
-                        recursiveTime += (tempCursorCode - 111);//把之前的“额外跨度”加总到新弧，取消旧弧
-
-                        //旧弧结束标记删除
-                        codesInSections.get(sectionIndex).remove(tempCursor);
-                        //删除后，索引不必递增
-                        if (tempCursor < codesInSections.get(sectionIndex).size()) {
-                            //仍未超节
-                            //【原则上不再是连音弧结尾标记，因为暂不支持多层连音弧嵌套。不检查】
-                            //改变该编码
-                            changeCodeAndNext((byte) (toCode - oldValue), sectionIndex, tempCursor, true, recursiveTime);
-                        } else {
-                            //跨节
-                            tempCursor = 0;
-                            sectionIndex++;
-                            changeCodeAndNext((byte) (toCode - oldValue), sectionIndex, tempCursor, true, recursiveTime);
-                        }
-                    }else {
-                        //后续是正常音符
-                        changeCodeAndNext((byte) (toCode - oldValue), sectionIndex, tempCursor, true, recursiveTime);
-                    }
-
-                }else {
-                    //跨节
-                    tempCursor=0;
-                    sectionIndex++;
-                    changeCodeAndNext((byte) (toCode - oldValue), sectionIndex, tempCursor,true,recursiveTime);
-                }
-            }
-        }
-    }
-
-    void availableValue(){
-        //span至少要包括自己在内的（也即至少=1）
-        //availableValue从0初始为首位的值
-        availableValue =0;//先清空
-        availableValue+=checkCodeValue(codesInSections.get(currentSectionIndex).get(currentUnitIndexInSection));//加上自己
-
-        for(int i=currentSectionIndex; i<codesInSections.size();i++){
-            ArrayList<Byte> codeInsideSection = codesInSections.get(i);
-            if(i==currentSectionIndex) {
-                for (int j=currentUnitIndexInSection+1;j<codeInsideSection.size();j++){
-                    //从第二个开始计算的
-                    byte currentCode = codeInsideSection.get(j);
-                    if(currentCode>112){
-                        //延音弧线结束标记，不作数
-                        continue;//【这里待增加删线逻辑！！！】
-                    }else if(currentCode>0){
-                        //此时必然小于112，包括：有时值的音符、均分多连音两类，都是“不再可用”，要停止
-                        return ;
-                    }else if(currentCode==0) {
-                        //空拍、延长符，都是可用的
-                        span++;
-                        availableValue+=valueOfBeat;
-                    }else {
-                        //只剩小于0
-                        span++;
-                        availableValue-=currentCode;
-
-                    }
-                }
-            }else {
-                for (Byte code : codeInsideSection) {
-                    if(code>112){
-                        //延音弧线结束标记，不作数
-                        continue;
-                    }else if(code>0){
-                        //此时必然小于112，包括：有时值的音符、均分多连音两类，都是“不再可用”，要停止
-                        return;
-                    }else if(code==0) {
-                        //空拍、延长符，都是可用的
-                        span++;
-                        availableValue+=valueOfBeat;
-                    }else {
-                        //只剩小于0
-                        span++;
-                        availableValue-=code;
-                    }
-                }
-            }
-        }
-    }
-
-    int availableValueInsideBeat(){
-        //不需跨节遍历
-        ArrayList<Byte> codesInThisSection = codesInSections.get(currentSectionIndex);
-        int availableValueInsideBeat =checkCodeValue(codesInThisSection.get(currentUnitIndexInSection));//拍内可用值，先把自身加上。
-
-        //所在拍子的后边界（需要从头遍历，要遍历到所在拍完结）
-        int totalValue = 0;
-//            int beatStartCursor = 0;
-        beatEndCursor = codesInThisSection.size()-1;
-        for (int k=0;k<codesInThisSection.size();k++) {
-            byte code = codesInThisSection.get(k);
-
-            //蓝框位置之前的大附点要特别处理
-            if(code ==valueOfBeat+valueOfBeat/2 && k<currentUnitIndexInSection){
-                //遇到大附点（且仍然在前半段，未到目标位置）则跳过
-                totalValue+=checkCodeValue(code);
-//                    beatStartCursor++;
-                continue;
-            }//后面的大附点不会对本位置上相关改写的逻辑造成影响。从略。
-
-            totalValue+=checkCodeValue(code);
-            if(totalValue%valueOfBeat==0){
-                //一拍完结
-                    /*if(k<currentUnitIndexInSection){
-                        //时值加总后仍然未到改动位置，说明是前面的某拍，还未到“当前拍”
-//                        beatStartCursor = k+1;
-                    }*/
-                if(k>=currentUnitIndexInSection){
-                    //k首次跨越目标位置后的拍尾位置
-                    beatEndCursor = k;
-                    break;//终止遍历
-                }
-            }
-        }//至此，已获得所在拍子的止索引
-
-        //计算拍内从蓝框位置到拍结束的可用剩余空间
-        for(int s=currentUnitIndexInSection+1;s<=beatEndCursor;s++){//由于之前已经计算了自身，因而这里s从+1处起
-            availableValueInsideBeat+=checkCodeValue(codesInThisSection.get(s));
-        }
-        return availableValueInsideBeat;
-    }
 
     int checkCodeValue(byte code) {
-        if (code > 112) {
+        if (code > 111) {
             //上弧连音专用符号，不记时值
             return 0;//但是由于实际上不会选中结束符，因而这种状态是错误的
         }else if(code>92){
-            return 4;//三类均分多连音的时值的定值，不随内容数量改变，也与vb无关。
+            return 16;//三类均分多连音的时值的定值，不随内容数量改变，也与vb无关。
         }else if(code>82){
             return 8;
         }else if (code > 72) {
             //时值计算
-            return 16;
+            return 4;
         } else if (code > 0) {
             //时值计算
             return code;
@@ -951,189 +742,6 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         }
     }
 
-    void changeToEmpty(){
-        //这个方法直接把圈定字符改为等值的负值。
-        ArrayList<Byte> codesInThisSection = codesInSections.get(currentSectionIndex);
-        byte b = codesInSections.get(currentSectionIndex).get(currentUnitIndexInSection);
-        //当前已经是空拍，退出
-        if(b<0){
-            return;
-        }
-        if(b==0){
-            //当前是延音号-
-            //能否占满整拍（能：检测后面是否是延音号——是则继续检测延音号前的音符是什么并将后面的延音符改成整拍实拍；
-            // 不是则不管。）
-            //(不能占满时，检测前方实拍，将剩余部分改成正确时值的前方实拍)
-            //
-
-        }
-
-
-        //①当前位置设为同时值空拍（负数等值）
-        codesInThisSection.set(currentUnitIndexInSection,(byte)-b);
-//        Log.i(TAG, "changeToEmpty: current code="+codesInThisSection.get(currentUnitIndexInSection));
-
-        if(b==valueOfBeat|| b==valueOfBeat+valueOfBeat/2){
-            //独占一拍，不存在合并情形
-            rh_editor_EM.codeChangedReDraw(codesInSections);
-            return;
-        }
-
-        int temp_centerCursor = currentUnitIndexInSection;
-        byte newCode = codesInSections.get(currentSectionIndex).get(temp_centerCursor);
-        if(temp_centerCursor==(codesInSections.get(currentSectionIndex).size()-1)){
-            //已到小节最末
-            rh_editor_EM.codeChangedReDraw(codesInSections);
-            return;
-        }
-        byte nextCode = codesInSections.get(currentSectionIndex).get(temp_centerCursor+1);
-        if(newCode==nextCode){//新符必然是某值的空拍（<0）
-            //仅在前一或后一存在与本音符等值的空拍时，合并
-            //如果此时未跨拍，则合并
-        }
-        if(temp_centerCursor==0){
-            //首符
-            rh_editor_EM.codeChangedReDraw(codesInSections);
-            return;
-        }
-        byte lastCode = codesInSections.get(currentSectionIndex).get(temp_centerCursor-1);
-
-        if(newCode == lastCode){
-            //仅在前一或后一存在与本音符等值的空拍时，合并
-            //如果此时未跨拍，则合并
-            //【寻找拍子边界，②可能要进一步递归调用（多个可合并时（每两个合并的符号，都要值对等））】
-        }
-
-        //②临近且不超过一个拍子的空拍合并
-        //先找到前后紧邻的空拍起止位置；
-        int minAdjacentEmptyCursor = 0;
-        int maxAdjacentEmptyCursor = currentUnitIndexInSection;
-        boolean isAllEmpty = true;//同时判断是否整节全空了（若是则删除整节）
-
-        for (int i=0;i<currentUnitIndexInSection;i++) {
-            byte code = codesInThisSection.get(i);
-
-            //从前向后捋。
-            if(code>=0&&code<112){
-                //该位置非空，且在改变位置之前（延音线不能算空拍）
-                minAdjacentEmptyCursor=i+1;//需要让该最小相邻起始空点位于当前索引之后（因为当前位置非空）
-                //极端情形下（前方没有空拍，则最小相邻起始空点=被改变位置的索引即可）
-
-                isAllEmpty = false;//只单向设置
-                break;
-            }
-        }
-
-        //从后向前捋
-        for (int i=codesInThisSection.size()-1;i>currentUnitIndexInSection;i--) {
-            byte code = codesInThisSection.get(i);
-
-            //从前向后捋。
-            if(code>=0&&code<112){
-                //该位置非空，且在改变位置之后
-                maxAdjacentEmptyCursor=i-1;//需要让该最大相邻起始空点位于当前索引之前（因为当前位置非空）
-                //极端情形下（后边没有空拍，则最大相邻起始空点=被改变位置的索引即可）
-
-                isAllEmpty = false;//只单向设置
-                break;
-            }
-        }
-
-        //短路判断，尝试减轻做功（如果周围没有其他空拍子，就可略去执行了）
-        if(minAdjacentEmptyCursor!=maxAdjacentEmptyCursor){
-            //周围有空拍，需合并
-            //要找到所在拍子的前后边界（必须要从头遍历，至少到达所在拍完结）
-            int totalValue = 0;
-            int beatStartCursor = 0;
-            int beatEndCursor = codesInThisSection.size()-1;
-            for (int k=0;k<codesInThisSection.size();k++) {
-                byte code = codesInThisSection.get(k);
-
-                //蓝框位置之前的大附点的特别处理逻辑
-                if(code ==valueOfBeat+valueOfBeat/2 && k<currentUnitIndexInSection){
-                    //遇到大附点（且仍然在前半段，未到目标位置）则跳过
-                    totalValue+=checkCodeValue(code);
-                    beatStartCursor++;
-                    continue;
-                }//后面的大附点不会对本位置上相关改写的逻辑造成影响。从略。
-
-                totalValue+=checkCodeValue(code);
-                if(totalValue%valueOfBeat==0){
-                    //一拍完结
-                    if(k<currentUnitIndexInSection){
-                        //时值加总后仍然未到改动位置，说明是前面的某拍，还未到“当前拍”
-                        beatStartCursor = k+1;
-                    }
-                    if(k>=currentUnitIndexInSection){
-                        //k首次跨越目标位置后的拍尾位置
-                        beatEndCursor = k;
-                        break;//终止遍历
-                    }
-                }
-            }//至此，已获得所在拍子的起止索引
-
-            //接下来，比较所在拍子的起止和“邻接空拍”起止位置的（大小/位置前后）关系
-            int mergeStartCursor = Math.max(beatStartCursor,minAdjacentEmptyCursor);//合并的起点，两起点比较选二者稍大的
-            int mergeEndCursor = Math.min(beatEndCursor,maxAdjacentEmptyCursor);//合并的终点，两终点比较选二者稍小
-
-            //上述范围内的编码全部删除，改为一个（时值恰当的）负值
-            int equallyEmptyValue = 0;
-            List<Byte> temp_emptyAdjacent = codesInThisSection.subList(mergeStartCursor,mergeEndCursor);
-            for (byte code :temp_emptyAdjacent) {
-                equallyEmptyValue+=checkCodeValue(code);
-            }
-            //移除（同拍内的临接空拍）
-            codesInThisSection.remove(temp_emptyAdjacent);
-            //在被移除空拍序列的起始位置上添加一个与被移除的总值等值的空拍
-            codesInThisSection.add(mergeStartCursor,(byte)-equallyEmptyValue);
-        }
-
-        //【如果位于连音弧线下的某音符改为空拍，该连音弧需要被取消！（怎么对空拍位置进行连音连唱？不合理）】
-        //寻找改空位置之后的连音弧结束标记，如有（且跨度覆盖本字符）则删除之。
-        checkAndRemoveLongCurve(false);
-
-
-        if(isAllEmpty){
-            //本节没有非空的拍子了,应当整节删除
-            codesInSections.remove(currentSectionIndex);
-//            对索引计数器的调整，由moveB方法负责。
-            if(currentSectionIndex>0) {
-                currentSectionIndex--;
-            }
-            currentUnitIndexInSection = 0;
-
-            moveBox(DELETE_MOVE_LAST_SECTION);
-        }
-
-        //通知到UI改变
-//        Log.i(TAG, "changeToEmpty: 1st code="+codesInSections.get(0).get(0));
-        rh_editor_EM.codeChangedReDraw(codesInSections);
-
-
-    }
-
-    void insertCurveEndAfterCurrent(int span){
-        byte code = (byte)(110+span);//这里的跨度从2起，最小是2。
-        ArrayList<Byte> codesInThisSection = codesInSections.get(currentSectionIndex);
-
-        //指定在最后位置附加结束标记元素（【待？能否指定这种“超标溢出”索引？】）
-        codesInThisSection.add(currentUnitIndexInSection+1,code);
-
-        /*if((codesInThisSection.size()-1-currentUnitIndexInSection)>0){
-            //后面有元素，指定索引插入
-            codesInThisSection.add(currentUnitIndexInSection+1,code);
-            //据文档：是在指定索引插入元素，该位置原有及后续元素均右移（如果有的话）。
-
-        }else {
-            //后面已经没有元素，要附加
-            codesInThisSection.add(code);
-        }*/
-
-        //通知到UI改变
-        rh_editor_EM.codeChangedReDraw(codesInSections);
-
-
-    }
 
     int checkAndRemoveLongCurve(boolean notifyUI){
         int numForReturn = 0;
@@ -1169,56 +777,6 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
     }
 
-    //【设计原则5：给指定蓝框设置新字符时，可以向后面的空拍扩展借用空间，但不能向前面的空拍扩展。】
-    void changeCodeToMultiDivided(int ten, int fraction){
-        byte newCode = (byte)(ten*10+fraction);
-        int newValue = checkCodeValue(newCode);//原则上，newCode在此一定是大于零的。
-        ArrayList<Byte> codesInThisSection = codesInSections.get(currentSectionIndex);
-        byte oldCode = codesInThisSection.get(currentUnitIndexInSection);
-        int oldValue = checkCodeValue(oldCode);
-        int availableValueInBeat = availableValueInsideBeat();
-
-        //【所以当前的逻辑设定是，均分多连音不能跨拍子！一切逻辑皆围绕本设定展开】
-        if(newValue>availableValueInBeat){
-            //所需空间比总可用都大，不改变编码
-            Toast.makeText(getContext(), "剩余空时值不足，请考虑删除后续临近的既有音符", Toast.LENGTH_SHORT).show();
-        }else {
-            //可以改变编码
-
-            //逻辑细分【以下待实现细节】
-            // ①原位置如果大于新符的时值，（改动 + 分离插入）。（不论是否附点、均分多连音，都无所谓）
-            // ②原位置如果等于（直接改）
-            // ③原位置如果小于，但是拍内总值大于等于（将所需的值对应的原编码删除，恰当位置插入新编码；未涉及到的后续编码不处理）
-            // ④连音弧处理（删除）（均分多连音需要唱做分离的音，连音弧是唱作一个整音；不能共存，会删除。【总提示+】）
-
-            if(newValue==oldValue){
-                codesInThisSection.set(currentUnitIndexInSection,newCode);
-            }else if(newValue<oldValue){
-                //当前字符改变
-                codesInThisSection.set(currentUnitIndexInSection,newCode);
-
-                //原字符的剩余值新建插入后续
-                if(oldCode>=0) {//对，延音似乎也应该变成实际值
-                    codesInThisSection.add(currentUnitIndexInSection + 1, (byte) (oldValue - newValue));
-                }else {
-                    //空拍子
-                    codesInThisSection.add(currentUnitIndexInSection + 1, (byte) -(oldValue - newValue));
-                }
-            }else if(newValue>oldValue){
-                List<Byte> subListToRemove = (ArrayList<Byte>) codesInThisSection.subList(currentUnitIndexInSection,beatEndCursor);
-                //本符、拍内后续空符全移除
-                codesInThisSection.remove(subListToRemove);
-                //在原来的本符位置追加新符；
-                codesInThisSection.add(currentUnitIndexInSection,newCode);
-                //后面一个位置追加全部剩余时值（空拍值）（不可能超过本拍，所以无更复杂逻辑）
-                codesInThisSection.add(currentUnitIndexInSection + 1, (byte) -(oldValue - newValue));
-
-            }
-
-            //通知到UI改变
-            rh_editor_EM.codeChangedReDraw(codesInSections);
-        }
-    }
 
 
     private boolean checkIsLastRealUnit(int currentIndex){
