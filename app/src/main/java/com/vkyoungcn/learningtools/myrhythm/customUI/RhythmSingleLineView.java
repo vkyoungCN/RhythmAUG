@@ -172,9 +172,9 @@ public class RhythmSingleLineView extends BaseRhythmView {
     @Override
     void initDrawingUnits(boolean isTriggerFromSC){
         initDrawingUnits_step1(h_shiftedAmount);//因为要调用的方法虽然与基类同名但实际签名不同从而无法由基类直接调用。
-        //所以在此重写了主iDU
-        initDrawingUnits_step2();
+        //所以在此重写了主initDU
 
+        initDrawingUnits_step2();
         if(!isTriggerFromSC){
             invalidate();
         }//onSC方法返回后会自动调用onD因而没必要调用invalidate方法。
@@ -187,6 +187,7 @@ public class RhythmSingleLineView extends BaseRhythmView {
     /* 以下方法是对基类同名方法的覆写（绘制信息计算第一部分方法）
     【注意如果基类方法保留的private，而前一调用方法又是基类的，则将会直接调用基类同名方法】*/
     void initDrawingUnits_step1(float h_shiftedAmount) {
+        Log.i(TAG, "initDrawingUnits_step1: RhSingleLineView");
         super.initDrawingUnits_step1();
 
         totalRequiredLength = 0;//每次重新计算绘制信息前要清空。

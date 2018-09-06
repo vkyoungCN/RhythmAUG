@@ -1,7 +1,9 @@
 package com.vkyoungcn.learningtools.myrhythm.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,9 +53,31 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
             tv_title = itemView.findViewById(R.id.tv_title);
             tv_createTime = itemView.findViewById(R.id.tv_createTime);
             llt_overall = itemView.findViewById(R.id.llt_overall);
+//            Log.i(TAG, "ViewHolder dataList SIZE=:"+dataList.size());
+//            Log.i(TAG, "ViewHolder adapterPosition=:"+getAdapterPosition());
+            llt_overall.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    AdapterMethodsHelper.toDetailActivity(context,dataList.get(getAdapterPosition()),RhythmDetailActivity.class);
 
-            llt_overall.setOnClickListener(new ToDetailClickListener(dataList.get(getAdapterPosition()),context, RhythmDetailActivity.class));
-            llt_overall.setOnLongClickListener(new LongClickMultiFunctionListener(context,dataList.get(getAdapterPosition()).getId(),MODEL_TYPE_RH));
+                   /* Intent intentToDetailActivity = new Intent(context, RhythmDetailActivity.class);
+                    intentToDetailActivity.putExtra("MODEL",dataList.get(getAdapterPosition()));
+                    context.startActivity(intentToDetailActivity);*/
+                }
+            });
+//            llt_overall.setOnClickListener(new ToDetailClickListener(dataList.get(getAdapterPosition()),context, RhythmDetailActivity.class));
+//这种方案下需要在设置之初就传递getAdapterPos，实践中返回-1（即NO_POSITION，可能是界面尚未刷新完成，太早）；而在使用匿名类的方案中，
+// gAp是在点击（onClick()）时方才获取pos并传递，因而必然已经有了实际数据，可行。【因而这里暂无法采用这种“新式”方案】
+
+            llt_overall.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    AdapterMethodsHelper.longClickingDelete(context,getAdapterPosition(),DELETE_RHYTHM);
+
+                    return true;
+                }
+            });
+//            llt_overall.setOnLongClickListener(new LongClickMultiFunctionListener(context,dataList.get(getAdapterPosition()).getId(),MODEL_TYPE_RH));
         }
 
 
@@ -99,6 +123,7 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
 //        holder.getMainSourceView().setRhythmViewData(singleModel);
         holder.getTv_id().setText(String.format(context.getResources().getString(R.string.plh_sharp_id), singleModel.getId()));
         holder.getTv_title().setText(singleModel.getTitle());
+        holder.getMainModelView().setRhythmViewData(singleModel);
 //        holder.getTv_createTime().setText(singleModel.getCreateTimeStr());
 
     }

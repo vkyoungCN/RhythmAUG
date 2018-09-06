@@ -14,6 +14,8 @@ import com.vkyoungcn.learningtools.myrhythm.models.PitchSequence;
 import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
 
+import junit.framework.Test;
+
 import java.util.ArrayList;
 
 public class MyRhythmDbHelper extends SQLiteOpenHelper {
@@ -164,49 +166,11 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
         //填充几个数据
 //        ArrayList<Rhythm> rhythmDefaultData = new ArrayList<>(2);
-        ArrayList<Byte> codes_1 = new ArrayList<>();
-        codes_1.add((byte)16);
-        codes_1.add((byte)8);
-        codes_1.add((byte)8);
-        codes_1.add((byte)16);
-        codes_1.add((byte)16);
-
-        codes_1.add((byte)8);
-        codes_1.add((byte)8);
-        codes_1.add((byte)8);
-        codes_1.add((byte)8);
-        codes_1.add((byte)4);
-        codes_1.add((byte)4);
-        codes_1.add((byte)8);
-        codes_1.add((byte)16);
-
-        Rhythm rhythm_1 = new Rhythm();
-        long currentTime = System.currentTimeMillis();
-        rhythm_1.setCreateTime(currentTime);
-        rhythm_1.setLastModifyTime(currentTime);
-        rhythm_1.setDescription("测试数据");
-        rhythm_1.setSelfDesign(true);
-        rhythm_1.setKeepTop(true);
-        rhythm_1.setRhythmType(RhythmHelper.RHYTHM_TYPE_44);
-        rhythm_1.setStars(3);
-        rhythm_1.setTitle("测试用+1");
-        rhythm_1.setCodeSerialByte(codes_1);
-//        rhythmDefaultData.add(rhythm_1);
-
-        Rhythm rhythm_2 = new Rhythm();
-        rhythm_2.setCreateTime(currentTime);
-        rhythm_2.setLastModifyTime(currentTime);
-        rhythm_2.setDescription("测试数据2");
-        rhythm_2.setSelfDesign(true);
-        rhythm_2.setKeepTop(true);
-        rhythm_2.setRhythmType(RhythmHelper.RHYTHM_TYPE_24);
-        rhythm_2.setStars(2);
-        rhythm_2.setTitle("测试用+2");
-        rhythm_2.setCodeSerialByte(codes_1);
-//        rhythmDefaultData.add(rhythm_2);
-
-        createRhythmWithDb(db,rhythm_1);
-        createRhythmWithDb(db,rhythm_2);
+        TestDataHelper tdh = new TestDataHelper();
+        createRhythmWithDb(db, tdh.populateRhythm(1));
+        createRhythmWithDb(db,tdh.populateRhythm(2));
+        createRhythmWithDb(db,tdh.populateRhythm(3));
+        createRhythmWithDb(db,tdh.populateRhythm(4));
 
     }
 

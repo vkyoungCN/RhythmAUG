@@ -48,8 +48,24 @@ public class GroupRvAdapter extends RecyclerView.Adapter<GroupRvAdapter.ViewHold
             tv_createTime = itemView.findViewById(R.id.tv_createTime_RVG);
             llt_overall = itemView.findViewById(R.id.llt_overall_RVG);
 
-            llt_overall.setOnClickListener(new ToDetailClickListener(dataList.get(getAdapterPosition()),context, GroupDetailActivity.class));
-            llt_overall.setOnLongClickListener(new LongClickMultiFunctionListener(context,dataList.get(getAdapterPosition()).getId(),DELETE_GROUP));
+            llt_overall.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    AdapterMethodsHelper.toDetailActivity(context, dataList.get(getAdapterPosition()), GroupDetailActivity.class);
+                }
+            });
+
+//            llt_overall.setOnClickListener(new ToDetailClickListener(dataList.get(getAdapterPosition()),context, GroupDetailActivity.class));
+            llt_overall.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    AdapterMethodsHelper.longClickingDelete(context,dataList.get(getAdapterPosition()).getId(),DELETE_GROUP);
+
+                    return true;
+                }
+            });
+
+//            llt_overall.setOnLongClickListener(new LongClickMultiFunctionListener(context,dataList.get(getAdapterPosition()).getId(),DELETE_GROUP));
         }
 
 

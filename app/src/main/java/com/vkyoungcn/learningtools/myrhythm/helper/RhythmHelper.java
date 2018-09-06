@@ -52,13 +52,15 @@ public class RhythmHelper {
 
     public static ArrayList<ArrayList<Byte>> codeParseIntoSections(ArrayList<Byte> rhythmCodes,int rhythmType){
         //将节奏编码序列按小节组织起来【编码增加126、127后不必再依靠累加时值判断】
+//        Log.i(TAG, "codeParseIntoSections: 1 dimension codeSerial.Size="+rhythmCodes.size());
         ArrayList<ArrayList<Byte>>codesInSections = new ArrayList<>();//初步初始化
         int startIndex = 0;//用于记录上次添加的末尾索引+1，即本节应添加的音符序列的索引起始值。
 
         for (int i=0; i<rhythmCodes.size();i++){
-            int b = (int)(rhythmCodes.get(i));
+            byte b = rhythmCodes.get(i);
             if(b==127){
                 ArrayList<Byte> codeInSingleSection = new ArrayList<>(rhythmCodes.subList(startIndex,i+1));//装载单节内的音符【注意指定的右侧索引值是不包含的，仅截取到/包括到到其左邻一个位置。】
+//                Log.i(TAG, "codeParseIntoSections: codeInSingleSect.Size="+codeInSingleSection.size());
                 codesInSections.add(codeInSingleSection);//添加到按节管理的总编码表
                 startIndex = i+1;
             }

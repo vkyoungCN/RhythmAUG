@@ -17,7 +17,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity" />
-        <activity android:name=".CreateRhythmActivity" />
+        <activity android:name=".RhythmCreateActivity" />
         <activity android:name=".AddRhythmFinalActivity" />
         <activity android:name=".RhythmDetailActivity" />
         <activity android:name=".RhythmPureEditActivity" />
@@ -25,14 +25,15 @@
         <activity android:name=".AllRhythmsActivity" />
         <activity android:name=".RhythmRvBassActivity" />
         <activity android:name=".ThreadRvBassActivity" />
-        <activity android:name=".AllGroupsActivity"/>
-        <activity android:name=".GroupDetailActivity"/>
-        <activity android:name=".LyricDetailActivity"/>
-        <activity android:name=".LyricEditActivity"/>
-        <activity android:name=".BaseModelDetailActivity"/>
-        <activity android:name=".BaseModelEditActivity"/>
-        <activity android:name=".GroupEditActivity"/>
-        <activity android:name=".AllModelsActivity"/>
+        <activity android:name=".AllGroupsActivity" />
+        <activity android:name=".GroupDetailActivity" />
+        <activity android:name=".LyricDetailActivity" />
+        <activity android:name=".LyricEditActivity" />
+        <activity android:name=".BaseModelDetailActivity" />
+        <activity android:name=".BaseModelEditActivity" />
+        <activity android:name=".GroupEditActivity" />
+        <activity android:name=".AllModelsActivity" />
+        <activity android:name=".BackUpActivity"></activity>
     </application>
 
 </manifest>

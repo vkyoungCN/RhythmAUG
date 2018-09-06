@@ -196,7 +196,7 @@
         android:background="#111111"
         android:clickable="true"
         android:translationZ="4dp"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <!--FAB组（音+、词+）的解释性文本组，位于FAB下方。-->
         <LinearLayout
@@ -211,12 +211,19 @@
                 android:layout_width="36dp"
                 android:layout_height="match_parent" />
 
-            <TextView
+            <!--<TextView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="@string/str_pitchSerial_add"
+                android:textColor="#ffffff"
+                android:textSize="12sp" />-->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
                 android:textColor="#ffffff"
                 android:textSize="12sp" />
 
@@ -281,7 +288,7 @@
                 android:layout_width="36dp"
                 android:layout_height="match_parent" />
 
-            <ImageView
+            <!--<ImageView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -289,7 +296,17 @@
                 android:onClick="createPitchSerial"
                 android:paddingTop="8dp"
                 android:scaleType="centerInside"
-                android:src="@drawable/add_pitchs" />
+                android:src="@drawable/add_pitchs" />-->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:onClick="toBackUpActivity"
+                android:paddingTop="8dp"
+                android:text="@string/back_up"
+                android:textColor="@color/myRhythm_light_green"
+                android:textSize="18sp" />
 
             <ImageView
                 android:layout_width="0dp"

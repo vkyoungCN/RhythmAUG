@@ -20,7 +20,7 @@ import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_COD
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_DONE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_FAILURE;
 
-public class CreateRhythmActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
+public class RhythmCreateActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -50,4 +50,17 @@ public class LyricCreateActivity extends LyricEditActivity {
 
     }
 
+    void initUiData(){
+      //新建模式下，传递来的是一个空model，手动设置初始的值。
+        tv_id.setText("--");
+        edt_title.setText("");
+
+        edt_descriptions.setText("");
+        spinner.setSelection(1);
+        ckb_selfDesign.setChecked(true);
+        ckb_keepTop.setChecked(false);
+
+        edt_LyricString.setText("");
+    }
+
 }

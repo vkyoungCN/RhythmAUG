@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.fragments.AddRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
+import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import java.util.ArrayList;
@@ -87,23 +88,36 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
      * 只需负责展开
      * */
     public void fabMainClick(View view) {
-        if (!isFabPanelExtracted) {//未展开，要做展开操作
-
-            //标志变量取反
-            isFabPanelExtracted = true;
-            //展开（取消隐藏）
-            rlt_fabPanel.setVisibility(View.VISIBLE);
-
-        }/* else {
+        extractFabPanel();
+        /* else {
             isFabPanelExtracted = false;
             rlt_fabPanel.setVisibility(View.GONE);
         }*/
     }
 
+    private void extractFabPanel() {
+        if (!isFabPanelExtracted) {//未展开，要做展开操作
+            //标志变量取反
+            isFabPanelExtracted = true;
+            //展开（取消隐藏）
+            rlt_fabPanel.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void collapseFabPanel() {
+        if (isFabPanelExtracted) {//未展开，要做展开操作
+            //标志变量取反
+            isFabPanelExtracted = false;
+            //展开（取消隐藏）
+            rlt_fabPanel.setVisibility(View.GONE);
+        }
+    }
+
+
 
     public void addRhythm(View view){
 //        点击后记得把面板收回。
-
+        collapseFabPanel();
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
         Fragment prev = getFragmentManager().findFragmentByTag("ADD_RHYTHM");
 
@@ -121,7 +135,10 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
     }
 
     public void createWords(View view){
-
+        Intent intentToLyricCreate = new Intent(this,LyricCreateActivity.class);
+        intentToLyricCreate.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intentToLyricCreate.putExtra("MODEL",new Lyric());
+        this.startActivityForResult(intentToLyricCreate,REQUEST_CODE_LY_CREATE);
     }
 
     public void toAllRhythms(View view){
@@ -140,6 +157,12 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
         this.startActivity(intentToAllModels);
     }
 
+    public void toBackUpActivity(View view){
+        Intent intentToBk = new Intent(this,BackUpActivity.class);
+        this.startActivity(intentToBk);
+    }
+
+
     void handleMessage(Message message) {
         super.handleMessage(message);
 
@@ -157,7 +180,7 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
                 //准备进入第二步（新增、编辑Rh）
                 int rhythmTypeChose = data.getInt("RHYTHM_TYPE");
 
-                Intent intentToRhStep_2 = new Intent(this,CreateRhythmActivity.class);
+                Intent intentToRhStep_2 = new Intent(this,RhythmCreateActivity.class);
                 intentToRhStep_2.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                 intentToRhStep_2.putExtra("RHYTHM_TYPE",rhythmTypeChose);
                 this.startActivityForResult(intentToRhStep_2,REQUEST_CODE_RH_CREATE);
@@ -202,7 +225,8 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
                 break;
 
             case RESULT_CODE_GP_CREATED:
-                //不做任何事。因为主页不存在gp的显示内容。
+            case RESULT_CODE_LY_CREATED:
+                //不做任何事。因为主页不存在gp、ly的显示内容。
                 break;
         }
     }

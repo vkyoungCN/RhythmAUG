@@ -6,6 +6,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Toast;
@@ -248,6 +249,7 @@ public class BaseRhythmView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         if(checkEmptyAndDraw(canvas)){
+//            Log.i(TAG, "onDraw: Empty...");
             return;
             //是空的，绘制一个空占位线条然后直接退出绘制即可。
         }
@@ -468,6 +470,7 @@ public class BaseRhythmView extends View {
     public void setRhythmViewData(RhythmBasedCompound rhythmBasedCompound, int codeSize, int unitWidth, int unitHeight){
         this.bcRhythm = rhythmBasedCompound;
         this.rhythmType = rhythmBasedCompound.getRhythmType();
+//        Log.i(TAG, "setRhythmViewData: rhBC="+rhythmBasedCompound.toString());
         this.codesInSections = RhythmHelper.codeParseIntoSections(rhythmBasedCompound.getCodeSerialByte(), rhythmType);
 
         this.lyricInString_1 = rhythmBasedCompound.getPrimaryLyricSerial();//【在计算时，会改为按节管理版本，才能正确放置位置】

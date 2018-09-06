@@ -109,7 +109,7 @@
     <string name="plh_groupAllInfo_GDA">本组统计：节奏%1$d条，词%2$d条，音高%3$d条。</string>
     <string name="removeByLongClick">在详情页中长按来移除节奏记录</string>
     <string name="remove_from_group">从分组移除</string>
-    <string name="remove_from_group_2">点击确定后，从分组移除本记录。</string>
+    <string name="remove_from_group_2">点击确定后，从分组移除本记录。\n(并不删除)</string>
     <string name="lyricDetail">词作详情</string>
     <string name="auto_create">修改时间\n（自动生成）</string>
     <string name="allRhythms">所有节奏</string>
@@ -173,5 +173,8 @@
     <string name="fwd_16">前16</string>
     <string name="str_rd16">后16</string>
     <string name="end">末</string>
+    <string name="back_up">--==备·份==--</string>
+    <string name="backUp2">备份</string>
+    <string name="underDeveloping">功能开发中……</string>
 
 </resources>

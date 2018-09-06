@@ -24,7 +24,11 @@ public interface MyRhythmConstants {
     int RESULT_CODE_GP_EDIT_CANCEL = 724;
 
 
-    int RESULT_CODE_LY_CREATED = 753;
-    int RESULT_CODE_GP_CREATED = 752;
+    int REQUEST_CODE_LY_CREATE = 751;
+    int RESULT_CODE_LY_CREATED = 752;
+
+
+    int REQUEST_CODE_GP_CREATE = 756;
+    int RESULT_CODE_GP_CREATED = 757;
 
 }

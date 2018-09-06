@@ -7,8 +7,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.vkyoungcn.learningtools.myrhythm.LyricDetailActivity;
 import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.helper.LongClickMultiFunctionListener;
+import com.vkyoungcn.learningtools.myrhythm.helper.ToDetailClickListener;
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 
 import java.util.ArrayList;
@@ -35,6 +37,23 @@ public class LyricFreeRvAdapter extends RecyclerView.Adapter<LyricFreeRvAdapter.
 
             tv_description = itemView.findViewById(R.id.tv_description_RVL);
 //            llt_overall.setOnClickListener(new ToDetailClickListener(getAdapterPosition(),context, LyricDetailActivity.class));
+
+            tv_description.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    AdapterMethodsHelper.toDetailActivity(context,dataList.get(getAdapterPosition()),LyricDetailActivity.class);
+                }
+            });
+
+            tv_description.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    AdapterMethodsHelper.longClickingDelete(context,getAdapterPosition(),DELETE_LYRIC);
+
+                    return true;
+                }
+            });
+//            tv_description.setOnClickListener(new ToDetailClickListener(dataList.get(getAdapterPosition()),context, LyricDetailActivity.class));
             tv_description.setOnLongClickListener(new LongClickMultiFunctionListener(context,dataList.get(getAdapterPosition()).getId(),DELETE_LYRIC));
         }
 
