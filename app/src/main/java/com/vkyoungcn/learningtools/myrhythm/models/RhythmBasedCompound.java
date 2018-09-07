@@ -1,6 +1,7 @@
 package com.vkyoungcn.learningtools.myrhythm.models;
 
 import android.os.Parcel;
+import android.util.Log;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ public class RhythmBasedCompound extends Rhythm {
 //    ②新增直接将时间字段以字串显示的“字串时间”字段。（本类保证能在设置long时间时自动生成之，不能单独设置）
 //    ③歌词、音调、字串时间字段仅用于显示，均不能进行设置。
     /* */
+    private static final String TAG = "RhythmBasedCompound";
     SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /* 以下5个特有字段（具备自动联动能力的字段可以没有setter；但其他三个字段要有setter，否则无法设置值）*/
@@ -143,7 +145,7 @@ public class RhythmBasedCompound extends Rhythm {
 
     private RhythmBasedCompound(Parcel in){
         super(in);
-
+//        Log.i(TAG, "RhythmBasedCompound: parcel constructor");
         primaryLyricSerial = in.readString();
         secondLyricSerial = in.readString();
         linkingPitches = (ArrayList<Byte>) in.readSerializable();

@@ -65,6 +65,9 @@ public class DrawingUnit {
     public boolean isLastCodeInSection = false;
     public int indexInCodeSerial = 0;//某些功能下要求能从指定的dU快速/直接获取所对应的在原始编码中的索引位置。
 
+    //为了在自动移动时，左侧不会脱离控件边缘
+    public float originalLeftToCenterWhenLessThanCenter = 0;//仅在du（的左侧）（仅初始，移动后不算）不足中心时，记录本字段；其余为0。
+
     //一个字符的空间方案暂定如下：标志尺寸ss,字符区域占宽=ss（字体尺寸本身不足的留空即可），
     // 字符占高=展宽；字符上方预留半ss的顶弧线高度，其中保留一小层的高度作为上加点区域；
     //字符下方半ss空间是下划线区域，下划线下方保留一小层高度作为下加点区域。（小层高度待定，暂定5~8dp）
@@ -160,27 +163,38 @@ public class DrawingUnit {
 
     public boolean checkIsOutOfUi( float availableStart, float availableTop,float availableEnd, float availableBottom){
 //        this.isOutOfUi = (right<availableStart||left>availableWidth|| bottomNoLyric <availableTop||top>availableHeight);
+        boolean hOut = false;
+        boolean vOut = false;
+
+
         if(right<availableStart){
-            isOutOfUi =true;
-            shiftAmountToCenterX = (availableStart-left)+(availableEnd-availableStart)/2;//需要向右移动才能到中心，是正值。
+            //（在调回中心的过程中）需要向右移动时，对原本初始态时位于中心左侧的dUs，其移动计算的目标点不是
+            // 中心，而是其初始点（为了保证各种移动后，左侧不留空）【暂未实现上下判断】
+            // 实现逻辑：扣除初始点与中心点的差值即可
+            // 【另外，向左移动时，可以移到中心（应当移到中心）不做特殊处理】
+
+            hOut =true;
+            shiftAmountToCenterX = (availableStart-left)+(availableEnd-availableStart)/2-originalLeftToCenterWhenLessThanCenter;//需要向右移动才能到中心，是正值。
         }else if(left>availableEnd){
-            isOutOfUi = true;
+            hOut = true;
             shiftAmountToCenterX = -((right-availableEnd)+(availableEnd-availableStart)/2);//需向左
         }else {
+            hOut = false;
             shiftAmountToCenterX =0;//不超，置0。
         }
 
         if(bottomNoLyric<availableTop){
-            isOutOfUi=true;
+            vOut=true;
             shiftAmountToCenterY = (availableTop-top)+(availableBottom-availableTop)/2;
         }else if(top>availableBottom){
-            isOutOfUi=true;
+            vOut=true;
             shiftAmountToCenterY = -((bottomNoLyric-availableBottom)+(availableBottom-availableTop)/2);
         }else {
+            vOut = false;
             shiftAmountToCenterY = 0;//不超，置0。
         }
 
-        return isOutOfUi;
+        return hOut||vOut;
     }
 
     /* 仅在已超出绘制边缘时起作用（因为需要在超出检测方法中获取需要移动的量）*/

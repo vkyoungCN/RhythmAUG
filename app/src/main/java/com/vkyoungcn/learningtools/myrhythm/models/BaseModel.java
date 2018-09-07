@@ -2,6 +2,7 @@ package com.vkyoungcn.learningtools.myrhythm.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 
 /*
@@ -9,6 +10,7 @@ import android.os.Parcelable;
 * 相对的是“LFR”，后者携带了交叉表中的“所归属的节奏id、是否是该节奏的主要歌词”两额外字段
 * */
 public class BaseModel implements Parcelable {
+    private static final String TAG = "BaseModel";
     int id=0;
     String title="";
     String codeSerialString ="";
@@ -87,7 +89,11 @@ public class BaseModel implements Parcelable {
     }
 
     public void setStars(int stars) {
-        if(stars>0&&stars<9){
+        if(stars<1){
+            this.stars = 1;
+        }else if(stars>9){
+            this.stars = 9;
+        }else {
             this.stars = stars;
         }//对数据进行合理限制。【对应spinner的数据源数组也是1~9的范围】
     }
@@ -121,6 +127,7 @@ public class BaseModel implements Parcelable {
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeInt(id);
         parcel.writeString(title);
+//        Log.i(TAG, "writeToParcel: title = "+title);
         parcel.writeString(codeSerialString);
         parcel.writeString(description);
         parcel.writeByte(isSelfDesign?(byte) 1:(byte) 0);

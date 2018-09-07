@@ -6,7 +6,6 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Toast;
@@ -463,6 +462,7 @@ public class BaseRhythmView extends View {
 
     /* 数据设置方法一（简化版）*/
     public void setRhythmViewData(RhythmBasedCompound rhythmBasedCompound){
+//        Log.i(TAG, "setRhythmViewData: rhBc="+rhythmBasedCompound.toString());
        setRhythmViewData(rhythmBasedCompound,18,20,20);
     }
 
@@ -471,6 +471,7 @@ public class BaseRhythmView extends View {
         this.bcRhythm = rhythmBasedCompound;
         this.rhythmType = rhythmBasedCompound.getRhythmType();
 //        Log.i(TAG, "setRhythmViewData: rhBC="+rhythmBasedCompound.toString());
+//        Log.i(TAG, "setRhythmViewData: rhBc.codeSerial="+rhythmBasedCompound.getCodeSerialByte().toString());
         this.codesInSections = RhythmHelper.codeParseIntoSections(rhythmBasedCompound.getCodeSerialByte(), rhythmType);
 
         this.lyricInString_1 = rhythmBasedCompound.getPrimaryLyricSerial();//【在计算时，会改为按节管理版本，才能正确放置位置】
@@ -574,22 +575,25 @@ public class BaseRhythmView extends View {
     public ArrayList<DrawingUnit> initSectionDrawingUnit(ArrayList<Byte> codesInThisSection, float topDrawing_Y,int lineCursor, float sectionStartX, float unitWidthChanged) {
         //如果是折行的，根据各节所在位置传入相应startX（行首padding，非行首则是上一节末尾+gap；如果是单行模式则只有首节处于行首，其余向后累加即可。）
         //int totalValueBeforeThisCodeInBeat = 0;//用于计算拍子【要在循环的末尾添加，因为要使用的是“本音符之前”的总和】
-
         ArrayList<DrawingUnit> drawingUnitsInSection = new ArrayList<>();
+        int skipNum = 0;//由于编码序列中存在不绘制的编码比dU序列多，必须带略过的值。
 
         for (int j = 0; j < codesInThisSection.size(); j++) {
-            accumulationNumInCodeSerial++;
+//            Log.i(TAG, "initSectionDrawingUnit: accNUCS="+accumulationNumInCodeSerial);
             byte code = codesInThisSection.get(j);
 
-            if(code>111&&code<126) {
+            if(code>125){
+                skipNum++;
+            }else if(code>111) {
+                skipNum++;
                 //112~125的没有实体绘制单元，而是在其前一单元中设置专用字段(126/127则纯粹为控制编码，没有UI信息)
                 int curveSpanForward = code-110;//跨越的单元数量（比如，code=112时，指弧线覆盖本身及本身前的1个音符，跨度2）
                 //连音线末端可以在小节首音符后，但是末端标记必然不能是小节第一个code，可以-1。
                 if(j==0){
                     Toast.makeText(mContext, "该小节内，连音标记前没有音符，错误编码。略过该连音。", Toast.LENGTH_SHORT).show();
                 }else {
-                    drawingUnitsInSection.get(j-1).isEndCodeOfLongCurve = true;
-                    drawingUnitsInSection.get(j-1).curveLength = curveSpanForward;
+                    drawingUnitsInSection.get(j-1-skipNum).isEndCodeOfLongCurve = true;
+                    drawingUnitsInSection.get(j-1-skipNum).curveLength = curveSpanForward;
                 }
             }else {
                 /* 从这里的逻辑设计可明确：仅在111以内的编码才有dU对应，所以外部调用方的索引不应指向112+编码位*/
@@ -597,6 +601,7 @@ public class BaseRhythmView extends View {
                 drawingUnit.top = topDrawing_Y + lineCursor * twoLinesTopYBetween;
                 drawingUnit.bottomNoLyric = drawingUnit.top + (unitHeight + additionalPointsHeight * 2 + curveOrLinesHeight * 2);
                 drawingUnit.indexInCodeSerial = accumulationNumInCodeSerial;//在没有dU的Code下，该值直接递增；在有对应dU的时候，将值存给dU。
+
 
                 //判断计算起点位置（startX）
                 if (j == 0) {
@@ -606,11 +611,19 @@ public class BaseRhythmView extends View {
                     if (codesInThisSection.get(j-1) > 125) {//【新判断方式（126拍尾，127节尾），原来是加总时值判断】
                         //前一音符为拍尾【注，即使前符有连音弧结尾标记，该标记也必须紧邻从而位于拍尾之前】
                         //如果不是首音符，则前面必然是有音符的，所以下句可行
-                        drawingUnit.left = drawingUnitsInSection.get(j - 1).right + beatGap;//要加入拍间隔
+//                        Log.i(TAG, "initSectionDrawingUnit: skipNum="+skipNum);
+                        drawingUnit.left = drawingUnitsInSection.get(j-1-skipNum).right + beatGap;//要加入拍间隔
                         //注意间隔要计算在du的外面。因为下划线布满du内的宽度。
 
                     } else {
-                        drawingUnit.left = drawingUnitsInSection.get(j - 1).right;//紧靠即可
+                        drawingUnit.left = drawingUnitsInSection.get(j-1-skipNum).right;//紧靠即可
+
+                    }
+
+                    if(drawingUnit.left<(sizeChangedWidth/2)){
+                        //初始位置在中心点左侧的，其“按本元素移动”时，移动的目标位置不是中心点，而是其最初始的位置
+                        // 以免控件左侧出现空当
+                        drawingUnit.originalLeftToCenterWhenLessThanCenter = (sizeChangedWidth/2)-drawingUnit.left;
 
                     }
 
@@ -724,8 +737,13 @@ public class BaseRhythmView extends View {
                 //在这一层循环的末尾，将本音符的时值累加到本小节的记录上；然后更新“tVBTCIS”记录以备下一音符的使用。
 //                totalValueBeforeThisCodeInBeat = addValueToBeatTotalValue(code, valueOfBeat, totalValueBeforeThisCodeInBeat);
                 drawingUnitsInSection.add(drawingUnit);//添加本音符对应的绘制信息。
+//                Log.i(TAG, "initSectionDrawingUnit: right="+drawingUnit.left+"("+(j-skipNum)+")");
                 drawingUnit.checkIsOutOfUi(padding,padding,sizeChangedWidth-padding,sizeChangedHeight-padding);
             }
+
+            //注意位置要正确！（如果放在循环开头则所有记录大1。）
+            accumulationNumInCodeSerial++;
+
         }
         return drawingUnitsInSection;//返回本小节对应的绘制信息列表*/
 

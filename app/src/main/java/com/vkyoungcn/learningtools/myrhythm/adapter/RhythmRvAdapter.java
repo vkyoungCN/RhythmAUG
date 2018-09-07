@@ -58,6 +58,8 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
             llt_overall.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+//                    Log.i(TAG, "onClick: model to send="+dataList.get(getAdapterPosition()).toString());
+//                    Log.i(TAG, "onClick: model.title="+dataList.get(getAdapterPosition()).getTitle());
                     AdapterMethodsHelper.toDetailActivity(context,dataList.get(getAdapterPosition()),RhythmDetailActivity.class);
 
                    /* Intent intentToDetailActivity = new Intent(context, RhythmDetailActivity.class);
@@ -124,6 +126,7 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
         holder.getTv_id().setText(String.format(context.getResources().getString(R.string.plh_sharp_id), singleModel.getId()));
         holder.getTv_title().setText(singleModel.getTitle());
         holder.getMainModelView().setRhythmViewData(singleModel);
+//        Log.i(TAG, "onBindViewHolder: rhythm.SIZE="+singleModel.getCodeSerialByte().size());
 //        holder.getTv_createTime().setText(singleModel.getCreateTimeStr());
 
     }

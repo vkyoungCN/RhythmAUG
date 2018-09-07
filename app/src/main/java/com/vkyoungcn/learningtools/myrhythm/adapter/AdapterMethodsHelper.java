@@ -6,15 +6,17 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.fragments.DeleteModelDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
 
 public class AdapterMethodsHelper {
-
+    private static final String TAG = "AdapterMethodsHelper";
     public static void toDetailActivity(Context context, BaseModel model, Class<?> clz){
         Intent intentToDetailActivity = new Intent(context, clz);
+//        Log.i(TAG, "toDetailActivity: model in Listener = "+model.toString());
         intentToDetailActivity.putExtra("MODEL",model);
         context.startActivity(intentToDetailActivity);
     }

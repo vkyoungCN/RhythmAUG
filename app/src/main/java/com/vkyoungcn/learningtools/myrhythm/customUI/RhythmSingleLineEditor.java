@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
@@ -143,6 +144,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         if(!selectionAreaMode){
             //单点选择模式，绘制蓝框
             DrawingUnit drawingUnit = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
+//            Log.i(TAG, "onDraw: this du isOutOfUi = "+drawingUnit.isOutOfUi);
             canvas.drawRect(drawingUnit.left, drawingUnit.top, drawingUnit.right, drawingUnit.bottomNoLyric, blueBoxPaint);
         }else {
             //选区模式
@@ -195,9 +197,9 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         initDrawingUnits(false);
     }
 
-    public void boxAreaChangedReDraw(int startIndex, int endIndex){
-        if(startIndex!=endIndex) {
-            //一定是选区模式了
+    public void boxAreaChangedReDraw(int startIndex, int endIndex,boolean freeModeOn){
+        if(freeModeOn) {
+            //选区模式【单纯使用ss==se并不一定不是选区】
             selectionAreaMode = true;
             changeOneDimCsIndexToTwoDimDuIndex(startIndex);
             sAreaStartSectionIndex = tempDuSectionIndex;
@@ -222,9 +224,11 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
         if(!saStart && !saEnd){
             //蓝框模式
             selectionAreaMode = false;
+//            Log.i(TAG, "boxMovedSuccessReDraw: index after move="+indexAfterMove);
             changeOneDimCsIndexToTwoDimDuIndex(indexAfterMove);
             blueBoxSectionIndex = tempDuSectionIndex;
             blueBoxUnitIndex = tempDuUnitIndex;
+//            Log.i(TAG, "boxMovedSuccessReDraw: temp SI="+tempDuSectionIndex+"；temp UI="+tempDuUnitIndex);
 
             //判断是否超出绘制区
             checkAndShiftWhenOutOfUI(blueBoxSectionIndex,blueBoxUnitIndex);
@@ -240,6 +244,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
         }else {
             selectionAreaMode = true;
+            Log.i(TAG, "boxMovedSuccessReDraw: Index after move="+indexAfterMove);
             changeOneDimCsIndexToTwoDimDuIndex(indexAfterMove);
             sAreaEndSectionIndex = tempDuSectionIndex;
             sAreaEndUnitIndex = tempDuUnitIndex;
@@ -276,6 +281,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
             ArrayList<DrawingUnit> duList = drawingUnits.get(i);
             for(int j=0;j<duList.size();j++){
                 DrawingUnit drawingUnit = duList.get(j);
+//                Log.i(TAG, "changeOneDimCsIndexToTwoDimDuIndex: du.indexInCs="+drawingUnit.indexInCodeSerial);
                 if(drawingUnit.indexInCodeSerial == index){
                     tempDuUnitIndex = j;
                     tempDuSectionIndex = i;
@@ -301,5 +307,27 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
     }*/
 
 
+    public int getBlueBoxSectionIndex() {
+        return blueBoxSectionIndex+1;
+    }
 
+    public int getBlueBoxUnitIndex() {
+        return blueBoxUnitIndex+1;
+    }
+
+    public int getSAStartSectionIndex() {
+        return sAreaStartSectionIndex+1;
+    }
+
+    public int getSAStartUnitIndex() {
+        return sAreaStartUnitIndex+1;
+    }
+
+    public int getSAEndSectionIndex() {
+        return sAreaEndSectionIndex+1;
+    }
+
+    public int getSAEndUnitIndex() {
+        return sAreaEndUnitIndex+1;
+    }
 }

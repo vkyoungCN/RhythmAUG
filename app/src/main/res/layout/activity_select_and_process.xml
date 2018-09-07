@@ -4,32 +4,35 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".BackUpActivity"
+    tools:context=".SelectAndProcessActivity"
     android:orientation="vertical"
     >
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="200dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="@string/infoPart"
+            android:gravity="center"
+            />
+
+
+    </FrameLayout>
+
+    <!--横分割线-->
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="32dp"
-        android:background="#efefef"
-        android:gravity="center"
-        android:text="@string/backUp2"
-        android:textSize="16sp" />
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="5dp"
-        android:alpha="0.4"
-        android:scaleType="centerCrop"
-        android:src="@drawable/slash_bar_orange" />
-
+        android:layout_height="1dp"
+        android:background="#e0e0e0"
+        />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:text="@string/fileSelectingUI"
         android:gravity="center"
-        android:text="@string/underDeveloping"
         />
-
-
 
 </LinearLayout>

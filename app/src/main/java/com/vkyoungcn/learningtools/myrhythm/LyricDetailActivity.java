@@ -16,20 +16,6 @@ public class LyricDetailActivity extends BaseModelDetailActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_detail_lyric);
-
-        //子类负责控件的加载
-        tv_id = findViewById(R.id.tv_rhId_LDA);
-        tv_title = findViewById(R.id.tv_title_LDA);
-        tv_lastModifyTime = findViewById(R.id.tv_lastModifyTime_LDA);
-        tv_stars = findViewById(R.id.tv_starts_LDA);
-        tv_descriptions = findViewById(R.id.tv_description_LDA);
-
-        ckb_selfDesign = findViewById(R.id.ckb_isSelfDesign_LDA);
-        ckb_keepTop = findViewById(R.id.ckb_isKeepTop_LDA);
-
-        //包括特殊控件
-        tv_LyricString = findViewById(R.id.tv_lyricString_LDA);
 
         initUiData();
     }
@@ -45,6 +31,26 @@ public class LyricDetailActivity extends BaseModelDetailActivity {
 
     //返回接收方法使用基类的
 
+
+
+    @Override
+    void loadComponents(){
+        setContentView(R.layout.activity_detail_lyric);
+
+        //子类负责控件的加载
+        tv_id = findViewById(R.id.tv_rhId_LDA);
+        tv_title = findViewById(R.id.tv_title_LDA);
+        tv_lastModifyTime = findViewById(R.id.tv_lastModifyTime_LDA);
+        tv_stars = findViewById(R.id.tv_starts_LDA);
+        tv_descriptions = findViewById(R.id.tv_description_LDA);
+
+        ckb_selfDesign = findViewById(R.id.ckb_isSelfDesign_LDA);
+        ckb_keepTop = findViewById(R.id.ckb_isKeepTop_LDA);
+
+        //包括特殊控件
+        tv_LyricString = findViewById(R.id.tv_lyricString_LDA);
+
+    }
 
 
     void initUiData(){

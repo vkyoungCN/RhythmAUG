@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".RhythmCreateActivity"
+    android:orientation="vertical"
     >
 
     <android.support.v7.widget.CardView
@@ -25,27 +26,25 @@
 
     </android.support.v7.widget.CardView>
 
-
-    <!--下方按键区-->
-
-    <!--<TextView
-        android:id="@+id/tv_Info_rhType_EM"
+    <TextView
+        android:id="@+id/tv_infoTop_EM"
         android:layout_width="match_parent"
-        android:layout_height="24dp"
-        android:textSize="12sp"
-        android:gravity="center"
+        android:layout_height="28dp"
+        android:background="#e0e0e0"
+        android:paddingEnd="2dp"
+        android:paddingStart="8dp"
+        android:layout_marginTop="6dp"
         android:text="@string/str_sharp8"
-        android:layout_marginStart="4dp"
-        android:background="#757575"
-        android:textColor="#efebe9"
-        />-->
+        android:gravity="center"
+        android:textColor="@color/myRhythm_orange" />
+
 
     <ScrollView
         android:id="@+id/scv_buttonsPanel_EM"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/card_EM"
-        android:layout_marginTop="8dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="2dp"
         >
 
         <!--具体内容开始-->
@@ -55,16 +54,6 @@
             android:layout_height="370dp"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/tv_infoTop_EM"
-                android:layout_width="match_parent"
-                android:layout_height="24dp"
-                android:background="#e0e0e0"
-                android:paddingEnd="2dp"
-                android:paddingStart="8dp"
-                android:text="@string/str_sharp8"
-                android:gravity="center"
-                android:textColor="@color/myRhythm_orange" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -147,29 +136,7 @@
                 android:layout_height="1dp"
                 android:background="#e0e0e0" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                >
 
-                <TextView
-                    android:id="@+id/tv_infoBottom_cI_EM"
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:textColor="@color/myRhythm_indigo"
-                    android:text="@string/plh_currentIndex" />
-
-                <TextView
-                    android:id="@+id/tv_infoBottom_rtp_EM"
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:textColor="@color/myRhythm_red"
-                    android:text="@string/defaultArea_bottomInfo" />
-
-            </LinearLayout>
 
             <!--横分割线-->
 
@@ -178,5 +145,54 @@
 
     </ScrollView>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:orientation="horizontal"
+        >
 
-</RelativeLayout>
+        <TextView
+            android:id="@+id/tv_infoBottom_cI_EM"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="4dp"
+            android:gravity="center"
+            android:textColor="@color/myRhythm_indigo"
+            android:text="@string/plh_currentIndex" />
+
+        <TextView
+            android:id="@+id/tv_infoBottom_rtp_EM"
+            android:layout_width="100dp"
+            android:layout_marginStart="4dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/myRhythm_red"
+            android:text="@string/defaultArea_bottomInfo" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:orientation="horizontal"
+        >
+
+        <TextView
+            android:id="@+id/tv_infoBottom_aI_EM"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="4dp"
+            android:gravity="center"
+            android:textColor="@color/myRhythm_green"
+            android:text="@string/bar2" />
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_marginStart="4dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/myRhythm_red"
+            />
+
+    </LinearLayout>
+</LinearLayout>

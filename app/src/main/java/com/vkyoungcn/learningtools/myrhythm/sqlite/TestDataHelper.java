@@ -14,7 +14,7 @@ public class TestDataHelper {
 
     public Rhythm populateRhythm(int multiply){
         Rhythm rhythm = new Rhythm();
-        Log.i(TAG, "populateRhythm: rhm:"+rhythm.toString());
+//        Log.i(TAG, "populateRhythm: rhm:"+rhythm.toString());
         rhythm.setTitle(String.valueOf(System.currentTimeMillis()%1000000));
         rhythm.setDescription(String.valueOf(System.currentTimeMillis()));
 
@@ -29,6 +29,7 @@ public class TestDataHelper {
         rhythm.setRhythmType(RhythmHelper.RHYTHM_TYPE_44);
 
         rhythm.setCodeSerialByte(getCodeSerial(multiply));
+        Log.i(TAG, "populateRhythm: rhythm.SIZE="+rhythm.getCodeSerialByte().size());
 
         return rhythm;
     }

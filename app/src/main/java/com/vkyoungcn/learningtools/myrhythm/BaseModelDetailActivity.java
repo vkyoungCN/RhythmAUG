@@ -3,9 +3,11 @@ package com.vkyoungcn.learningtools.myrhythm;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
@@ -21,7 +23,7 @@ import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_PURE_EDIT_DONE;
 
 public class BaseModelDetailActivity extends AppCompatActivity {
-
+    private static final String TAG = "BaseModelDetailActivity";
     BaseModel model;
 
     SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -43,14 +45,24 @@ public class BaseModelDetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        /* 基类负责加载数据*/
         if(savedInstanceState!=null){
             model = savedInstanceState.getParcelable("MODEL");
         }else {
+//            Log.i(TAG, "onCreate: from Intent");
             model = getIntent().getParcelableExtra("MODEL");
         }
+//        Log.i(TAG, "onCreate: model="+model.toString());
+//        loadData(savedInstanceState);
 
-
-        /* 此处要加载各控件（fbd方法）。子类实现*/
+        /*子类负责显示（任务1，加载布局、控件）*/
+        loadComponents();
+        if(model==null){
+//            Log.i(TAG, "onCreate: null");
+            Toast.makeText(this, "传递的Model是空指针。", Toast.LENGTH_SHORT).show();
+            this.finish();
+        }
+        /* 子类的显示任务2*/
         initUiData();
 
     }
@@ -108,6 +120,14 @@ public class BaseModelDetailActivity extends AppCompatActivity {
 
     }
 
+
+    /*void loadData(Bundle savedInstanceState){
+        //子类实现
+    }*/
+
+    void loadComponents(){
+        //子类实现
+    }
 
     void initUiData(){
         tv_id.setText(String.format(this.getResources().getString(R.string.plh_sharp_id), model.getId()));

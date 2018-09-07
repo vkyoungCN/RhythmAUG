@@ -187,7 +187,7 @@ public class RhythmSingleLineView extends BaseRhythmView {
     /* 以下方法是对基类同名方法的覆写（绘制信息计算第一部分方法）
     【注意如果基类方法保留的private，而前一调用方法又是基类的，则将会直接调用基类同名方法】*/
     void initDrawingUnits_step1(float h_shiftedAmount) {
-        Log.i(TAG, "initDrawingUnits_step1: RhSingleLineView");
+//        Log.i(TAG, "initDrawingUnits_step1: RhSingleLineView");
         super.initDrawingUnits_step1();
 
         totalRequiredLength = 0;//每次重新计算绘制信息前要清空。
@@ -208,13 +208,19 @@ public class RhythmSingleLineView extends BaseRhythmView {
             //如果不换行，则不需复杂的计算逻辑，直接向后扩展即可
             if(i == 0){
                 //第一小节
-                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, 1,padding+h_shiftedAmount, unitWidth);
+                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, 0,padding+h_shiftedAmount, unitWidth);
+                drawingUnits.add(sectionDrawingUnit);
+//                Log.i(TAG, "initDrawingUnits_step1: padding="+padding);
+            }else {
+//                Log.i(TAG, "initDrawingUnits_step1: i="+i);
+                int lastSectionSize = drawingUnits.get(i-1).size();
+                float startX = drawingUnits.get(i-1).get(lastSectionSize-1).right+beatGap;
+//                Log.i(TAG, "initDrawingUnits_step1: startX(n)="+startX+"("+i+")");
+//                Log.i(TAG, "initDrawingUnits_step1: lastSecSize="+lastSectionSize+"("+(i-1)+")");
+                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, 0,startX, unitWidth);
                 drawingUnits.add(sectionDrawingUnit);
 
-            }else {
-                float startX = drawingUnits.get(i-1).get(drawingUnits.get(i-1).size()-1).right+beatGap;
-                ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i), topDrawing_Y, 1,startX, unitWidth);
-                drawingUnits.add(sectionDrawingUnit);
+
             }
 
             //记录到所需总长度

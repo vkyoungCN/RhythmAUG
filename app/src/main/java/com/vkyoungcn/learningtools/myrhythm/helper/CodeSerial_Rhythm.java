@@ -1,10 +1,13 @@
 package com.vkyoungcn.learningtools.myrhythm.helper;
 
+import android.util.Log;
+
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import java.util.ArrayList;
 
 public class CodeSerial_Rhythm {
+    private static final String TAG = "CodeSerial_Rhythm";
     //为编码工作提供规则、校验、功能封装。
     // 改动（单个位置字符替换、添加、删除；连续位置上的字符替换、添加、）提交到本类，由本类负责判断提交是否合法，合法则按规则进行修改，否则拒绝。
 //【两种方案：①静态；②实例（每条节奏编码对应单独的csR类）；按说应该采用后者；
@@ -1245,6 +1248,52 @@ public class CodeSerial_Rhythm {
     }
 
 
+    /* 找到当前光标所在拍子的前界限*/
+    public int findLastBeatStartIndex(int currentIndex){
+        boolean passLastBeatEnd = false;
+        int tempLastLastBeatEnd = currentIndex;
+        int tempLastBeatEnd = currentIndex;//为了处理在“本拍前方只剩1拍时”的情况
+        for(int i=currentIndex;i>=0;i--){
+            byte b = codeSerial.get(i);
+            if(b==126&&!passLastBeatEnd){
+                //（上一拍的结尾，上一节的结尾）
+                passLastBeatEnd = true;
+                tempLastBeatEnd = i;
+            }else if (b==126){
+                tempLastLastBeatEnd = i;
+                break;
+            }
+        }
+        if(tempLastBeatEnd == currentIndex){
+            //本拍是最前1拍
+            return -1;
+        }else if(tempLastLastBeatEnd == currentIndex){
+            //本拍是前数第2 拍
+            //此时一定不跨节
+            for(int k=0;k<currentIndex;k++){
+                if(codeSerial.get(k)<110){
+                    return k;//应该是0（除非有前缀音）
+                    //直接返回第一个实际音符
+                }
+            }
+        }else {
+            //检查是否跨节，返回正确的实际音符等
+            for(int j=tempLastLastBeatEnd;j<currentIndex;j++){
+                if(codeSerial.get(j)==127){
+                    return -1;//跨节
+                }
+            }
+            for(int j=tempLastLastBeatEnd;j<currentIndex;j++){
+                if(codeSerial.get(j)<110){
+                    //首个实际音符
+                    return j;
+                }
+            }
+        }
+
+        return -1;
+    }
+
     /* 找到当前光标所在拍子的后界限*/
     //在此“多此一举”地传入一个与全局变量同名的变量原因：方法的另一处应用场景中，传入的不是这个全局量而是另外的量，
     // 因而必须设置一个形参。
@@ -1259,6 +1308,37 @@ public class CodeSerial_Rhythm {
                 }
                 return i-1;
                 //【126/127暂定不计入当前音符范围，连音弧尾标记也不计入。】
+            }
+        }
+        return  -1;
+    }
+
+    public int findNextBeatEndIndex(int currentUnitIndex){
+        boolean passBeatEnd = false;
+        int tempEndIndex = currentUnitIndex;
+        for(int i = currentUnitIndex; i< codeSerial.size(); i++){
+            byte b = codeSerial.get(i);
+            if(b==126&&!passBeatEnd){
+                passBeatEnd = true;
+            }else if(b==126){
+                //编译提示此时pBE一定是真。
+                tempEndIndex = i;
+                break;
+            }
+        }
+//        Log.i(TAG, "findNextBeatEndIndex: E="+tempEndIndex+",C="+currentUnitIndex);
+        //检查找到的下拍是否已跨节
+        for(int j=tempEndIndex;j>currentUnitIndex;j--){
+//            Log.i(TAG, "findNextBeatEndIndex: sectionPassTest "+codeSerial.get(j)+"("+j);
+            if(codeSerial.get(j)==127){
+                return -1;
+            }
+        }
+        /* 不能简单的合并到上一循环，否则在到达127之前就返回了realCode*/
+        for(int j=tempEndIndex;j>currentUnitIndex;j--){
+//            Log.i(TAG, "findNextBeatEndIndex: sectionPassTest "+codeSerial.get(j)+"("+j);
+            if(codeSerial.get(j)<110){
+                return j;//返回从后面查到的第一个实际音符的cs索引。
             }
         }
         return  -1;
@@ -1311,10 +1391,22 @@ public class CodeSerial_Rhythm {
     }
 
 
+    public int getFistRealUnitIndex(){
+        for(int i=0; i<codeSerial.size();i++){
+            if(codeSerial.get(i)<110){
+                //左侧仍然 有实际音符
+                return i;
+            }
+        }
+        //循环完了都没找到
+        return -1;
+    }
+
     public int getNextRealUnitIndex(int currentIndex){
         for(int i = currentIndex+1; i< codeSerial.size(); i++){
             if(codeSerial.get(i)<110){
                 //其后的首个实际音符
+//                Log.i(TAG, "getNextRealUnitIndex: i(index after move/next real code)="+i);
                 return i;
             }
         }

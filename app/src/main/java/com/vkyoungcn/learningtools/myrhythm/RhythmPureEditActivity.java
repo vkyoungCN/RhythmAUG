@@ -5,6 +5,7 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.fragments.MelodyEditorFragment;
@@ -14,14 +15,14 @@ import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_PURE_EDIT_DONE;
 
 public class RhythmPureEditActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
-
+    private static final String TAG = "RhythmPureEditActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_pure_rhythm);
 
         RhythmBasedCompound rhythmBasedCompound = getIntent().getParcelableExtra("COMPOUND_RHYTHM");
-
+//        Log.i(TAG, "RhPureEdt onCreate: rhBc="+rhythmBasedCompound.toString());
         FragmentTransaction transaction = (getFragmentManager().beginTransaction());
         Fragment prev = (getFragmentManager().findFragmentByTag("EDIT_TEXT"));
 

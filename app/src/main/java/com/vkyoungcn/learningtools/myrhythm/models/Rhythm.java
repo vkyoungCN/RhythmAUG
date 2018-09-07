@@ -80,6 +80,7 @@ public class Rhythm extends BaseDualCodeSerialModel {
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
+        super.writeToParcel(parcel,i);
         parcel.writeInt(rhythmType);
         parcel.writeInt(primaryLyricId);
         parcel.writeInt(secondLyricId);

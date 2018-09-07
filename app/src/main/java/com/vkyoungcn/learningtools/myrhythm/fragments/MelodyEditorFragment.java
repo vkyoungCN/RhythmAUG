@@ -2,6 +2,7 @@ package com.vkyoungcn.learningtools.myrhythm.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,10 +31,12 @@ public class MelodyEditorFragment extends MelodyBaseEditFragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             rhythmBasedCompound = getArguments().getParcelable("RHYTHM");
         }
+//        Log.i(TAG, "onCreate: MEfg, rbBc="+rhythmBasedCompound.toString());
+        super.onCreate(savedInstanceState);
+
     }
 
     @Override

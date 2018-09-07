@@ -167,10 +167,10 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         //填充几个数据
 //        ArrayList<Rhythm> rhythmDefaultData = new ArrayList<>(2);
         TestDataHelper tdh = new TestDataHelper();
-        createRhythmWithDb(db, tdh.populateRhythm(1));
-        createRhythmWithDb(db,tdh.populateRhythm(2));
-        createRhythmWithDb(db,tdh.populateRhythm(3));
-        createRhythmWithDb(db,tdh.populateRhythm(4));
+        createRhythmWithDb(db, tdh.populateRhythm(2));
+//        createRhythmWithDb(db,tdh.populateRhythm(2));
+//        createRhythmWithDb(db,tdh.populateRhythm(3));
+//        createRhythmWithDb(db,tdh.populateRhythm(4));
 
     }
 

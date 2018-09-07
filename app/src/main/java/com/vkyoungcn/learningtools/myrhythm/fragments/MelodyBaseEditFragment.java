@@ -3,10 +3,10 @@ package com.vkyoungcn.learningtools.myrhythm.fragments;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +32,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     public static final int MOVE_LAST_SECTION = 2904;
     public static final int MOVE_FINAL_SECTION = 2905;
     public static final int DELETE_MOVE_LAST_SECTION = 2906;
+    public static final int MOVE_ADJACENT_SECTION = 2907;
 
     /*
      * 说明：本FG、rh-UI、csRh编码事务类、rh辅助类四者配合完成编辑与显示任务
@@ -63,6 +64,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     boolean dualForward = true;//选定两个拍子时，存在朝向问题；选定其一为正另一为反。暂定向右为正，默认方向。
     boolean moveAreaStart = false;
     boolean moveAreaEnd = false;
+    boolean freeAreaModeOn = false;//必须多设这个变量才能正确判断【？】
     boolean oneBeatModeOn = false;//转切分、转附点在单、双拍选区下起作用；(或则单点恰=vb)
     boolean dualBeatModeOn = false;//转前后十六尽在单拍模式下起作用。
     //切换到单点（单符）模式、或者移动后置否；进入到选定单拍、双拍后置真。
@@ -113,9 +115,10 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
     TextView tv_allConfirm;
 
-    EditText edt_topInfo;
-    EditText edt_bottomInfo;
-
+    TextView tv_topInfo;
+    TextView tv_bottomInfo_rhType;
+    TextView tv_bottomInfo_cursor;
+    TextView tv_bottomInfo_Acursor;
 
     /* 音高输入组件*/
     /*TextView tv_pitch_1;
@@ -155,12 +158,12 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.rhythmBasedCompound = getArguments().getParcelable("RHYTHM");
+        /*this.rhythmBasedCompound = getArguments().getParcelable("RHYTHM");
         if(rhythmBasedCompound==null){
             Toast.makeText(getContext(), "传递的节奏数据为空，退出", Toast.LENGTH_SHORT).show();
             getActivity().finish();//【这样退出是否正确？】
             return;
-        }
+        }*/
         this.csRhythmHelper = new CodeSerial_Rhythm(rhythmBasedCompound);
         this.codeSerial = rhythmBasedCompound.getCodeSerialByte();
         this.valueOfBeat = RhythmHelper.calculateValueBeat(rhythmBasedCompound.getRhythmType());
@@ -170,7 +173,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                 Bundle savedInstanceState) {
-        View rootView =  inflater.inflate(R.layout.fragment_edit_melody, container, false);
+        View rootView =  inflater.inflate(R.layout.fragment_edit_melody2, container, false);
 
         rh_editor_EM = rootView.findViewById(R.id.rh_editor_EM);
 
@@ -209,10 +212,13 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         tv_deleteSection =rootView.findViewById(R.id.tv_sectionMinus);
         tv_allConfirm =rootView.findViewById(R.id.tv_confirmAddRhythm_EM);
 
-        edt_topInfo =rootView.findViewById(R.id.tv_infoTop_EM);
-        edt_bottomInfo = rootView.findViewById(R.id.tv_infoBottom_EM);
-        edt_bottomInfo.setText(RhythmHelper.getStrRhythmType(rhythmBasedCompound.getRhythmType()));
-
+        tv_topInfo =rootView.findViewById(R.id.tv_infoTop_EM);
+        tv_bottomInfo_rhType = rootView.findViewById(R.id.tv_infoBottom_rtp_EM);
+        tv_bottomInfo_rhType.setText(RhythmHelper.getStrRhythmType(rhythmBasedCompound.getRhythmType()));
+        tv_bottomInfo_cursor = rootView.findViewById(R.id.tv_infoBottom_cI_EM);
+        tv_bottomInfo_Acursor = rootView.findViewById(R.id.tv_infoBottom_aI_EM);
+        tv_bottomInfo_cursor.setText(String.format(getResources().getString(R.string.plh_currentIndex),
+                rh_editor_EM.getBlueBoxSectionIndex(),rh_editor_EM.getBlueBoxUnitIndex()));//初始
 
         //设监听
         tv_merge.setOnClickListener(this);
@@ -259,60 +265,148 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.tv_selectBeat:
-                edt_topInfo.setText("选中整拍（可转切分、附点、前/后16）");
+
+                tv_topInfo.setText("选中整拍（可转切分、附点、前/后16）");
                 //点击后，从默认的选中单个code变为选中所在的Beat
                 //如果当前是选区模式，将按照其起始位置进行选取
                 resetSelectionAreaToTotalBeat();
                 oneBeatModeOn = true;
                 dualBeatModeOn = false;
+                if(selectStartIndex!=selectEndIndex){
+                    freeAreaModeOn = true;
+                }
+
                 //通知UI（改框色、改起止范围）
-                rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex);
+                rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+                checkMoveModeAndSetBottomInfo();
                 break;
 
             case R.id.tv_selectDualBeat:
-                edt_topInfo.setText("选中双整拍（可转切分、附点）");
+                //【注意，由于双拍存在方向切换，为排除错误，同时简化逻辑，在此要求只能基于单点坐标选取】
+                tv_topInfo.setText("选中双整拍（可转切分、附点）");
+                Log.i(TAG, "onClick: select Dual Beats");
                 resetSelectionAreaToDualBeat();
                 dualBeatModeOn = true;
                 oneBeatModeOn = false;
+               /* if(selectStartIndex!=selectEndIndex){
+                    freeAreaModeOn = true;这样是蓝色
+                }*/
+                freeAreaModeOn = true;//单框单拍也是绿色
                 //通知自定义UI改用双拍框的颜色样式
-                rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex);
+                rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+                checkMoveModeAndSetBottomInfo();
                 break;
 
             case R.id.tv_selectSingleCode:
-                edt_topInfo.setText("单点模式");
+                tv_topInfo.setText("单点模式");
                 moveAreaStart = false;
                 moveAreaEnd = false;
                 oneBeatModeOn = false;
                 dualBeatModeOn = false;
+                freeAreaModeOn = false;
 
                 selectStartIndex = selectEndIndex =currentUnitIndex;
                 //通知控件
-                rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex);
+                rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+                checkMoveModeAndSetBottomInfo();
                 break;
 
-            case R.id.tv_merge:
-                edt_topInfo.setText("");
-
-                //调用编码辅助类的合并方法（暂定只允许对一拍、不足一拍的选区进行合并；跨拍的（含超1拍，2拍多拍的）暂不处理）
-                int resultCodeMerge = csRhythmHelper.mergeArea(selectStartIndex,selectEndIndex);
-                if(resultCodeMerge<3300){
-                    //成功，通知自定义UI改变
-                    rh_editor_EM.codeChangedReDraw();
-                }else {
-                    //失败，给出提示
-                    Toast.makeText(getContext(),"失败代码："+resultCodeMerge,Toast.LENGTH_SHORT).show();
-                }
-                break;
 
             case R.id.tv_selectAreaStart:
+                tv_topInfo.setText("选区-起点");
+                if(!freeAreaModeOn){
+                    selectStartIndex = selectEndIndex =currentUnitIndex;
+                    freeAreaModeOn = true;
+                }
+                /*if(!moveAreaStart&&!moveAreaEnd){
+                    //从单点模式切换而来
+                    selectStartIndex = selectEndIndex =currentUnitIndex;
+                }else if(!moveAreaStart&&moveAreaEnd){
+                    //从终点模式切换而来（），保留原终点位置；只改变原起点
+                    selectStartIndex = currentUnitIndex;
+                }*///剩余一种情形是重复点击
                 moveAreaStart = true;
                 moveAreaEnd = false;
+
+                rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);//可能只是换了个框框颜色
+                checkMoveModeAndSetBottomInfo();
                 //然后在move方法中通过布尔情况判定移动的目标是谁。
                 break;
 
             case R.id.tv_selectAreaEnd:
+                tv_topInfo.setText("选区-终点");
+                if(!freeAreaModeOn){
+                    selectStartIndex = selectEndIndex =currentUnitIndex;
+                    freeAreaModeOn = true;
+                }
+                /*if(!moveAreaEnd&&!moveAreaStart){
+                    //从单点模式切换而来
+                    selectStartIndex = selectEndIndex =currentUnitIndex;
+                }else if(!moveAreaEnd&&moveAreaStart){
+                    selectEndIndex = currentUnitIndex;
+
+                }*///剩余一种情形是重复点击
+
                 moveAreaStart = false;
-                moveAreaEnd = false;
+                moveAreaEnd = true;
+                rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+                checkMoveModeAndSetBottomInfo();
+                break;
+
+
+            case R.id.tv_lastSection_EM:
+                oneBeatModeOn = false;
+                dualBeatModeOn = false;
+                generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
+                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_LAST_SECTION);
+                if(fakeResultIndex == -1){
+                    return;
+                }
+                indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
+                rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
+                checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
+                break;
+
+            case R.id.tv_nextSection_EM:
+//                Log.i(TAG, "onClick: next S");
+                oneBeatModeOn = false;
+                dualBeatModeOn = false;
+                generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
+                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_NEXT_SECTION);
+                if(fakeResultIndex == -1){
+                    return;
+                }
+                indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
+                rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
+                checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
+                break;
+
+            case R.id.tv_lastUnit_EM:
+                oneBeatModeOn = false;
+                dualBeatModeOn = false;
+                generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
+                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_LAST_UNIT);
+                if(fakeResultIndex == -1){
+                    return;
+                }
+                indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
+                rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
+                checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
+                break;
+
+            case R.id.tv_nextUnit_EM:
+//                Log.i(TAG, "onClick: next U");
+                oneBeatModeOn = false;
+                dualBeatModeOn = false;
+                generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
+//                Log.i(TAG, "onClick: current index="+generalCurrentIndex);
+                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_NEXT_UNIT);
+                if(fakeResultIndex == -1){
+                    return;
+                }
+                indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
+                rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
+                checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
                 break;
 
             case R.id.tv_over_2:
@@ -363,6 +457,31 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                         rh_editor_EM.codeChangedReDraw();
 
                     }
+                }
+                break;
+
+            case R.id.tv_merge:
+//                tv_topInfo.setText("");
+                //要先把box改为单点模式。避免越界溢出。
+                tv_topInfo.setText("单点模式");
+                moveAreaStart = false;
+                moveAreaEnd = false;
+                oneBeatModeOn = false;
+                dualBeatModeOn = false;
+                freeAreaModeOn = false;
+
+                currentUnitIndex = selectStartIndex;//先改一个
+                rh_editor_EM.boxMovedSuccessReDraw(currentUnitIndex,false,false);
+                checkMoveModeAndSetBottomInfo();
+
+                //调用编码辅助类的合并方法（暂定只允许对一拍、不足一拍的选区进行合并；跨拍的（含超1拍，2拍多拍的）暂不处理）
+                int resultCodeMerge = csRhythmHelper.mergeArea(selectStartIndex,selectEndIndex);
+                if(resultCodeMerge<3300){
+                    //成功，通知自定义UI改变
+                    rh_editor_EM.codeChangedReDraw();
+                }else {
+                    //失败，给出提示
+                    Toast.makeText(getContext(),"失败代码："+resultCodeMerge,Toast.LENGTH_SHORT).show();
                 }
                 break;
 
@@ -437,54 +556,6 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                 }
                 break;
 
-            case R.id.tv_lastSection_EM:
-                oneBeatModeOn = false;
-                dualBeatModeOn = false;
-                generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
-                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_LAST_SECTION);
-                if(fakeResultIndex == -1){
-                    return;
-                }
-                indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
-                rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
-                break;
-
-            case R.id.tv_nextSection_EM:
-                oneBeatModeOn = false;
-                dualBeatModeOn = false;
-                generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
-                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_NEXT_SECTION);
-                if(fakeResultIndex == -1){
-                    return;
-                }
-                indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
-                rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
-                break;
-
-            case R.id.tv_lastUnit_EM:
-                oneBeatModeOn = false;
-                dualBeatModeOn = false;
-                generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
-                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_LAST_UNIT);
-                if(fakeResultIndex == -1){
-                    return;
-                }
-                indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
-                rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
-                break;
-
-            case R.id.tv_nextUnit_EM:
-                oneBeatModeOn = false;
-                dualBeatModeOn = false;
-                generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
-                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_NEXT_UNIT);
-                if(fakeResultIndex == -1){
-                    return;
-                }
-                indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
-                rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
-                break;
-
 
             case R.id.tv_curve:
                 //单点模式，只能删除：（如果有）则取消当前上方的连音弧
@@ -550,6 +621,16 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
                 if(sectionAddToEnd){
                     codeSerial.addAll(sectionForAdd);
+
+                    //只有在“光标不在最后而却要在最后添加”时，才刷新box的绘制。
+                    rh_editor_EM.codeChangedReDraw();//由于编码有变动，需要这种更新（仅更新框是不够的）
+                    moveAreaStart=false;
+                    moveAreaEnd=false;//添加后强行改为单点光标模式。
+                    fakeResultIndex = moveBox(selectStartIndex,MOVE_FINAL_SECTION);//移动到最后一节（新节）
+                    indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);//统一各光标计数器
+
+                    rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);//根据新的位置，以单点模式重绘蓝框。
+                    checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
                 }else {
                     int nextIndex127 = csRhythmHelper.findNext127(selectStartIndex);
                     if(nextIndex127<(codeSerial.size()-1)){
@@ -558,21 +639,39 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                         codeSerial.addAll(sectionForAdd);
                     }
                 }
-                fakeResultIndex = moveBox(selectStartIndex,MOVE_FINAL_SECTION);
+
+
                /* if(fakeResultIndex == -1){
                     return; 这里如果==-1则可能是出错的情形。
                 }*/
-                rh_editor_EM.codeChangedReDraw();//由于编码有变动，需要这种更新（仅更新框是不够的）
+
+                checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
                 break;
 
             case R.id.tv_sectionMinus:
                 //暂时只允许删除空节（非空的弹出DFG后可强行删除）
-                if(!csRhythmHelper.checkSectionEmpty(selectStartIndex)){
+                if(checkSectionAmountEqualsOne()) {
+                    //只有一节不让删
+                    Toast.makeText(getContext(), "只有一节，不能删除。", Toast.LENGTH_SHORT).show();
+                }else if(!csRhythmHelper.checkSectionEmpty(selectStartIndex)){
                     Toast.makeText(getContext(), "所选小节不是空节。（暂时）不能删除", Toast.LENGTH_SHORT).show();
                 }else {
+                    //由于是按当前的ss光标删除，删除后改单点，强制位于该节前方一节（或后方）
+                    //由于移动BOX时需要利用原有坐标，如果删除的恰位于尾部，删除并重置计算后，原box索引位越界；
+                    // 因而先移动box坐标再删除和重置绘制信息
+                    moveAreaStart=false;
+                    moveAreaEnd=false;//添加后强行改为单点光标模式。
+                    fakeResultIndex = moveBox(selectStartIndex,MOVE_ADJACENT_SECTION);
+                    indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);//统一各光标计数器
+                    rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);//根据新的位置，以单点模式重绘蓝框。
+
                     if(csRhythmHelper.removeSection(selectStartIndex)!=-1){
                         rh_editor_EM.codeChangedReDraw();
                     }
+
+                    checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
+
+                    //删除之后，光标改为单点
                 }
                 break;
 
@@ -583,6 +682,17 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     }
 
 
+    private boolean checkSectionAmountEqualsOne(){
+        boolean passOne = false;
+        for(int i=0;i<codeSerial.size();i++){
+            if(codeSerial.get(i)==127&&!passOne){
+                passOne = true;
+            }else if(codeSerial.get(i)==127){
+                return false;
+            }
+        }
+        return true;
+    }
 
     /* 部分需要对fg中全局变量进行操作的辅助方法（无法转移到csRH辅助类）*/
     /* 返回的值是移动后的索引值（或者在移动无效时是移动前的值），但都是当前模式对应的正确的索引项的值
@@ -612,6 +722,19 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         }
     }
 
+    private void checkMoveModeAndSetBottomInfo(){
+        if(!freeAreaModeOn){
+            //如果是单点移动，需要把改写底部信息栏的光标指示。【设置要在rhUi更新后才有效】
+            tv_bottomInfo_cursor.setText(String.format(getResources().getString(R.string.plh_currentIndex),
+                    rh_editor_EM.getBlueBoxSectionIndex(),rh_editor_EM.getBlueBoxUnitIndex()));
+            tv_bottomInfo_Acursor.setText(getResources().getString(R.string.bar2));//初始
+        }else{
+            tv_bottomInfo_Acursor.setText(String.format(getResources().getString(R.string.plh_areaIndex),
+                    rh_editor_EM.getSAStartSectionIndex(),rh_editor_EM.getSAStartUnitIndex(),
+                    rh_editor_EM.getSAEndSectionIndex(),rh_editor_EM.getSAEndUnitIndex()));
+        }
+    }
+
     /* 开始移动之前，判断要使哪个光标移动（返回该光标的当前位置作为后续计算的当前点）*/
     private int checkMoveModeAndGetCurrentIndex(){
         if (moveAreaStart) {
@@ -629,26 +752,63 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
     /* 选定当前光标所在的单个整拍子，将区域选定标记的起止坐标记录器设置为结果值*/
     private void resetSelectionAreaToTotalBeat(){
-        selectStartIndex = csRhythmHelper.findBeatStartIndex(selectStartIndex);
-        selectEndIndex = csRhythmHelper.findBeatEndIndex(selectStartIndex);
+        int index = switchCursorForArea();
+        selectStartIndex = csRhythmHelper.findBeatStartIndex(index);
+        selectEndIndex = csRhythmHelper.findBeatEndIndex(index);
     }
 
+    private int switchCursorForArea(){
+        //为了防止“蠕动移位”现象。
+        int index;
+        if(moveAreaStart){
+            index = selectStartIndex;
+            moveAreaStart = false;
+            moveAreaEnd = true;
+        }else if(moveAreaEnd){
+            index = selectEndIndex;
+            moveAreaEnd = false;
+            moveAreaStart =true;
+        }else {
+            index = currentUnitIndex;
+        }
+        return index;
+    }
     /* 选定当前光标所在的两个整拍子，将区域选定标记的起止坐标记录器设置为结果值*/
     private void resetSelectionAreaToDualBeat(){
+        int index = switchCursorForArea();
         if(!dualForward){
             //执行向右扩展
             //切换扩展方向（从当前光标所在拍开始）
             dualForward = true;
 
-            selectStartIndex= csRhythmHelper.findBeatStartIndex(selectStartIndex);//区域开头仍然是本拍拍首
-            int tempAreaEndIndex = csRhythmHelper.findBeatEndIndex(selectStartIndex);//拍尾要选用下一拍（除非跨节（不允许））
-            int fakeNextBeatStartIndex = csRhythmHelper.getRealNextBeatStartIndexIfInSameSection(tempAreaEndIndex);
-            if(fakeNextBeatStartIndex == -1){
+            selectStartIndex= csRhythmHelper.findBeatStartIndex(index);//区域开头仍然是本拍拍首
+//            Log.i(TAG, "resetSelectionAreaToDualBeat: index="+index);
+            int areaEndIndex = csRhythmHelper.findNextBeatEndIndex(index);//拍尾要选用下一拍（除非跨节（不允许））
+//            Log.i(TAG, "resetSelectionAreaToDualBeat: nextBE index="+areaEndIndex);
+//            int fakeNextBeatStartIndex = csRhythmHelper.getRealNextBeatStartIndexIfInSameSection(areaEndIndex);
+            if(areaEndIndex == -1){
                 //(-1是跨节了)，只实际选定单拍
-                selectEndIndex = tempAreaEndIndex;
+                Toast.makeText(getContext(), "不许跨节→选定，只选定单拍。", Toast.LENGTH_SHORT).show();
+                selectEndIndex = csRhythmHelper.findBeatEndIndex(index);
             }else {
                 //选定下一拍的拍尾
-                selectEndIndex = csRhythmHelper.findBeatEndIndex(fakeNextBeatStartIndex);
+//                Log.i(TAG, "resetSelectionAreaToDualBeat: aeI="+areaEndIndex);
+                selectEndIndex = areaEndIndex;
+            }
+        }else {
+
+            dualForward = false;
+
+            selectEndIndex = csRhythmHelper.findBeatEndIndex(index);
+//            Log.i(TAG, "resetSelectionAreaToDualBeat: index="+index);
+            int areaStartIndex = csRhythmHelper.findLastBeatStartIndex(index);
+//            Log.i(TAG, "resetSelectionAreaToDualBeat: nextBE index="+areaStartIndex);
+
+            if(areaStartIndex==-1){
+                Toast.makeText(getContext(), "不许跨节←选定，只选定单拍。", Toast.LENGTH_SHORT).show();
+                selectStartIndex = csRhythmHelper.findBeatStartIndex(index);
+            }else {
+                selectStartIndex = areaStartIndex;
             }
         }
     }
@@ -680,12 +840,13 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         //移动完毕后，先经过检查（在调用方法中进行）再更新自定义UI；
         switch (moveType){
             case MOVE_NEXT_UNIT:
+//                Log.i(TAG, "moveBox: Next U.");
                 if(csRhythmHelper.checkIsFinalRealUnit(currentIndex)){
                     Toast.makeText(getContext(), "已在最后", Toast.LENGTH_SHORT).show();
                     return -1; //已在最后，不移动
                 }else {
+//                    Log.i(TAG, "moveBox: currentIndex="+currentIndex);
                     return csRhythmHelper.getNextRealUnitIndex(currentIndex);
-
                 }
             case MOVE_NEXT_SECTION:
                 if(csRhythmHelper.checkIsFinalSection(currentIndex)){
@@ -696,6 +857,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                     return csRhythmHelper.getRealUnitIndexOfNextSection(currentIndex);
 
                 }
+
             case MOVE_LAST_UNIT:
                 if(csRhythmHelper.checkIsFirstRealUnit(currentIndex)){
                     Toast.makeText(getContext(), "已在最前", Toast.LENGTH_SHORT).show();
@@ -723,9 +885,48 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                 }else {
                     return csRhythmHelper.getRealUnitIndexOfLastSection();
                 }
+
+            case MOVE_ADJACENT_SECTION:
+                //删除之后，移到临近一节。优先向左（以免在删除最后小节时box下标越界）；
+                // 如果被删小节是首节则移动到0,0
+                if(csRhythmHelper.checkIsFirstSection(currentIndex)){
+                    return csRhythmHelper.getFistRealUnitIndex();
+                }else {
+                    return csRhythmHelper.getLastRealUnitIndexOfLastSection(currentIndex);
+                }              /*
+                if(csRhythmHelper.checkIsFinalSection(currentIndex)){
+                    //已在最后，不移动
+                    Toast.makeText(getContext(), "已在最后一节，可能出错", Toast.LENGTH_SHORT).show();
+                    return -1;
+                }else {
+                    return csRhythmHelper.getRealUnitIndexOfLastSection();
+                }*/
         }
         return 0;
     }
+
+    /* 检测选定坐标所在的节内是否有框*/
+  /*  private boolean checkBoxInThisSection(int index,int cursorIndex){
+        int sectionStart = 0;//如果最后sS还是0一般代表当前节在最前。
+        int sectionEnd = 0;//如果最后sE还是0就是出错。
+        //向前找127
+        for (int i=index;i>0;i--){
+            if(codeSerial.get(i)==127){
+                sectionStart = i+1;
+                break;
+            }
+        }
+
+        for(int k=index;k<codeSerial.size();k++){
+            if(codeSerial.get(k)==127){
+                sectionEnd = k;
+                break;
+            }
+        }
+
+        return (selectStartIndex<cursorIndex&&selectEndIndex>cursorIndex);
+
+    }*/
 
     public void checkNotEmptyAndCommit(){
         if(csRhythmHelper.checkAllListEmpty()){

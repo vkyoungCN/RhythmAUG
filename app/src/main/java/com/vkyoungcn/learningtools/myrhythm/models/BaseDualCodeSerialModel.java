@@ -1,6 +1,7 @@
 package com.vkyoungcn.learningtools.myrhythm.models;
 
 import android.os.Parcel;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -11,7 +12,7 @@ public class BaseDualCodeSerialModel extends BaseModel {
     //部分模型在DB中使用字串存放编码，但在程序端需要使用Byte列表。
     //新字段
     private ArrayList<Byte> codeSerialByte =new ArrayList<>();
-
+    private static final String TAG = "BaseDualCodeSerialModel";
 
     /* 构造器*/
     public BaseDualCodeSerialModel() {
@@ -103,6 +104,7 @@ public class BaseDualCodeSerialModel extends BaseModel {
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         super.writeToParcel(parcel,i);
+//        Log.i(TAG, "writeToParcel: csB="+codeSerialByte.toString());
         parcel.writeSerializable(codeSerialByte);
     }
 
@@ -118,9 +120,13 @@ public class BaseDualCodeSerialModel extends BaseModel {
         }
     };
 
+
     BaseDualCodeSerialModel(Parcel in){
         super(in);
+//        Log.i(TAG, "BaseDualCodeSerialModel: parcel in");
         codeSerialByte = (ArrayList<Byte>) in.readSerializable();
+//        Log.i(TAG, "BaseDualCodeSerialModel: coSB="+codeSerialByte.toString());
+
     }
 
 }

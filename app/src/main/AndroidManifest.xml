@@ -33,7 +33,8 @@
         <activity android:name=".BaseModelEditActivity" />
         <activity android:name=".GroupEditActivity" />
         <activity android:name=".AllModelsActivity" />
-        <activity android:name=".BackUpActivity"></activity>
+        <activity android:name=".BackUpActivity" />
+        <activity android:name=".SelectAndProcessActivity"></activity>
     </application>
 
 </manifest>
