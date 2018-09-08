@@ -188,5 +188,11 @@
     <string name="titleHere">标题</string>
     <string name="dots">&#8230;</string>
     <string name="refresh1">Rfh.</string>
+    <string name="default1">缺省</string>
+    <string name="addGroup">新建分组</string>
+    <string name="group">分组</string>
+    <string name="plh_groupAmount">共有分组：%1$d个。</string>
+    <string name="groupIsGood">使用分组能够便于管理</string>
+    <string name="add">+</string>
 
 </resources>

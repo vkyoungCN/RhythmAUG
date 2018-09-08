@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".RhythmDetailActivity"
+    tools:context=".GroupDetailActivity"
     android:orientation="vertical"
     >
 
@@ -79,15 +79,49 @@
 
 
     <!--中1·横栏-->
-    <TextView
-        android:id="@+id/tv_rhythmTitleBar_GDA"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="32dp"
+        android:layout_height="36dp"
         android:background="#e0e0e0"
-        android:gravity="center"
-        android:text="@string/linkingRyhythms"
-        android:textSize="16sp"
-        />
+
+        >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/linkingRyhythms"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="54dp"
+            android:text="@string/add"
+            android:layout_gravity="end"
+            android:gravity="center"
+            android:background="#e5e5e5"
+            android:textSize="16sp"
+            android:textStyle="italic|bold"
+            android:onClick="addRhForGroup"
+            android:textColor="@color/myRhythm_indigo"
+            />
+        <TextView
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="4dp"
+            android:text="@string/refresh1"
+            android:layout_gravity="end"
+            android:gravity="center"
+            android:background="#e5e5e5"
+            android:textSize="16sp"
+            android:textStyle="italic|bold"
+            android:onClick="refreshRh"
+            android:textColor="@color/myRhythm_light_green"
+            />
+
+    </FrameLayout>
+
     <!--分割线-->
     <TextView
         android:layout_width="match_parent"
@@ -129,14 +163,49 @@
 
 
     <!--中2·横栏-->
-    <TextView
-        android:id="@+id/tv_lyricTitleBar_GDA"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="32dp"
+        android:layout_height="36dp"
         android:background="#e0e0e0"
-        android:gravity="center"
-        android:text="@string/linkingLyrics"
-        android:textSize="16sp" />
+
+        >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/linkingLyrics"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="54dp"
+            android:text="@string/add"
+            android:layout_gravity="end"
+            android:gravity="center"
+            android:background="#e5e5e5"
+            android:textSize="16sp"
+            android:textStyle="italic|bold"
+            android:onClick="addLyForGroup"
+            android:textColor="@color/myRhythm_indigo"
+            />
+        <TextView
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="4dp"
+            android:text="@string/refresh1"
+            android:layout_gravity="end"
+            android:gravity="center"
+            android:background="#e5e5e5"
+            android:textSize="16sp"
+            android:textStyle="italic|bold"
+            android:onClick="refreshLy"
+            android:textColor="@color/myRhythm_light_green"
+            />
+
+    </FrameLayout>
+
     <!--分割线-->
     <TextView
         android:layout_width="match_parent"

@@ -13,7 +13,7 @@
         android:layout_height="36dp"
         android:background="#efefef"
         android:gravity="center"
-        android:text="@string/lyricDetail"
+        android:text="@string/group"
         android:textSize="16sp" />
     <TextView
         android:layout_width="match_parent"
@@ -23,9 +23,10 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="45dp"
-        android:layout_marginTop="2dp"
-        android:orientation="horizontal">
+        android:layout_height="48dp"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal"
+        android:layout_marginBottom="48dp">
 
         <TextView
             android:id="@+id/tv_rhId_GEA"
@@ -58,9 +59,19 @@
         android:layout_height="1dp"
         android:background="#f5f5f5"
         />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:background="#efefef"
+        android:gravity="center"
+        android:text="@string/descriptions"
+        android:textSize="16sp"
+        android:layout_marginTop="2dp"
+        />
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:layout_margin="2dp"
         >
         <EditText
@@ -73,73 +84,8 @@
     </ScrollView>
 
     <!--分割线-->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="1dp"
-        android:layout_marginBottom="1dp"
-        android:background="#e0e0e0"
-        />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="38dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:gravity="end"
-        android:orientation="horizontal">
-
-        <CheckBox
-            android:id="@+id/ckb_isSelfDesign_GEA"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="8dp"
-            android:clickable="false"
-            android:gravity="center_vertical"
-            android:text="@string/selfDesign" />
-
-        <CheckBox
-            android:id="@+id/ckb_isKeepTop_GEA"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="4dp"
-            android:clickable="false"
-            android:gravity="center_vertical"
-            android:text="@string/keepTop2" />
-
-        <!--这里本来该放置一个星际标识UI，暂以tv代替-->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginStart="4dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_margin="8dp"
-                android:gravity="center"
-                android:text="@string/stars_rating" />
-
-            <Spinner
-                android:id="@+id/spinner_starts_GEA"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:entries="@array/star_numbers" />
-        </LinearLayout>
-
-
-    </LinearLayout>
 
     <!--分割线-->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="1dp"
-        android:layout_marginBottom="1dp"
-        android:background="#e0e0e0"
-        />
 
     <!--由于取消了多交叉的关系设计，因而暂不进行关联音、词的显示-->
 <!--
@@ -230,14 +176,6 @@
         android:layout_height="1dp"
         android:background="@color/myRhythm_light_green"
         />
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        >
-
-        <!--描述部分的修改-->
-    </FrameLayout>
     <!--底部信息及按键，横置覆盖于rv上层-->
     <FrameLayout
         android:layout_width="match_parent"

@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
 import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
@@ -19,6 +20,8 @@ public class ThreadRvBassActivity<T extends BaseModel,K extends RecyclerView.Ada
         extends AppCompatActivity implements OnGeneralDfgInteraction {
     public static final int MESSAGE_PRE_DB_FETCHED = 5505;
     public static final int MESSAGE_RE_FETCHED = 5506;
+    public static final int MESSAGE_RH_RE_FETCHED = 5507;
+    public static final int MESSAGE_LY_RE_FETCHED = 5508;
 
     private static final String TAG = "ThreadRvBassActivity";
     RecyclerView mRv;
@@ -29,6 +32,7 @@ public class ThreadRvBassActivity<T extends BaseModel,K extends RecyclerView.Ada
     MyRhythmDbHelper rhythmDbHelper;
 
     ArrayList<T> dataFetched;//T是BM的子类，使用泛型使dataFetched可以指向AL<Rhythm>等类型的列表。
+    ArrayList<T> dataReFetched;
     Handler handler = new RvBassActivityHandler(this);//涉及弱引用，通过其发送消息。
 
 
@@ -73,12 +77,53 @@ public class ThreadRvBassActivity<T extends BaseModel,K extends RecyclerView.Ada
         }
     }
 
+    /* 用于双资源页面中独立获取一项资源（节奏）*/
+    class ReFetchRhDataRunnable implements Runnable{
+        @Override
+        public void run() {
+            reFetchRhAndSort();//子类可以通过覆写该方法实现自定义行为
+//            Log.i(TAG, "run: reFetchRunnable");
+            //然后封装消息
+            Message message = new Message();
+            message.what = MESSAGE_RH_RE_FETCHED;
+            //数据通过全局变量直接传递。
+
+            handler.sendMessage(message);
+
+        }
+    }
+
+    class ReFetchLyDataRunnable implements Runnable{
+        @Override
+        public void run() {
+            reFetchLyAndSort();//子类可以通过覆写该方法实现自定义行为
+//            Log.i(TAG, "run: reFetchRunnable");
+            //然后封装消息
+            Message message = new Message();
+            message.what = MESSAGE_LY_RE_FETCHED;
+            //数据通过全局变量直接传递。
+
+            handler.sendMessage(message);
+
+        }
+    }
+
     void fetchAndSort(){
 
     }
 
     void reFetchAndSort(){
+            dataFetched.clear();
+            dataFetched.addAll(dataReFetched);
+    }
 
+    void reFetchRhAndSort(){
+        dataFetched.clear();
+        dataFetched.addAll(dataReFetched);
+    }
+
+    void reFetchLyAndSort(){
+        //获取和替换都需要子类实现
     }
 
     final static class RvBassActivityHandler extends Handler {
@@ -106,6 +151,10 @@ public class ThreadRvBassActivity<T extends BaseModel,K extends RecyclerView.Ada
                 }
 
                 //为mRv加载adapter
+                if(dataFetched.isEmpty()){
+                    Toast.makeText(this, "数据(1)为空。", Toast.LENGTH_SHORT).show();
+//                    return;【这里如果退出，后面旧不初始化适配器，更新后空指针出错。】
+                }
                 loadAdapter();
 
                 break;
@@ -115,10 +164,36 @@ public class ThreadRvBassActivity<T extends BaseModel,K extends RecyclerView.Ada
                 if(maskView.getVisibility() == View.VISIBLE) {
                     maskView.setVisibility(View.GONE);
                 }
-                adapter.notifyDataSetChanged();
+                notifyAdapter();//因为有的页面需要更新两项
+                break;
+
+            case MESSAGE_RH_RE_FETCHED:
+//                Log.i(TAG, "handleMessage: ReFetched");
+                //取消遮罩、更新rv数据
+                if(maskView.getVisibility() == View.VISIBLE) {
+                    maskView.setVisibility(View.GONE);
+                }
+                adapter.notifyDataSetChanged();//rh对应的一般都是第一项adp，默认的。
+                break;
+
+            case MESSAGE_LY_RE_FETCHED:
+//                Log.i(TAG, "handleMessage: ReFetched");
+                //取消遮罩、更新rv数据
+                if(maskView.getVisibility() == View.VISIBLE) {
+                    maskView.setVisibility(View.GONE);
+                }
+                notifySecondAdp();//因为第二项在子类特有实现，无法在基类直接调用。
                 break;
         }
 
+    }
+
+    void notifyAdapter(){
+        adapter.notifyDataSetChanged();//默认实现，更新一项
+    }
+
+    void notifySecondAdp(){
+        //子类更新其独有的第二项ADP
     }
 
     void loadAdapter(){

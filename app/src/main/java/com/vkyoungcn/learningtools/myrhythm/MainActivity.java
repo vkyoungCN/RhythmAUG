@@ -77,22 +77,30 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
         dataFetched = rhythmDbHelper.getTopKeepCompoundRhythmsOrModifiedLaterThan(timeThreshold) ;
 //        Log.i(TAG, "fetchAndSort: main reFetched.Size="+dataFetched.size());
         //对返回的节奏进行排序（置顶的在最上，其余按时间，越近越先）
-        shaftRhythms(dataFetched);
-        //获取总量数字【这也是需要再对RRBA再重写一遍的原因，多了这个字段的需求。】
-        rhythmsAllAmount = dataFetched.size();//有一个控件需要使用节奏总数量
+        if(dataFetched!=null) {
+            shaftRhythms(dataFetched);
+            //获取总量数字【这也是需要再对RRBA再重写一遍的原因，多了这个字段的需求。】
+            rhythmsAllAmount = dataFetched.size();//有一个控件需要使用节奏总数量
+        }
     }
 
     void reFetchAndSort(){
         //获取节奏数据
-        dataFetched.clear();
-        dataFetched.addAll(rhythmDbHelper.getAllCompoundRhythms());
+        dataReFetched =rhythmDbHelper.getAllCompoundRhythms();
+        super.reFetchAndSort();
+
         //对返回的节奏进行排序（按修改时间降序？）
-        Collections.sort(dataFetched,new SortByModifyTime());
-
-        rhythmsAllAmount = dataFetched.size();//有一个控件需要使用节奏总数量
-
+        if(dataFetched!=null) {
+            Collections.sort(dataFetched, new SortByModifyTime());
+            rhythmsAllAmount = dataFetched.size();//有一个控件需要使用节奏总数量
+        }
     }
 
+
+    void nullDataOperation(){
+        //为空时，基类在调用loadAdapter前被截止。补充一个设置方法。
+        tv_rhythmAmount.setText(String.format(getResources().getString(R.string.plh_groupAmount),0));
+    }
         /*
      * 当Fab按键系统的主按钮点击时调用
      *

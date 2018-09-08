@@ -163,6 +163,9 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_LYRIC);
         db.execSQL(SQL_CREATE_PITCHES);
         db.execSQL(SQL_CREATE_ACTION_RECORDS);
+//        db.execSQL(SQL_CREATE_SINGLE_TAG);
+        db.execSQL(SQL_CREATE_GROUPS);
+        db.execSQL(SQL_CREATE_GROUP_CROSS);
 
         //填充几个数据
 //        ArrayList<Rhythm> rhythmDefaultData = new ArrayList<>(2);
@@ -577,9 +580,9 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
                 rhythm_1.setPitchesId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID)));
                 rhythms.add(rhythm_1);
             }while (cursor.moveToNext());
-        }else{
+        }/*else{
             return null;
-        }
+        }*/
         try {
             cursor.close();
         } catch (Exception e) {
@@ -626,9 +629,9 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
                 rhythms.add(rhythmBasedCompound);
             }while (cursor.moveToNext());
-        }else{
+        }/*else{
             return null;
-        }
+        }*/
         try {
             cursor.close();
         } catch (Exception e) {
@@ -663,9 +666,9 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
             do {
                 rhythms.add(getCompoundRhythmById_TRS(cursor.getInt(0)));
             }while (cursor.moveToNext());
-        }else{
+        }/*else{
             return null;
-        }
+        }*/
         try {
             cursor.close();
         } catch (Exception e) {
@@ -698,9 +701,9 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
             do {
                 lyris.add(getFreeLyricsById_TRS(cursor.getInt(0)));
             }while (cursor.moveToNext());
-        }else{
+        }/*else{
             return null;
-        }
+        }*/
         try {
             cursor.close();
         } catch (Exception e) {
@@ -739,9 +742,9 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
                 lyrics.add(lyric);
             }while (cursor.moveToNext());
-        }else{
+        }/*else{
             return null;
-        }
+        }*/
         try {
             cursor.close();
         } catch (Exception e) {
@@ -823,9 +826,9 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
                 compounds.add(rhythmBasedCompound);
             }while (cursor.moveToNext());
-        }else{
+        }/*else{
             return null;
-        }
+        }*/
 
         try {
             cursor.close();
@@ -876,9 +879,9 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
                 compounds.add(rhythmBasedCompound);
             }while (cursor.moveToNext());
-        }else{
+        }/*else{
             return null;
-        }
+        }*/
 
         try {
             cursor.close();
@@ -1087,9 +1090,10 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
                 groups.add(group);
             }while (cursor.moveToNext());
-        }else{
+        }/*else{
             return null;
-        }
+        }【这个小设计是错误的。严重灾难级！由于返回null，使得之前的new在无数据时无效，无数据时接收方要做极大量的处理工作且逻辑脆弱！】
+        */
         try {
             cursor.close();
         } catch (Exception e) {

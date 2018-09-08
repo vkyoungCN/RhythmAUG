@@ -29,16 +29,15 @@ public class RhythmRvBassActivity extends ThreadRvBassActivity implements OnGene
         //获取节奏数据
         dataFetched = rhythmDbHelper.getAllCompoundRhythms() ;
         //对返回的节奏进行排序（按修改时间降序？）
-        Collections.sort(dataFetched,new SortByModifyTime());
+        Collections.sort(dataFetched, new SortByModifyTime());
     }
 
     void reFetchAndSort(){
         //获取节奏数据
-        dataFetched.clear();
-        dataFetched.addAll(rhythmDbHelper.getAllCompoundRhythms());
+        dataReFetched =rhythmDbHelper.getAllCompoundRhythms();
+        super.reFetchAndSort();
         //对返回的节奏进行排序（按修改时间降序？）
-        Collections.sort(dataFetched,new SortByModifyTime());
-
+        Collections.sort(dataFetched, new SortByModifyTime());
     }
 
 

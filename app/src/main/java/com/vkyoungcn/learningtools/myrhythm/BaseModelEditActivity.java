@@ -2,6 +2,7 @@ package com.vkyoungcn.learningtools.myrhythm;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -9,6 +10,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
+import com.vkyoungcn.learningtools.myrhythm.models.Group;
 import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
 import java.text.SimpleDateFormat;
@@ -18,6 +20,7 @@ public class BaseModelEditActivity extends AppCompatActivity {
 /* 由于暂时取消了多交叉复杂关系，暂不在本页面显示“相关的音序和歌词”
 * 其实这种互相关联的功能已经涉及到了创作的部分，暂时先实现记录，再谋求创作。
 * */
+private static final String TAG = "BaseModelEditActivity";
 
     BaseModel model;
     MyRhythmDbHelper rhythmDbHelper = MyRhythmDbHelper.getInstance(this);
@@ -44,7 +47,7 @@ public class BaseModelEditActivity extends AppCompatActivity {
         }else {
             model = getIntent().getParcelableExtra("MODEL");
         }
-
+//        Log.i(TAG, "onCreate: model="+model.toString());
         //需要先调用SUPER（也就是本类）然后执行各子类的实现，ui数据的初始在子类实现中进行
 
         //各控件的fbd由子类实现
