@@ -2,6 +2,7 @@ package com.vkyoungcn.learningtools.myrhythm.customUI;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
@@ -32,35 +33,20 @@ public class RhythmView extends BaseRhythmView {
     }
 
     /* 覆写一下默认尺寸的设置方法，其尺寸改小。*/
-    @Override
-    public void setRhythmViewData(RhythmBasedCompound rhythmBasedCompound) {
-        super.setRhythmViewData(rhythmBasedCompound,14,18,18);
-    }
+    /*public void setRhythmViewData(RhythmBasedCompound rhythmBasedCompound) {
+        super.setRhythmViewData(rhythmBasedCompound,16,20,20);
+    }*/
 
 
-    /*
-     * 目前（已分配的）编码
-     * ①0：延音符-
-     * ②1、2、3、4、6、8、12、16、24。各种时值的实体节奏符X（带下划线的是基本、非附点的音符）
-     * ③上述（②条目中）各值的负值：各种时值的空拍子
-     * ④73~79、83~89、103~109，总时值分别为（1/4、1/8、1/16）的均分多连音；
-     * 【待改：以code%10的余数表示其内含的多连音个数】，便于计算时值(x/10 -1)*4
-     * ⑤112~125：连音弧结束标记，（以code-110代表其跨度，暂时支持2~15跨度）【要求紧邻在音符后，
-     * 如果音符后即是126、127，则弧结束标记要在126、127之前（以免影响节的判断。）】【某些判断可能要修改（如独占整拍的检测逻辑【待】）】
-     * ⑥126：拍尾标记
-     * ⑦127：小节尾标记
-     * ⑧111：前缀音（有独立绘制单元（只是尺寸较小，除字符外格式固定）；占据pitch中的一个单位；不占Lyric中的单位；不占时值。）
-     * */
     void initDrawingUnits_step1() {
-        //【如果本方法是从onSc中触发的调用，则最后不进行invalidate()】
         //本控件采用折行模式。
         super.initDrawingUnits_step1();//完成部分初始化任务
 
-
-        //开始计算绘制信息。以小节为单位进行计算（根据折行规则具体安排实现）。
+        //开始计算绘制信息。以小节为单位进行（根据折行规则具体实现）。
         for (int i = 0; i < codesInSections.size(); i++) {
             //先获取当前小节的长度
             float sectionRequiredLength = standardLengthOfSection(codesInSections.get(i));
+            
             //记录到本行所需总长度
             lineRequiredLength += sectionRequiredLength;
             //本行既有小节数量+1
@@ -73,6 +59,7 @@ public class RhythmView extends BaseRhythmView {
                 // 如果本行已有其他节则需要压缩本节、扩展其他节；且本节下移
                 // 否则（本行只有本节自己）压缩本节，下一节新起一行（行宽计数重置）
                 if (sectionAmountInLine == 1) {
+                    Log.i(TAG, "initDrawingUnits_step1: 1 Ex");
                     //①本行只有本节自己，对本节的单位宽度压缩（不需下移）【暂定只压缩宽度；而高度、字号可以一定程度上保持不变】
                     float unitWidthSingleZipped = (availableTotalWidth / sectionRequiredLength) * unitWidth;//与外部使用的uW变量同名
                     //【按调整后的宽度计算本行本节的绘制数据】
@@ -87,6 +74,8 @@ public class RhythmView extends BaseRhythmView {
 
                     lineCursor++;//行计数器+1，以备下节正确使用
                 } else {
+                    Log.i(TAG, "initDrawingUnits_step1: 1 Ex, line Ex");
+
                     //本行超过1节（除本节外还有其他节），其他节扩展
                     extraOthersInLine(availableTotalWidth,lineRequiredLength,sectionRequiredLength,i,sectionAmountInLine,topDrawing_Y,lineCursor);
 
@@ -106,6 +95,8 @@ public class RhythmView extends BaseRhythmView {
 
                 }
             } else if (lineRequiredLength > availableTotalWidth) {
+//                Log.i(TAG, "initDrawingUnits_step1: 1 notEx, line Ex");
+
                 //单节宽度不大于控件可用宽度，但是行累加宽度超过了；
                 // 本行其他节要放大
                 extraOthersInLine(availableTotalWidth,lineRequiredLength,sectionRequiredLength,i,sectionAmountInLine,topDrawing_Y,lineCursor);
@@ -129,10 +120,13 @@ public class RhythmView extends BaseRhythmView {
 //                accumulateSizeBeforeThisSection+=drawingUnits.get(i).size();
 
             } else {
+//                Log.i(TAG, "initDrawingUnits_step1: 1 notEx, line notEx");
                 //单节宽度不超控件允许宽度、本行总宽也未超总宽。
                 // 本节索引已在开头自动加入行索引列表，因而不需在此再次操作。
                 //在此，需判断本节是否是最后一节，如果是，则将本行现有所有节进行整体扩展，以占满全行宽度
-                extraAllInLine(availableTotalWidth,lineRequiredLength,i,sectionAmountInLine,topDrawing_Y,lineCursor);
+                if(i == codesInSections.size()-1) {
+                    extraAllInLine(availableTotalWidth, lineRequiredLength, i, sectionAmountInLine, topDrawing_Y, lineCursor);
+                }
                 //此分支下仅当到达尾节时才进行计算（本行绘制数据的计算）【否则在后面的节超屏宽时会再次触发对本节的计算，重复负荷】
                 //其余情况下只是增加本行的小节数量记录即可，不必有其他处理。
             }
@@ -140,7 +134,7 @@ public class RhythmView extends BaseRhythmView {
 
         //【这里应根据所需总高对各行进行平移】
         //【如果不处理则默认是顶部对齐的绘制方式】
-        float totalHeightNeeded = lineCursor* twoLinesTopYBetween;
+        float totalHeightNeeded = (lineCursor+1)* twoLinesTopYBetween;
         float totalAvailableHeight = sizeChangedHeight-2*padding;
         if(totalHeightNeeded<totalAvailableHeight){
             float shiftAmount = (totalAvailableHeight-totalHeightNeeded)/2;

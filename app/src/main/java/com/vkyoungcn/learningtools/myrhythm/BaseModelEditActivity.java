@@ -105,7 +105,7 @@ public class BaseModelEditActivity extends AppCompatActivity {
         ckb_selfDesign.setChecked(model.isSelfDesign());
         ckb_keepTop.setChecked(model.isKeepTop());
 
-        edt_LyricString.setText(model.getCodeSerialString());
+//        edt_LyricString.setText(model.getCodeSerialString());
     }
 
 }

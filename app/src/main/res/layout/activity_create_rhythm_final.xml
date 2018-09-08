@@ -145,7 +145,19 @@
         android:textColor="@color/myRhythm_red"
 
         />
-
+    <!--横分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#efefef"
+        />
+    <EditText
+        android:id="@+id/edt_titleInput_ARFA"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center"
+        android:hint="@string/titleHere"
+        />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -166,7 +178,7 @@
             android:layout_below="@+id/description_top"
             android:layout_above="@+id/tv_confirm_ARFA"
             android:gravity="center"
-            android:hint="@string/descriptionHere"
+            android:text="@string/descriptionHere"
             />
         <TextView
             android:id="@+id/tv_confirm_ARFA"

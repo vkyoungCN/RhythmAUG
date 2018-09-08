@@ -79,6 +79,14 @@ public class GroupDetailActivity extends ThreadRvBassActivity{
 
     }
 
+    void reFetchAndSort(){
+        //获取节奏数据
+        dataFetched.clear();
+        dataFetched.addAll(rhythmDbHelper.getRhythmBasedCompoundsByGid(group.getId()));
+        dataList_lyric.clear();
+        dataList_lyric.addAll(rhythmDbHelper.getFreeLyricsByGid(group.getId()));
+
+    }
     @Override
     void loadAdapter() {
         //取消其他两个mask（节奏的在基类已取消显示）

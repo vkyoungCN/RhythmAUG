@@ -1,6 +1,7 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
 import android.os.Bundle;
+import android.view.View;
 
 public class AllRhythmsActivity extends RhythmRvBassActivity {
 
@@ -19,5 +20,9 @@ public class AllRhythmsActivity extends RhythmRvBassActivity {
     }
 
     //其余均使用直接基类的逻辑。
+    public void refresh(View view){
+        new Thread(new ReFetchDataRunnable()).start();
+    }
+
 
 }

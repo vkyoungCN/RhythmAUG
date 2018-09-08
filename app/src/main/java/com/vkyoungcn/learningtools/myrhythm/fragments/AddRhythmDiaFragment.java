@@ -23,7 +23,7 @@ import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
 public class AddRhythmDiaFragment extends DialogFragment
         implements View.OnClickListener {
 
-    private static final String TAG = "AddRhythmDiaFragment";
+//    private static final String TAG = "AddRhythmDiaFragment";
 
     private OnGeneralDfgInteraction mListener;
     private RadioGroup rgp_rhythmType;

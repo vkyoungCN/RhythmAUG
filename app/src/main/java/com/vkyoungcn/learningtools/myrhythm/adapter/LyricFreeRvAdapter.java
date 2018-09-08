@@ -48,7 +48,7 @@ public class LyricFreeRvAdapter extends RecyclerView.Adapter<LyricFreeRvAdapter.
             tv_description.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    AdapterMethodsHelper.longClickingDelete(context,getAdapterPosition(),DELETE_LYRIC);
+                    AdapterMethodsHelper.longClickingDelete(context,dataList.get(getAdapterPosition()).getId(),DELETE_LYRIC);
 
                     return true;
                 }

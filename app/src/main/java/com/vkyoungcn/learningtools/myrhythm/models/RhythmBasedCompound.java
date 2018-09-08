@@ -55,14 +55,23 @@ public class RhythmBasedCompound extends Rhythm {
     }
 
     public void setPrimaryLyricSerial(String primaryLyricSerial) {
+        if (primaryLyricSerial==null){
+            primaryLyricSerial="";
+        }
         this.primaryLyricSerial = primaryLyricSerial;
     }
 
     public void setSecondLyricSerial(String secondLyricSerial) {
+        if (secondLyricSerial==null){
+            secondLyricSerial="";
+        }
         this.secondLyricSerial = secondLyricSerial;
     }
 
     public void setLinkingPitches(ArrayList<Byte> linkingPitches) {
+        if (linkingPitches==null){
+            linkingPitches = new ArrayList<>((byte)0);
+        }
         this.linkingPitches = linkingPitches;
     }
 

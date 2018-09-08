@@ -5,6 +5,7 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -28,13 +29,14 @@ import static com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper.RHYTHM_TY
 import static com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper.RHYTHM_TYPE_68;
 
 public class AddRhythmFinalActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
-
+    private static final String TAG = "";
     private RhythmView rhythmView;
     private TextView tv_rhythmType;
     private CheckBox ckb_selfDesign;
     private CheckBox ckb_keepTop;
     private Spinner spinner;
     private EditText edt_description;
+    private EditText edt_title;
     private TextView tv_confirm;
 
     private RhythmBasedCompound rhythmBasedCompound;
@@ -56,6 +58,7 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
         ckb_keepTop = findViewById(R.id.ckb_keepTop_ARFA);
         spinner = findViewById(R.id.spinner_ARFA);
         edt_description = findViewById(R.id.edt_descriptionInput_ARFA);
+        edt_title = findViewById(R.id.edt_titleInput_ARFA);
         tv_confirm = findViewById(R.id.tv_confirm_ARFA);
 
         rhythmBasedCompound = getIntent().getParcelableExtra("COMPOUND_RHYTHM");
@@ -95,9 +98,15 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
                 rhythmBasedCompound.setSelfDesign(ckb_selfDesign.isChecked());
                 rhythmBasedCompound.setKeepTop(ckb_keepTop.isChecked());
                 rhythmBasedCompound.setStars(Integer.parseInt((String)(spinner.getSelectedItem())));
-                rhythmBasedCompound.setDescription(edt_description.getText().toString());//一定非null
+                rhythmBasedCompound.setDescription(edt_description.getText().toString());//一定非null(编译器提示)
 
                 long currentTime = System.currentTimeMillis();
+                String title = edt_title.getText().toString();
+                if(title.isEmpty()){
+                    title = "缺省标题"+currentTime%1000000;
+                }
+                rhythmBasedCompound.setTitle(title);//一定非null
+
                 rhythmBasedCompound.setCreateTime(currentTime);
                 rhythmBasedCompound.setLastModifyTime(currentTime);//二者严格一致
 
@@ -109,6 +118,8 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
                     //失败
                     isResultOk =false;
                 }
+                Log.i(TAG, "onClick: affected lines="+l);
+
                 //dfg中展示结果（从DB重新获取）
                 FragmentTransaction transaction = getFragmentManager().beginTransaction();
                 Fragment prev = getFragmentManager().findFragmentByTag("FINAL_ADD_RHYTHM");
@@ -132,8 +143,10 @@ public class AddRhythmFinalActivity extends AppCompatActivity implements OnGener
                 //在提示成功或失败的dfg中点击了确定后，依次返回原来的各调用页，无需传递数据。
                 if(isResultOk){
                     setResult(RESULT_CODE_RH_CREATE_DONE,null);
+//                    Log.i(TAG, "onButtonClickingDfgInteraction: resultCode to send back="+RESULT_CODE_RH_CREATE_DONE);
                 }else{
                     setResult(RESULT_CODE_RH_CREATE_FAILURE,null);
+//                    Log.i(TAG, "onButtonClickingDfgInteraction: resultCode to send back=..");
                 }
                 this.finish();
         }

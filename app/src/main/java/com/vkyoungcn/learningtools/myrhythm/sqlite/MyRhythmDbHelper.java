@@ -428,12 +428,15 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
     /*
      * 要删除一个节奏，需要①节奏删除……没有其他操作
      * */
-    public void deleteRhythmById(int rhythmId){
+    public int deleteRhythmById(int rhythmId){
         String deleteSingleRhythmSql = "DELETE FROM "+ MyRhythmContract.Rhythm.TABLE_NAME+" WHERE "+
                 MyRhythmContract.Rhythm._ID+" = "+rhythmId;
-        mSQLiteDatabase.execSQL(deleteSingleRhythmSql);
         getWritableDatabaseIfClosedOrNull();
+        int l = mSQLiteDatabase.delete(MyRhythmContract.Rhythm.TABLE_NAME,MyRhythmContract.Rhythm._ID+" = ? ",
+                new String[]{String.valueOf(rhythmId)});
+//        mSQLiteDatabase.execSQL(deleteSingleRhythmSql);
         closeDB();
+        return l;
 
     }
 
@@ -441,8 +444,8 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         String deleteSingleRhythmSql = "DELETE FROM "+ MyRhythmContract.GroupCrossModels.TABLE_NAME+" WHERE "+
                 MyRhythmContract.GroupCrossModels.COLUMN_MID+" = "+modelId+" AND "+
                 MyRhythmContract.GroupCrossModels.COLUMN_GID+" = "+groupId;
-        mSQLiteDatabase.execSQL(deleteSingleRhythmSql);
         getWritableDatabaseIfClosedOrNull();
+        mSQLiteDatabase.execSQL(deleteSingleRhythmSql);
         closeDB();
 
     }
@@ -450,16 +453,16 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
     public void deleteLyricById(int lyricId){
         String deleteSingleLyricSql = "DELETE FROM "+ MyRhythmContract.Lyric.TABLE_NAME+" WHERE "+
                 MyRhythmContract.Lyric._ID+" = "+lyricId;
-        mSQLiteDatabase.execSQL(deleteSingleLyricSql);
         getWritableDatabaseIfClosedOrNull();
+        mSQLiteDatabase.execSQL(deleteSingleLyricSql);
         closeDB();
 
     }
     public void deletePitchesById(int pitchesId){
         String deletePitchesSql = "DELETE FROM "+ MyRhythmContract.Pitches.TABLE_NAME+" WHERE "+
                 MyRhythmContract.Pitches._ID+" = "+pitchesId;
-        mSQLiteDatabase.execSQL(deletePitchesSql);
         getWritableDatabaseIfClosedOrNull();
+        mSQLiteDatabase.execSQL(deletePitchesSql);
         closeDB();
 
     }
@@ -468,9 +471,8 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         String deleteSql = "DELETE FROM "+ MyRhythmContract.Group.TABLE_NAME+" WHERE "+
                 MyRhythmContract.Group._ID+" = "+groupId;
         //考虑到cascade的设定，就不对交叉表做手动处理了。
-
-        mSQLiteDatabase.execSQL(deleteSql);
         getWritableDatabaseIfClosedOrNull();
+        mSQLiteDatabase.execSQL(deleteSql);
         closeDB();
     }
 

@@ -74,7 +74,7 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
             llt_overall.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    AdapterMethodsHelper.longClickingDelete(context,getAdapterPosition(),DELETE_RHYTHM);
+                    AdapterMethodsHelper.longClickingDelete(context,dataList.get(getAdapterPosition()).getId(),DELETE_RHYTHM);
 
                     return true;
                 }
@@ -127,7 +127,7 @@ public class RhythmRvAdapter extends RecyclerView.Adapter<RhythmRvAdapter.ViewHo
         holder.getTv_title().setText(singleModel.getTitle());
         holder.getMainModelView().setRhythmViewData(singleModel);
 //        Log.i(TAG, "onBindViewHolder: rhythm.SIZE="+singleModel.getCodeSerialByte().size());
-//        holder.getTv_createTime().setText(singleModel.getCreateTimeStr());
+        holder.getTv_createTime().setText(singleModel.getCreateTimeStr());
 
     }
 

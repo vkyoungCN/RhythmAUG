@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
@@ -19,6 +20,7 @@ public class ThreadRvBassActivity<T extends BaseModel,K extends RecyclerView.Ada
     public static final int MESSAGE_PRE_DB_FETCHED = 5505;
     public static final int MESSAGE_RE_FETCHED = 5506;
 
+    private static final String TAG = "ThreadRvBassActivity";
     RecyclerView mRv;
     K adapter;
     View maskView;
@@ -56,7 +58,26 @@ public class ThreadRvBassActivity<T extends BaseModel,K extends RecyclerView.Ada
         }
     }
 
+    class ReFetchDataRunnable implements Runnable{
+        @Override
+        public void run() {
+            reFetchAndSort();//子类可以通过覆写该方法实现自定义行为
+//            Log.i(TAG, "run: reFetchRunnable");
+            //然后封装消息
+            Message message = new Message();
+            message.what = MESSAGE_RE_FETCHED;
+            //数据通过全局变量直接传递。
+
+            handler.sendMessage(message);
+
+        }
+    }
+
     void fetchAndSort(){
+
+    }
+
+    void reFetchAndSort(){
 
     }
 
@@ -89,6 +110,7 @@ public class ThreadRvBassActivity<T extends BaseModel,K extends RecyclerView.Ada
 
                 break;
             case MESSAGE_RE_FETCHED:
+//                Log.i(TAG, "handleMessage: ReFetched");
                 //取消遮罩、更新rv数据
                 if(maskView.getVisibility() == View.VISIBLE) {
                     maskView.setVisibility(View.GONE);
@@ -105,24 +127,27 @@ public class ThreadRvBassActivity<T extends BaseModel,K extends RecyclerView.Ada
 
     @Override
     public void onButtonClickingDfgInteraction(int dfgType, Bundle data) {
+        int modelId = data.getInt("MODEL_ID");
         switch (dfgType){
             case DELETE_RHYTHM:
-                rhythmDbHelper.deleteRhythmById(data.getInt("MODEL_ID"));
+
+                int l = rhythmDbHelper.deleteRhythmById(modelId);
+//                Log.i(TAG, "onButtonClickingDfgInteraction: deleteRh. id="+modelId+", affected lines="+l);
                 //删完要刷新
-                new Thread(new FetchDataRunnable()).start();
+                new Thread(new ReFetchDataRunnable()).start();
                 break;
 
             case DELETE_GROUP:
                 rhythmDbHelper.deleteGroupById(data.getInt("MODEL_ID"));
                 //删完要刷新
-                new Thread(new FetchDataRunnable()).start();
+                new Thread(new ReFetchDataRunnable()).start();
                 break;
 
             case REMOVE_RHYTHM:
             case REMOVE_LYRIC:
                 rhythmDbHelper.removeModelCrossGroup(data.getInt("MODEL_ID"),data.getInt("GROUP_ID"));
                 //删完要刷新
-                new Thread(new FetchDataRunnable()).start();
+                new Thread(new ReFetchDataRunnable()).start();
                 break;
 
         }

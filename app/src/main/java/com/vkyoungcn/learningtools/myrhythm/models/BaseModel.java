@@ -49,6 +49,9 @@ public class BaseModel implements Parcelable {
     }
 
     public void setCodeSerialString(String codeSerialString) {
+        if(codeSerialString==null){//【引用类型需要这样处理一下。（可能多此一举了？）】
+            codeSerialString = "";
+        }
         this.codeSerialString = codeSerialString;
     }
 
@@ -57,6 +60,9 @@ public class BaseModel implements Parcelable {
     }
 
     public void setDescription(String description) {
+        if(description==null){
+            description = "";
+        }
         this.description = description;
     }
 

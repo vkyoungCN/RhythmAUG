@@ -42,8 +42,9 @@ public class RhythmPureEditActivity extends AppCompatActivity implements OnGener
             case RHYTHM_PURE_EDIT_DONE:
                 //准备返回节奏详情页（携带最新修改的rh信息）。
                 Intent intentBack = new Intent();
+//                Log.i(TAG, "onButtonClickingDfgInteraction: model="+data.getParcelable("COMPOUND_RHYTHM").toString());
                 intentBack.putExtra("MODEL",data.getParcelable("COMPOUND_RHYTHM"));
-                setResult(RESULT_CODE_RH_PURE_EDIT_DONE);
+                setResult(RESULT_CODE_RH_PURE_EDIT_DONE,intentBack);
                 this.finish();
                 break;
         }

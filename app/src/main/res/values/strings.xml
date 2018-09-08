@@ -19,7 +19,7 @@
     <string name="add_rhythm_step_1">新增节奏（步骤1/3）</string>
     <string name="chooseRhythmType">选择节奏类型</string>
     <string name="add_rhythm_info_1">请选择适当的节奏类型。</string>
-    <string name="rhythmType">节拍\n形式</string>
+    <string name="rhythmType">节拍形式</string>
     <string name="str_2_over4">2/4</string>
     <string name="str_3_over4">3/4</string>
     <string name="str_4_over4">4/4</string>
@@ -184,5 +184,9 @@
     <string name="plh_areaIndex">选区：S[s%1$d-u%2$d]&#8212;E[s%3$d-u%4$d]</string>
     <string name="bar2">--</string>
     <string name="singleSpot">单点模式</string>
+    <string name="sectionAddToEnd">新节：末端追加</string>
+    <string name="titleHere">标题</string>
+    <string name="dots">&#8230;</string>
+    <string name="refresh1">Rfh.</string>
 
 </resources>

@@ -144,27 +144,17 @@ public class CodeSerial_Rhythm {
     }
 
     /* 选区内恰好是一或二个整拍*/
-    public boolean checkAreaOneOrTwoNicelyBeat(int startIndex,int endIndex){
+    public boolean checkAreaOneNicelyBeat(int startIndex,int endIndex){
         int areaTotalValue = getAreaValue(startIndex,endIndex);
-
-        if(areaTotalValue==valueOfBeat){
+        return(areaTotalValue==valueOfBeat)&&(!checkAreaCrossBeats(startIndex,endIndex));
             //区域时值恰=单整拍；
             //此时还需要中间没有拍间隔126
-            if(checkAreaCrossBeats(startIndex,endIndex)){
-                return false;//是跨拍的1拍
-            }else {
-                return true;
-            }
-        }else if(areaTotalValue == valueOfBeat*2){
-            //要求126仅有1个
-            if(checkAreaCrossBeatsTimes(startIndex,endIndex)==1){
-                return true;
-            }else {
-                return false;
-            }
-        }else{//(areaTotalValue!=(valueOfBeat)&&areaTotalValue!=(valueOfBeat*2))
-            return false;//区域时值不是1或2倍整拍。直接false。
-        }
+    }
+
+    public boolean checkAreaTwoNicelyBeat(int startIndex,int endIndex){
+        int areaTotalValue = getAreaValue(startIndex,endIndex);
+        return (areaTotalValue == valueOfBeat*2)&&(checkAreaCrossBeatsTimes(startIndex,endIndex)==1);
+        //时值两拍，允许1个间隔。
     }
 
     //获取选定编码的值
@@ -935,6 +925,11 @@ public class CodeSerial_Rhythm {
                 break;
             }
         }
+        if(nextRealIndex == -1){
+            //后面没有实际音符了（结尾）
+            return 127;
+        }
+
         if(codeSerial.get(nextRealIndex)==0){
             codeSerial.set(nextRealIndex,(byte)valueOfBeat);//改为一个X
             return valueOfBeat;

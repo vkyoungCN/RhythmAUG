@@ -6,6 +6,7 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Message;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
@@ -71,14 +72,26 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
 
 
     void fetchAndSort() {
+//        Log.i(TAG, "fetchAndSort: main reFetch");
         //获取数据
         dataFetched = rhythmDbHelper.getTopKeepCompoundRhythmsOrModifiedLaterThan(timeThreshold) ;
+//        Log.i(TAG, "fetchAndSort: main reFetched.Size="+dataFetched.size());
         //对返回的节奏进行排序（置顶的在最上，其余按时间，越近越先）
         shaftRhythms(dataFetched);
-        //获取总量数字
-        rhythmsAllAmount = rhythmDbHelper.getAmountOfRhythms();//有一个控件需要使用节奏总数量
+        //获取总量数字【这也是需要再对RRBA再重写一遍的原因，多了这个字段的需求。】
+        rhythmsAllAmount = dataFetched.size();//有一个控件需要使用节奏总数量
     }
 
+    void reFetchAndSort(){
+        //获取节奏数据
+        dataFetched.clear();
+        dataFetched.addAll(rhythmDbHelper.getAllCompoundRhythms());
+        //对返回的节奏进行排序（按修改时间降序？）
+        Collections.sort(dataFetched,new SortByModifyTime());
+
+        rhythmsAllAmount = dataFetched.size();//有一个控件需要使用节奏总数量
+
+    }
 
         /*
      * 当Fab按键系统的主按钮点击时调用
@@ -115,7 +128,7 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
 
 
 
-    public void addRhythm(View view){
+    public void createRhythm(View view){
 //        点击后记得把面板收回。
         collapseFabPanel();
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
@@ -164,10 +177,11 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
 
 
     void handleMessage(Message message) {
-        super.handleMessage(message);
+//        Log.i(TAG, "handleMessage: MA handle. amount="+rhythmsAllAmount);
 
         //上方还有一个Tv没有设置数据(不区分sw_case)
         tv_rhythmAmount.setText(String.format(getResources().getString(R.string.psh_totalRhythmAmount),rhythmsAllAmount));
+        super.handleMessage(message);
 
     }
 
@@ -181,13 +195,13 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
                 int rhythmTypeChose = data.getInt("RHYTHM_TYPE");
 
                 Intent intentToRhStep_2 = new Intent(this,RhythmCreateActivity.class);
-                intentToRhStep_2.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+//                intentToRhStep_2.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);【如果有这个就没法传回来结果码，暂注释，待改】
                 intentToRhStep_2.putExtra("RHYTHM_TYPE",rhythmTypeChose);
                 this.startActivityForResult(intentToRhStep_2,REQUEST_CODE_RH_CREATE);
                 break;
             case DELETE_RHYTHM:
                 //基类中执行 DB删除和刷新，再执行改总数
-                tv_rhythmAmount.setText(String.format(getResources().getString(R.string.psh_totalRhythmAmount),rhythmsAllAmount));
+//                tv_rhythmAmount.setText(String.format(getResources().getString(R.string.psh_totalRhythmAmount),rhythmsAllAmount));
                 break;
 
         }
@@ -213,10 +227,11 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         //更新当前列表的显示，重新获取“置顶和新的”节奏数据
-
+//        Log.i(TAG, "onActivityResult: resultCode="+resultCode);
         switch (resultCode){
             case RESULT_CODE_RH_CREATE_DONE:
-                new Thread(new FetchDataRunnable()).start();
+//                Log.i(TAG, "onActivityResult: CREATED DONE.");
+                new Thread(new ReFetchDataRunnable()).start();
                 break;
             case RESULT_CODE_RH_CREATE_FAILURE:
             case DELIVER_ERROR:
@@ -251,5 +266,8 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
         compounds.addAll(tempCodes_UnKeepTop);
     }
 
+    public void refresh(View view){
+        new Thread(new ReFetchDataRunnable()).start();
+    }
 
 }

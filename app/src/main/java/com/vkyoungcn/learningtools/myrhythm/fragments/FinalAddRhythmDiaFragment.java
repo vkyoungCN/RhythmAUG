@@ -3,6 +3,7 @@ package com.vkyoungcn.learningtools.myrhythm.fragments;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -94,6 +95,8 @@ public class FinalAddRhythmDiaFragment extends DialogFragment
         switch (view.getId()){
             case R.id.btn_ok_finaladdRhDfg:
                 //确定了直接返回就好了
+//                Log.i(TAG, "onClick: dft for back="+RHYTHM_CREATE_DONE);
+//                Log.i(TAG, "onClick: mListener="+mListener.toString());
                 mListener.onButtonClickingDfgInteraction(RHYTHM_CREATE_DONE,null);
                 this.dismiss();
                 break;

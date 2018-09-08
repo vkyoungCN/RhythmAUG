@@ -11,6 +11,7 @@ import com.vkyoungcn.learningtools.myrhythm.adapter.RhythmRvAdapter;
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class AllModelsActivity extends ThreadRvBassActivity{
 
@@ -45,6 +46,12 @@ public class AllModelsActivity extends ThreadRvBassActivity{
         dataFetched = rhythmDbHelper.getAllCompoundRhythms();
         dataList_lyric = rhythmDbHelper.getAllLyrics();//不按归属
 //        rhythmDbHelper.(group.getId());
+
+    }
+    void reFetchAndSort(){
+        //获取节奏数据
+        dataFetched.clear();
+        dataFetched.addAll(rhythmDbHelper.getAllLyrics());
 
     }
 

@@ -40,6 +40,9 @@ public class BaseDualCodeSerialModel extends BaseModel {
     }
 
     public void setCodeSerialByte(ArrayList<Byte> codeSerialByte) {
+        if(codeSerialByte==null){
+            codeSerialByte = new ArrayList<>((byte)0);
+        }
         this.codeSerialString = getStrCodeFromByteCode(codeSerialByte);
         this.codeSerialByte = codeSerialByte;
     }
@@ -54,6 +57,9 @@ public class BaseDualCodeSerialModel extends BaseModel {
     /* 为实现两种编码互相转换而需要的一些方法*/
     private void setPitchSequenceFromStr(String pitchesCodeSerialStr){
         this.codeSerialByte.clear();
+        if(pitchesCodeSerialStr == null){
+            pitchesCodeSerialStr = "";//排错空指针问题
+        }
         for (byte b :pitchesCodeSerialStr.getBytes()) {
             this.codeSerialByte.add(b);
         }//无法利用Arrays.asList()直接转换，基础类型。

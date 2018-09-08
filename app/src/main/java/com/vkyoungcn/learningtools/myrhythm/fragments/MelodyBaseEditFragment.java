@@ -121,6 +121,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     TextView tv_bottomInfo_rhType;
     TextView tv_bottomInfo_cursor;
     TextView tv_bottomInfo_Acursor;
+    TextView tv_bottomInfo_newSectionToEnd;
 
     /* 音高输入组件*/
     /*TextView tv_pitch_1;
@@ -160,15 +161,16 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        /*this.rhythmBasedCompound = getArguments().getParcelable("RHYTHM");
+        this.rhythmBasedCompound = getArguments().getParcelable("RHYTHM");
         if(rhythmBasedCompound==null){
             Toast.makeText(getContext(), "传递的节奏数据为空，退出", Toast.LENGTH_SHORT).show();
             getActivity().finish();//【这样退出是否正确？】
             return;
-        }*/
+        }
         this.csRhythmHelper = new CodeSerial_Rhythm(rhythmBasedCompound);
         this.codeSerial = rhythmBasedCompound.getCodeSerialByte();
         this.valueOfBeat = RhythmHelper.calculateValueBeat(rhythmBasedCompound.getRhythmType());
+//        Log.i(TAG, "onCreate: rhBc type="+rhythmBasedCompound.getRhythmType());
 
     }
 
@@ -219,6 +221,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         tv_bottomInfo_rhType.setText(RhythmHelper.getStrRhythmType(rhythmBasedCompound.getRhythmType()));
         tv_bottomInfo_cursor = rootView.findViewById(R.id.tv_infoBottom_cI_EM);
         tv_bottomInfo_Acursor = rootView.findViewById(R.id.tv_infoBottom_aI_EM);
+        tv_bottomInfo_newSectionToEnd = rootView.findViewById(R.id.tv_infoBottom_secAddEnd_EM);
         tv_bottomInfo_cursor.setText(String.format(getResources().getString(R.string.plh_currentIndex),
                 rh_editor_EM.getBlueBoxSectionIndex(),rh_editor_EM.getBlueBoxUnitIndex()));//初始
 
@@ -286,7 +289,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
             case R.id.tv_selectDualBeat:
                 //【注意，由于双拍存在方向切换，为排除错误，同时简化逻辑，在此要求只能基于单点坐标选取】
                 tv_topInfo.setText("选中双整拍（可转切分、附点）");
-                Log.i(TAG, "onClick: select Dual Beats");
+//                Log.i(TAG, "onClick: select Dual Beats");
                 resetSelectionAreaToDualBeat();
                 dualBeatModeOn = true;
                 oneBeatModeOn = false;
@@ -571,26 +574,46 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                 if(freeAreaModeOn){
                     //选区模式下（包括两端实质相等时）
                     //检测选区是否恰为1或2个拍子（如不得是半+半、半+1+半等的形式；且时值符合1或2beat）
-                    if(!csRhythmHelper.checkAreaOneOrTwoNicelyBeat(selectStartIndex,selectEndIndex)){
-                        Toast.makeText(getContext(), "需选定整拍、整双拍后才可执行转换。", Toast.LENGTH_SHORT).show();
-                        return;
-                    }else {
-                        //可以改
-
+                    if(csRhythmHelper.checkAreaOneNicelyBeat(selectStartIndex,selectEndIndex)){
                         if(csRhythmHelper.replaceAreaToHaveSpot(selectStartIndex,selectEndIndex)<33){
-
+                            //整1拍，可以改
                             currentUnitIndex = selectStartIndex;//先改一个光标（统一位置）
                             rh_editor_EM.boxMovedSuccessReDraw(currentUnitIndex,false,false);
+//                            Log.i(TAG, "onClick: to Single Spot");
                             //这样在rhV中，区域模式关闭，不绘制区域选框。（在du数量减小时，不越界）
                             // 更新后再改为选区。不能直接改选区，如【形如8 8 126 16的编码段，直接改为选区
                             // (ssi,ssi+2)的后端恰=126，转换不到正确的dU，会返回-1（稍后或可对该转换方法改进？）
                             rh_editor_EM.codeChangedReDraw();
+//                            Log.i(TAG, "onClick: cs="+codeSerial.toString());
 
                             //然后改选区，调边界
-                            selectEndIndex = selectStartIndex+2;//【附点后面有126，因而需要+2】
+                            selectEndIndex = selectStartIndex+1;//【1拍的附点后面没有126，两拍有一个，因而需要+2】
+//                            Log.i(TAG, "onClick: ssi="+selectStartIndex+",sei="+selectEndIndex);
                             rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,true);
                             checkMoveModeAndSetBottomInfo();
                         }
+                    }else if(csRhythmHelper.checkAreaTwoNicelyBeat(selectStartIndex,selectEndIndex)){
+                        //整2拍，可以改
+                        if(csRhythmHelper.replaceAreaToHaveSpot(selectStartIndex,selectEndIndex)<33){
+
+                            currentUnitIndex = selectStartIndex;//先改一个光标（统一位置）
+                            rh_editor_EM.boxMovedSuccessReDraw(currentUnitIndex,false,false);
+//                            Log.i(TAG, "onClick: to Single Spot");
+                            //这样在rhV中，区域模式关闭，不绘制区域选框。（在du数量减小时，不越界）
+                            // 更新后再改为选区。不能直接改选区，如【形如8 8 126 16的编码段，直接改为选区
+                            // (ssi,ssi+2)的后端恰=126，转换不到正确的dU，会返回-1（稍后或可对该转换方法改进？）
+                            rh_editor_EM.codeChangedReDraw();
+//                            Log.i(TAG, "onClick: cs="+codeSerial.toString());
+
+                            //然后改选区，调边界
+                            selectEndIndex = selectStartIndex+2;//【附点后面有126，因而需要+2】
+//                            Log.i(TAG, "onClick: ssi="+selectStartIndex+",sei="+selectEndIndex);
+                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,true);
+                            checkMoveModeAndSetBottomInfo();
+                        }
+                    }else {
+                        //选区模式同时区域内时值不符，或不是恰整拍子
+                        Toast.makeText(getContext(), "需选定整拍、整双拍后才可执行转换。", Toast.LENGTH_SHORT).show();
                     }
                 }else {
                     //单点模式
@@ -602,7 +625,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                             rh_editor_EM.codeChangedReDraw();
 
                             //转选区模式（原位置+包含后一个）
-                            selectEndIndex = selectStartIndex+1;
+                            selectEndIndex = selectStartIndex+1;//单点模式下肯定不是双排，中间没有126
                             tv_topInfo.setText("选区模式");
                             freeAreaModeOn = true;
                             moveAreaStart = true;//强制按前端选定模式
@@ -780,12 +803,17 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
             case R.id.tv_atEnd:
                 sectionAddToEnd = !sectionAddToEnd;
+                if(sectionAddToEnd){
+                    tv_bottomInfo_newSectionToEnd.setText(getResources().getString(R.string.sectionAddToEnd));
+                }else {
+                    tv_bottomInfo_newSectionToEnd.setText("");
+                }
                 break;
 
             case R.id.tv_sectionAdd:
                 //构造新节编码
                 ArrayList<Byte> sectionForAdd = RhythmHelper.getStandardEmptySection(rhythmBasedCompound.getRhythmType());
-
+//                Log.i(TAG, "onClick: rhType="+rhythmBasedCompound.getRhythmType()+",section for add ="+sectionForAdd.toString());
                 if(sectionAddToEnd){
                     codeSerial.addAll(sectionForAdd);
 
@@ -842,6 +870,8 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                     }
 
                     checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
+
+                    //删除之后，光标改为单点
                 }
                 break;
 

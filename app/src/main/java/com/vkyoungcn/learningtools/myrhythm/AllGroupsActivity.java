@@ -5,6 +5,8 @@ import android.support.v7.widget.LinearLayoutManager;
 
 import com.vkyoungcn.learningtools.myrhythm.adapter.GroupRvAdapter;
 
+import java.util.Collections;
+
 public class AllGroupsActivity extends ThreadRvBassActivity {
 
     @Override
@@ -24,6 +26,12 @@ public class AllGroupsActivity extends ThreadRvBassActivity {
         dataFetched = rhythmDbHelper.getAllGroups();
         //不需排序
     }
+    void reFetchAndSort(){
+        //获取节奏数据
+        dataFetched.clear();
+        dataFetched.addAll(rhythmDbHelper.getAllGroups());
+    }
+
 
     @Override
     void loadAdapter() {

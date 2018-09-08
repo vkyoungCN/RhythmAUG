@@ -8,6 +8,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
 import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
@@ -21,7 +22,7 @@ import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE
 public class RhythmOverallEditActivity extends BaseModelEditActivity {
 
     /* 特有控件*/
-    private RhythmView rhythmView;
+    private RhythmSingleLineView rhythmView;
 
 
     @Override

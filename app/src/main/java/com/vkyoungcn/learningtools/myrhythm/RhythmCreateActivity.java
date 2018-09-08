@@ -5,6 +5,7 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
@@ -21,7 +22,7 @@ import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_FAILURE;
 
 public class RhythmCreateActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
-
+    private static final String TAG = "RhythmCreateActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +50,8 @@ public class RhythmCreateActivity extends AppCompatActivity implements OnGeneral
         ArrayList<Byte> sectionForAdd = RhythmHelper.getStandardEmptySection(rhythmType);
         RhythmBasedCompound rhythmBasedCompound = new RhythmBasedCompound();
         rhythmBasedCompound.setCodeSerialByte(sectionForAdd);
+        rhythmBasedCompound.setRhythmType(rhythmType);
+//        Log.i(TAG, "onCreate: section created="+sectionForAdd.toString());
 
         Fragment editFragment = MelodyCreateFragment.newInstance(rhythmBasedCompound);
         transaction.add(R.id.flt_fgContainer_CRA,editFragment,"CREATE_RH").commit();
@@ -71,7 +74,8 @@ public class RhythmCreateActivity extends AppCompatActivity implements OnGeneral
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
+//        Toast.makeText(this, "resultCode HalfWay"+resultCode, Toast.LENGTH_SHORT).show();
+//        Log.i(TAG, "onActivityResult: resultCode="+resultCode);
         switch (resultCode){
             case RESULT_CODE_RH_CREATE_DONE:
                 setResult(RESULT_CODE_RH_CREATE_DONE,data);//这个data应该是null
