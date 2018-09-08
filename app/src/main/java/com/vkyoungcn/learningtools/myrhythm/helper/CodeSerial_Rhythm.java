@@ -58,6 +58,49 @@ public class CodeSerial_Rhythm {
         return codeSerial;
     }
 
+    //检测是否跨拍子（合并时不允许跨拍）
+    public boolean checkAreaCrossBeats(int startIndex, int endIndex){
+        for(int i=startIndex;i<=endIndex;i++){
+            if(codeSerial.get(i)==126){
+                //不允许跨拍合并
+                return true;//不允许跨拍合并
+            }
+        }//通过了检测，没有跨拍（选定的是1拍或不足1拍）
+        return false;
+    }
+
+    public int checkAreaCrossBeatsTimes(int startIndex, int endIndex){
+        int times = 0;
+        for(int i=startIndex;i<=endIndex;i++){
+            if(codeSerial.get(i)==126){
+                times++;
+            }
+        }
+        return times;
+    }
+
+    /*
+    * 检测区域内是否：①仅有X/-；②仅有0，③仅有X
+    * 满足方可进行合并，否则（不符合直观的使用习惯）
+    * */
+    public boolean checkAreaPureCodes(int startIndex, int endIndex){
+        boolean hasEmptyCode = false;
+        boolean hasXOrBar = false;
+        boolean hasOtherReal =false;
+        for(int i=startIndex;i<=endIndex;i++){
+            if(!hasXOrBar&&codeSerial.get(i)>=0){
+                hasXOrBar = true;
+            }else if(!hasEmptyCode&&codeSerial.get(i)<0){
+                hasEmptyCode = true;
+            }else if(!hasOtherReal&&codeSerial.get(i)>24&&codeSerial.get(i)<110){
+                hasOtherReal = true;
+            }
+        }
+
+        return (!hasOtherReal)&&((hasXOrBar&&!hasEmptyCode)||(!hasXOrBar&&hasEmptyCode));
+        //在没有其他（均分多连）的情况下，两类只能有其一。
+    }
+
 
     /* 业务方法*/
     /* 区域合并*/
@@ -69,12 +112,12 @@ public class CodeSerial_Rhythm {
         if(startIndex>endIndex){
             return 3033;//起止反序。
         }
-        for(int i=startIndex;i<=endIndex;i++){
-            if(codeSerial.get(i)==126){
-                //不允许跨拍合并
-                return 3301;//不允许跨拍合并
-            }
-        }//通过了检测，没有跨拍（选定的是1拍或不足1拍）
+
+       /* 外置，调用方直接检查后给出提示。
+        if(checkAreaCrossBeats(startIndex,endIndex)){
+            //不允许跨拍合并
+            return 3301;//不允许跨拍合并
+        }//通过了检测，没有跨拍（选定的是1拍或不足1拍）*/
 
         int areaTotalValue = getAreaValue(startIndex,endIndex);
 
@@ -99,6 +142,31 @@ public class CodeSerial_Rhythm {
         }
         return areaTotalValue;
     }
+
+    /* 选区内恰好是一或二个整拍*/
+    public boolean checkAreaOneOrTwoNicelyBeat(int startIndex,int endIndex){
+        int areaTotalValue = getAreaValue(startIndex,endIndex);
+
+        if(areaTotalValue==valueOfBeat){
+            //区域时值恰=单整拍；
+            //此时还需要中间没有拍间隔126
+            if(checkAreaCrossBeats(startIndex,endIndex)){
+                return false;//是跨拍的1拍
+            }else {
+                return true;
+            }
+        }else if(areaTotalValue == valueOfBeat*2){
+            //要求126仅有1个
+            if(checkAreaCrossBeatsTimes(startIndex,endIndex)==1){
+                return true;
+            }else {
+                return false;
+            }
+        }else{//(areaTotalValue!=(valueOfBeat)&&areaTotalValue!=(valueOfBeat*2))
+            return false;//区域时值不是1或2倍整拍。直接false。
+        }
+    }
+
     //获取选定编码的值
     private int getCodeValue(byte code,int valueOfBeat){
         if(code>111){
@@ -275,12 +343,10 @@ public class CodeSerial_Rhythm {
         return areaValue;
     }
 
-    public int changeAreaToHaveSpot(int startIndex,int endIndex){
-        if(checkAreaUnderCurve(startIndex,endIndex)){
-            return 3077;//被连音弧覆盖，退出。
-        }
+    public int replaceAreaToHaveSpot(int startIndex, int endIndex){
         //不必检测区域时值是否符合，调用方限定1整拍、2整拍，单点单拍三种情形
-        //仅检测逻辑
+        //调用方检测连音弧
+        //仅为逻辑检测区域时值
         int areaValue = getAreaValue(startIndex,endIndex);
         ArrayList<Byte> codePiece = new ArrayList<>();
         if(areaValue>valueOfBeat){
@@ -307,9 +373,9 @@ public class CodeSerial_Rhythm {
 
 
     public int changeAreaToRwd16(int startIndex,int endIndex){
-        if(checkAreaUnderCurve(startIndex,endIndex)){
+       /* if(checkAreaUnderCurve(startIndex,endIndex)){
             return 3077;//被连音弧覆盖，退出。
-        }
+        }调用方负责*/
         //不必检测区域时值是否符合，调用方限定1整拍、单点单拍情形
         //仅检测逻辑
         ArrayList<Byte> codePiece = new ArrayList<>();
@@ -328,9 +394,9 @@ public class CodeSerial_Rhythm {
     }
 
     public int changeAreaToFwd16(int startIndex,int endIndex){
-        if(checkAreaUnderCurve(startIndex,endIndex)){
+      /*  if(checkAreaUnderCurve(startIndex,endIndex)){
             return 3077;//被连音弧覆盖，退出。
-        }
+        }*/
         //不必检测区域时值是否符合，调用方限定1整拍、单点单拍情形
         //仅检测逻辑
         ArrayList<Byte> codePiece = new ArrayList<>();
@@ -404,6 +470,24 @@ public class CodeSerial_Rhythm {
 
     }
 
+
+
+    /* 区域内是否只有X或者只有X和-（要求X开头）*/
+    public boolean checkAreaXOrXBarAndStartWithX(int startIndex, int endIndex){
+        //检测内部
+        if(codeSerial.get(startIndex)<=0||codeSerial.get(startIndex)>25){
+            return false;//首个音符不是X。
+        }
+
+        for(int i=startIndex+1;i<=endIndex;i++){
+            if(codeSerial.get(i)>25||codeSerial.get(i)<0){
+                return false;//其他音符不是X或bar
+            }
+
+        }
+
+        return true;
+    }
 
     //如果要替换为延音符，要求：①独占整拍(不能位于序列的首位，前后紧邻的应该是拍尾（前方紧邻节尾也合理）)，
     // ②前一音符需要也是独占整拍
@@ -700,32 +784,78 @@ public class CodeSerial_Rhythm {
             return emptyCode;
     }
 
+    public int removeCurve(int index,boolean nextCurveCoverHere){
+        //由外部调用方负责检测后方的弧是否覆盖到本区域（传入的布尔用于提醒调用时注意先完成检测）
+        if(!nextCurveCoverHere){
+            return 3077;//尚未完成检测？（用于强制调用方检测，避免危险使用。）
+        }
+        for(int i=index;i<codeSerial.size();i++){
+            //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
+            byte b = codeSerial.get(i);
+            if(b>111&&b<126){
+                    codeSerial.remove(i);//移除
+                return b;
+            }
+        }
+        return 3077;
+    }
 
     /* 辅助方法*/
     //检测当前符号是否位于连音弧覆盖之下
     public boolean checkCurveCovering(int index){
-        int span = 0;//【这个span是codeSerial的跨度，126等也要计入其内！】
+        int duSpan = 0;//【这个span是codeSerial的跨度，126等也要计入其内！】
         int curveEndIndex = -1; //初始值采用不可能值
         int curveStartIndex = -1;
+        int skipNum = 0;
         for(int i=index;i<codeSerial.size();i++){
             //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
-            byte currentCode = codeSerial.get(i);
-            if(currentCode>111&&currentCode<126){
+            byte b = codeSerial.get(i);
+            if(b >125){
+                skipNum++;
+            }else if(b>111){
                 //112~125是连音弧结束标记
-                span = currentCode-110;
-                curveEndIndex = i;//结尾index是curve结束标记所在位置。
-                curveStartIndex = i-span+1;
-
+                duSpan = b-110;
+//                Log.i(TAG, "checkCurveCovering: Curvel end index="+i+",span="+duSpan+",current index="+index);
+                curveEndIndex = i;//结尾index是curve结束标记所在位置(编码位置)。
+                curveStartIndex = i-duSpan-skipNum;//编码的跨度，需要再加上无dU的编码数（由于向前，实际是减去）。
+                //从end按span、skipNum计算start时，由于code位比du位多1，且span按du计，因而不必多减1【已实测。】
+//                Log.i(TAG, "checkCurveCovering: curve start index="+curveStartIndex+"curve end index="+curveEndIndex
+//                        +"current index="+index);
                 return ((curveStartIndex<=index)&&(curveEndIndex>index));
                 //前提是不允许多层连音弧。
             }
         }
         return false;
     }
+    public ArrayList<Byte> getCurrentSection(int index){
+        int startIndex= 0;
+        int endIndex = codeSerial.size()-1;
+        ArrayList<Byte> sectionList = new ArrayList<>();
+
+        for(int i=index;i>0;i--) {
+            if (codeSerial.get(i) == 127) {
+                startIndex = i+1;
+                break;
+            }
+        }
+        for(int j=index;j<codeSerial.size();j++){
+            if(codeSerial.get(j)==127){
+                endIndex = j;
+                break;
+            }
+        }
+        for(int k=startIndex;k<=endIndex;k++){
+            sectionList.add(codeSerial.get(k));
+        }
+        return sectionList;
+    }
+
+
 
     public int addCurveForArea(int startIndex,int endIndex){
-        int span = endIndex-startIndex+1;
-        byte curveCode = (byte)(110+span);
+        int skipNum = getUnDrawingCodeNum(startIndex,endIndex);
+        int duSpan = endIndex-startIndex+1-skipNum;
+        byte curveCode = (byte)(110+duSpan);
         if(curveCode>125){
             return 3077;
         }
@@ -733,28 +863,18 @@ public class CodeSerial_Rhythm {
         return curveCode;
     }
 
-    public int removeCurveOver(int index){
-        int span = 0;//【这个span是codeSerial的跨度，126等也要计入其内！】
-        int curveEndIndex = -1; //初始值采用不可能值
-        int curveStartIndex = -1;
-        for(int i=index;i<codeSerial.size();i++){
-            //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
-            byte currentCode = codeSerial.get(i);
-            if(currentCode>111&&currentCode<126){
-                //112~125是连音弧结束标记
-                span = currentCode-110;
-                curveEndIndex = i;//结尾index是curve结束标记所在位置。
-                curveStartIndex = i-span+1;
-
-                if ((curveStartIndex<=index)&&(curveEndIndex>index)){
-                    //上方有弧
-                    codeSerial.remove(curveEndIndex);//移除
-                    return curveEndIndex;
-                }
+    //在构造连音弧跨度时，需要将其中不绘制的编码剔除
+    public int getUnDrawingCodeNum(int startIndex,int endIndex){
+        int times = 0;
+        for(int i=startIndex;i<=endIndex;i++){
+            if(codeSerial.get(i)>125){
+                times++;
             }
         }
-        return 3077;
+        return times;
     }
+
+
 
 
     public int removeSection(int currentIndex){
@@ -848,7 +968,7 @@ public class CodeSerial_Rhythm {
 
     public boolean checkLeftRealIsXOrBar(int currentIndex){
         int leftRealIndex = -1;
-        for(int i=currentIndex;i>=0;i--){
+        for(int i=currentIndex-1;i>=0;i--){
             if(codeSerial.get(i)<110){
                 leftRealIndex = i;
                 break;
@@ -1039,16 +1159,16 @@ public class CodeSerial_Rhythm {
 
         byte currentCode = codeSerial.get(index);
 
-        if (currentCode > 111) {
+       /* if (currentCode > 111) {
             //如果要修改的位置原本是112+(连音弧结束标记),126，127，则不允许修改
             return 3015;
-        }
-        //不能位于连音弧下方
+        }（当前模式下选不到连音弧这种虚拟位置）*/
+       /* //不能位于连音弧下方
         if (checkCurveCovering(index)) {
             return 3016;
-        }
+        }*/
 
-        //均分多连音
+       /* //均分多连音
         if(currentCode>73&&currentCode<110){
             return 3023;
         }
@@ -1056,7 +1176,7 @@ public class CodeSerial_Rhythm {
         if(currentCode == 0){
             //延音
             return 3023;
-        }
+        }*/
 
         //以下几种情况，都可以对音符做出修改，但是要分别做一些其他操作
         int codeDivided = valueOfBeat/2;//备用（稍后根据具体情况生成）
@@ -1094,6 +1214,15 @@ public class CodeSerial_Rhythm {
         return codeDivided;
     }
 
+    public boolean checkIsMulti(int index){
+        byte currentCode = codeSerial.get(index);
+        return (currentCode>73&&currentCode<110);
+    }
+
+    public boolean checkIsBar(int index){
+        byte currentCode = codeSerial.get(index);
+        return currentCode == 0;
+    }
 
     /* 添加 */
     /* 在最后添加一个空拍小节*/

@@ -62,9 +62,11 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     //注意，由于界限索引需要同UI控件交互，需要指示到可绘制的code上（所以126、127、112+都是不能指向的）
 
     boolean dualForward = true;//选定两个拍子时，存在朝向问题；选定其一为正另一为反。暂定向右为正，默认方向。
-    boolean moveAreaStart = false;
-    boolean moveAreaEnd = false;
+
     boolean freeAreaModeOn = false;//必须多设这个变量才能正确判断【？】
+    boolean moveAreaStart = false;//为逻辑安全起见，只要是手动移动，下方1BMO,2BMO自动关闭。
+    // （否则需要每步移动都检测是否恰好是1/2拍）
+    boolean moveAreaEnd = false;
     boolean oneBeatModeOn = false;//转切分、转附点在单、双拍选区下起作用；(或则单点恰=vb)
     boolean dualBeatModeOn = false;//转前后十六尽在单拍模式下起作用。
     //切换到单点（单符）模式、或者移动后置否；进入到选定单拍、双拍后置真。
@@ -334,6 +336,8 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                 break;
 
             case R.id.tv_selectAreaEnd:
+
+
                 tv_topInfo.setText("选区-终点");
                 if(!freeAreaModeOn){
                     selectStartIndex = selectEndIndex =currentUnitIndex;
@@ -362,6 +366,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                 if(fakeResultIndex == -1){
                     return;
                 }
+
                 indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);
                 rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);
                 checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
@@ -415,22 +420,53 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                     return;//三种合法情形均不满足，不能执行操作
                 }
 
-                //【注意，单点模式下ss必=se，故!=必是选区模式；而反过来==并不一定是单点模式且ss==se并不一定与cI
-                // 一致；逻辑上只要求ss/se不交叉跨越，未要求不跨越cI！】(另外考虑高兼容要求，设计如下逻辑选择实际意图下的索引值)
-                if(moveAreaStart||moveAreaEnd){
+                /*【注意，单点模式下ss必=se，故!=必是选区模式；而反过来==并不一定是单点模式且ss==se并不一定与cI
+                 一致；逻辑上只要求ss/se不交叉跨越，未要求不跨越cI！】(另外考虑高兼容要求，设计如下逻辑选择实际意图下的索引值)*/
+                if(freeAreaModeOn){//【现在已经看不懂折断设计的意义了？！但是又不敢轻易的改】
                     realIndex = selectStartIndex;
                 }else {
                     realIndex = currentUnitIndex;
                 }
+
+                if(csRhythmHelper.checkCurveCovering(realIndex)){
+                    Toast.makeText(getContext(), "请先取消连音弧。", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(csRhythmHelper.checkIsBar(realIndex)){
+                    Toast.makeText(getContext(), "不可直接拆分-。", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(csRhythmHelper.checkIsMulti(realIndex)){
+                    Toast.makeText(getContext(), "不可直接拆分多连音。", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 if(csRhythmHelper.binaryDividingAt(realIndex)<25){
                     //拆分完成，应刷新控件
                     rh_editor_EM.codeChangedReDraw();
+
+                    //转选区模式（原位置+包含后一个）
+                    selectEndIndex = realIndex+1;
+                    tv_topInfo.setText("选区模式");
+                    freeAreaModeOn = true;
+                    moveAreaStart = true;//强制按前端选定模式
+                    moveAreaEnd = false;
+                    //通知UI（改框色、改起止范围）
+                    rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+                    checkMoveModeAndSetBottomInfo();
+                }else {
+                    Toast.makeText(getContext(), "拆分失败。可能是音符含附点、音符过小等原因。", Toast.LENGTH_SHORT).show();
+
                 }//否则无反映
                 break;
 
             case R.id.tv_over_3:
                 //改均分多连音
-                //只要①不跨拍子，②选区时值符合，实际上度允许操作【暂定】
+                //原要求只要不跨拍子，且时值符合就允许操作；现改为仅允许对单个操作。
+                if(selectStartIndex!=selectEndIndex){//高兼容，即使不在单点模式，但是二者相等也可。
+                    Toast.makeText(getContext(), "仅对单个符号进行操作。", Toast.LENGTH_SHORT).show();
+                    return;//三种合法情形均不满足，不能执行操作
+                }
                 if(!csRhythmHelper.checkAreaInsideBeat(selectStartIndex,selectEndIndex)){
                     //跨拍子，不符合要求；
                     return;
@@ -448,7 +484,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                     return;//三种合法情形均不满足，不能执行操作
                 }else {
                     //选区或单点之一符合，统一暂按选区模式转变（兼容）
-                    if(moveAreaStart||moveAreaEnd){
+                    if(freeAreaModeOn){
                         realIndex = selectStartIndex;
                     }else {
                         realIndex = currentUnitIndex;
@@ -462,6 +498,15 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
             case R.id.tv_merge:
 //                tv_topInfo.setText("");
+                if(csRhythmHelper.checkAreaCrossBeats(selectStartIndex,selectEndIndex)){
+                    Toast.makeText(getContext(), "暂不允许跨拍子合并。", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(!csRhythmHelper.checkAreaPureCodes(selectStartIndex,selectEndIndex)){
+                    Toast.makeText(getContext(), "选区内音符不单一，不能合并。", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 //要先把box改为单点模式。避免越界溢出。
                 tv_topInfo.setText("单点模式");
                 moveAreaStart = false;
@@ -476,6 +521,7 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
 
                 //调用编码辅助类的合并方法（暂定只允许对一拍、不足一拍的选区进行合并；跨拍的（含超1拍，2拍多拍的）暂不处理）
                 int resultCodeMerge = csRhythmHelper.mergeArea(selectStartIndex,selectEndIndex);
+                selectEndIndex = selectStartIndex;//用完了之后这侧也要修改。
                 if(resultCodeMerge<3300){
                     //成功，通知自定义UI改变
                     rh_editor_EM.codeChangedReDraw();
@@ -518,40 +564,151 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                 break;
 
             case R.id.tv_toHaveSpot:
-                if(!oneBeatModeOn&&!dualBeatModeOn&&csRhythmHelper.checkCodeValue(codeSerial.get(currentUnitIndex))!=valueOfBeat){
-                    Toast.makeText(getContext(), "需选定整拍、整双拍后才可执行转换。", Toast.LENGTH_SHORT).show();
-                    return;//三种合法情形均不满足，不能执行操作
+                if(csRhythmHelper.checkAreaUnderCurve(selectStartIndex,selectEndIndex)){
+                    Toast.makeText(getContext(), "请先删除区域内的连音弧", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(freeAreaModeOn){
+                    //选区模式下（包括两端实质相等时）
+                    //检测选区是否恰为1或2个拍子（如不得是半+半、半+1+半等的形式；且时值符合1或2beat）
+                    if(!csRhythmHelper.checkAreaOneOrTwoNicelyBeat(selectStartIndex,selectEndIndex)){
+                        Toast.makeText(getContext(), "需选定整拍、整双拍后才可执行转换。", Toast.LENGTH_SHORT).show();
+                        return;
+                    }else {
+                        //可以改
+
+                        if(csRhythmHelper.replaceAreaToHaveSpot(selectStartIndex,selectEndIndex)<33){
+
+                            currentUnitIndex = selectStartIndex;//先改一个光标（统一位置）
+                            rh_editor_EM.boxMovedSuccessReDraw(currentUnitIndex,false,false);
+                            //这样在rhV中，区域模式关闭，不绘制区域选框。（在du数量减小时，不越界）
+                            // 更新后再改为选区。不能直接改选区，如【形如8 8 126 16的编码段，直接改为选区
+                            // (ssi,ssi+2)的后端恰=126，转换不到正确的dU，会返回-1（稍后或可对该转换方法改进？）
+                            rh_editor_EM.codeChangedReDraw();
+
+                            //然后改选区，调边界
+                            selectEndIndex = selectStartIndex+2;//【附点后面有126，因而需要+2】
+                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,true);
+                            checkMoveModeAndSetBottomInfo();
+                        }
+                    }
                 }else {
-                    //选区或单点之一符合，统一暂按选区模式转变（兼容）
-                    if(csRhythmHelper.changeAreaToHaveSpot(selectStartIndex,selectEndIndex)<33){//允许双整拍
-                        rh_editor_EM.codeChangedReDraw();
+                    //单点模式
+                    if(csRhythmHelper.checkCodeValue(codeSerial.get(currentUnitIndex))!=valueOfBeat){
+                        Toast.makeText(getContext(), "需选定整拍、整双拍后才可执行转换。", Toast.LENGTH_SHORT).show();
+                        return;
+                    }else {
+                        if(csRhythmHelper.replaceAreaToHaveSpot(selectStartIndex,selectEndIndex)<33){
+                            rh_editor_EM.codeChangedReDraw();
+
+                            //转选区模式（原位置+包含后一个）
+                            selectEndIndex = selectStartIndex+1;
+                            tv_topInfo.setText("选区模式");
+                            freeAreaModeOn = true;
+                            moveAreaStart = true;//强制按前端选定模式
+                            moveAreaEnd = false;
+                            //通知UI（改框色、改起止范围）
+                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+                            checkMoveModeAndSetBottomInfo();
+
+                        }
 
                     }
                 }
                 break;
 
             case R.id.tv_rwd16:
-                if(!oneBeatModeOn&&csRhythmHelper.checkCodeValue(codeSerial.get(currentUnitIndex))!=valueOfBeat){
-                    Toast.makeText(getContext(), "需选定整拍后才可执行转换。", Toast.LENGTH_SHORT).show();
-                    return;//合法情形均不满足，不能执行操作
+                if(csRhythmHelper.checkAreaUnderCurve(selectStartIndex,selectEndIndex)){
+                    Toast.makeText(getContext(), "请先删除区域内的连音弧", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(freeAreaModeOn){
+                    //选区模式下（包括两端实质相等时）
+                    //检测选区是否恰为1个拍子（如不得是半+半等的形式；且时值符合1 beat）
+                    if(csRhythmHelper.getAreaValue(selectStartIndex,selectEndIndex)!=valueOfBeat){
+                        Toast.makeText(getContext(), "需选定整拍才可转换。", Toast.LENGTH_SHORT).show();
+                        return;
+                    }else {
+                        //可以改
+                        //音符是变多的，不需转单点
+                        if(csRhythmHelper.changeAreaToRwd16(selectStartIndex,selectEndIndex)<25){
+                            rh_editor_EM.codeChangedReDraw();
+                            //调整选区边界
+                            resetSelectionAreaToTotalBeat();
+                            oneBeatModeOn = true;
+                            /*if(selectStartIndex!=selectEndIndex){
+                                freeAreaModeOn = true;
+                            }*/
+                            //通知UI（改框色、改起止范围）
+                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+                            checkMoveModeAndSetBottomInfo();
+                        }
+                    }
                 }else {
-                    //选区或单点之一符合，统一暂按选区模式转变（兼容）
-                    if(csRhythmHelper.changeAreaToRwd16(selectStartIndex,selectEndIndex)<25){
-                        rh_editor_EM.codeChangedReDraw();
-
+                    //单点模式下
+                    if(csRhythmHelper.checkCodeValue(codeSerial.get(currentUnitIndex))!=valueOfBeat){
+                        Toast.makeText(getContext(), "需选定整拍、整双拍后才可执行转换。", Toast.LENGTH_SHORT).show();
+                        return;
+                    }else {
+                        if(csRhythmHelper.changeAreaToRwd16(selectStartIndex,selectEndIndex)<33){
+                            rh_editor_EM.codeChangedReDraw();
+                            //转选区
+                            resetSelectionAreaToTotalBeat();
+                            tv_topInfo.setText("选区模式");
+                            oneBeatModeOn = true;
+                            freeAreaModeOn = true;//进入单拍选定后必须附带的
+                            //通知UI（改框色、改起止范围）
+                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+                            checkMoveModeAndSetBottomInfo();
+                        }
                     }
                 }
                 break;
 
             case R.id.tv_fwd16:
-                if(!oneBeatModeOn&&csRhythmHelper.checkCodeValue(codeSerial.get(currentUnitIndex))!=valueOfBeat){
-                    Toast.makeText(getContext(), "需选定整拍后才可执行转换。", Toast.LENGTH_SHORT).show();
-                    return;//合法情形均不满足，不能执行操作
+                if(csRhythmHelper.checkAreaUnderCurve(selectStartIndex,selectEndIndex)){
+                    Toast.makeText(getContext(), "请先删除区域内的连音弧", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(freeAreaModeOn){
+                    //选区模式下（包括两端实质相等时）
+                    //检测选区是否恰为1个拍子（如不得是半+半等的形式；且时值符合1 beat）
+                    if(csRhythmHelper.getAreaValue(selectStartIndex,selectEndIndex)!=valueOfBeat){
+                        Toast.makeText(getContext(), "需选定整拍才可转换。", Toast.LENGTH_SHORT).show();
+                        return;
+                    }else {
+                        //可以改
+                        //音符是变多的，不需转单点
+                        if(csRhythmHelper.changeAreaToFwd16(selectStartIndex,selectEndIndex)<25){
+                            rh_editor_EM.codeChangedReDraw();
+                            //调整选区边界
+                            resetSelectionAreaToTotalBeat();
+                            oneBeatModeOn = true;
+                            /*if(selectStartIndex!=selectEndIndex){
+                                freeAreaModeOn = true;
+                            }*/
+                            //通知UI（改框色、改起止范围）
+                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+                            checkMoveModeAndSetBottomInfo();
+                        }
+                    }
                 }else {
-                    //选区或单点之一符合，统一暂按选区模式转变（兼容）
-                    if(csRhythmHelper.changeAreaToFwd16(selectStartIndex,selectEndIndex)<25){
-                        rh_editor_EM.codeChangedReDraw();
-
+                    //单点模式下
+                    if(csRhythmHelper.checkCodeValue(codeSerial.get(currentUnitIndex))!=valueOfBeat){
+                        Toast.makeText(getContext(), "需选定整拍、整双拍后才可执行转换。", Toast.LENGTH_SHORT).show();
+                        return;
+                    }else {
+                        if(csRhythmHelper.changeAreaToFwd16(selectStartIndex,selectEndIndex)<25){
+                            rh_editor_EM.codeChangedReDraw();
+                            //转选区
+                            resetSelectionAreaToTotalBeat();
+                            tv_topInfo.setText("选区模式");
+                            oneBeatModeOn = true;
+                            freeAreaModeOn = true;//进入单拍选定后必须附带的
+                            //通知UI（改框色、改起止范围）
+                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+                            checkMoveModeAndSetBottomInfo();
+                        }
                     }
                 }
                 break;
@@ -560,24 +717,34 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
             case R.id.tv_curve:
                 //单点模式，只能删除：（如果有）则取消当前上方的连音弧
                 //选区模式（且s不等e）只能新增；如果有，不允许增加
+                tv_topInfo.setText("选中单个音符删除上方的弧；多选新增；不允许层叠");
                 if(selectStartIndex!=selectEndIndex){
+                    //是多个音符选中状态，新增操作
+                    //判断是否符合
                     if(csRhythmHelper.checkAreaUnderCurve(selectStartIndex,selectEndIndex)){
-                        Toast.makeText(getContext(), "选区模式仅支持新增。且暂不允许层叠。用单点模式删除。", Toast.LENGTH_SHORT).show();
-                    }else {
-                        if(csRhythmHelper.addCurveForArea(selectStartIndex,selectEndIndex)<126){
-                            rh_editor_EM.codeChangedReDraw();
-                        }
+                        Toast.makeText(getContext(), "暂不允许层叠。用单点模式删除。", Toast.LENGTH_SHORT).show();
+                        return;
                     }
+                    if(csRhythmHelper.checkAreaXOrXBarAndStartWithX(selectStartIndex,selectEndIndex)){
+                        Toast.makeText(getContext(), "区域不是X开头或后续含有X/-以外的音符，拒绝添加。", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if(csRhythmHelper.addCurveForArea(selectStartIndex,selectEndIndex)<126){
+                        rh_editor_EM.codeChangedReDraw();
+                    }
+
                 }else {
                     //实质单点模式（但是此时选区的坐标和单点坐标可能不一致，判断到底是谁）
-                    if(moveAreaStart||moveAreaEnd){
-                        realIndex = selectStartIndex;//决定暂时允许对选区实际单点的情形下执行删除操作。
+                    if(freeAreaModeOn){
+                        realIndex = selectStartIndex;
                     }else {
                         realIndex = currentUnitIndex;
                     }
+//                    Log.i(TAG, "onClick: getCurrentSection="+ csRhythmHelper.getCurrentSection(realIndex).toString());
                     if(csRhythmHelper.checkCurveCovering(realIndex)){
                         //删除
-                        if(csRhythmHelper.removeCurveOver(realIndex)<3000){
+                        if(csRhythmHelper.removeCurve(realIndex,true)<3000){
                             rh_editor_EM.codeChangedReDraw();
                         }
                     }else {
@@ -638,6 +805,10 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                     }else {
                         codeSerial.addAll(sectionForAdd);
                     }
+
+                    rh_editor_EM.codeChangedReDraw();//由于编码有变动，需要这种更新（仅更新框是不够的）
+
+
                 }
 
 
@@ -662,16 +833,15 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
                     moveAreaStart=false;
                     moveAreaEnd=false;//添加后强行改为单点光标模式。
                     fakeResultIndex = moveBox(selectStartIndex,MOVE_ADJACENT_SECTION);
+                    int tempIndex = selectStartIndex;//由于下面一句统一各光标计数器，故而另外保留一份旧值以供删除正确小节。
                     indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);//统一各光标计数器
                     rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);//根据新的位置，以单点模式重绘蓝框。
 
-                    if(csRhythmHelper.removeSection(selectStartIndex)!=-1){
+                    if(csRhythmHelper.removeSection(tempIndex)!=-1){
                         rh_editor_EM.codeChangedReDraw();
                     }
 
                     checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
-
-                    //删除之后，光标改为单点
                 }
                 break;
 
@@ -681,6 +851,24 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
         }
     }
 
+
+
+    /*
+    * 多次重复的代码，抽离成方法
+    * 从选取模式转单点模式
+    * 还用于合并，选区转附点等“字符实际减少”的操作之后，自动转单点以避免（位于最后时）选区越界
+    * （本方法暂时只负责①设顶部tv；②bool关；
+    * 其余操作：UI刷新box显示、底部tv设置等暂未操作。）
+    *（暂时只有少量位置替换成了本方法）
+    * */
+    private void switchToSpotAndOffBool(){
+        tv_topInfo.setText("单点模式");
+        moveAreaStart = false;
+        moveAreaEnd = false;
+        oneBeatModeOn = false;
+        dualBeatModeOn = false;
+        freeAreaModeOn = false;
+    }
 
     private boolean checkSectionAmountEqualsOne(){
         boolean passOne = false;

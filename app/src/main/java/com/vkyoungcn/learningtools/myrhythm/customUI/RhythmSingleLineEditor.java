@@ -204,10 +204,12 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
             changeOneDimCsIndexToTwoDimDuIndex(startIndex);
             sAreaStartSectionIndex = tempDuSectionIndex;
             sAreaStartUnitIndex = tempDuUnitIndex;
+            Log.i(TAG, "boxAreaChangedReDraw: SASSI/SASUI="+sAreaStartSectionIndex+"/"+sAreaStartUnitIndex);
 
             changeOneDimCsIndexToTwoDimDuIndex(endIndex);
             sAreaEndSectionIndex = tempDuSectionIndex;
             sAreaEndUnitIndex = tempDuUnitIndex;
+            Log.i(TAG, "boxAreaChangedReDraw: SAESI/SAEUI="+sAreaEndSectionIndex+"/"+sAreaEndUnitIndex);
             //原来的蓝框必然（？）在画面中，因而在此不移动du列表。（暂简化）
         }else {
             selectionAreaMode = false;
@@ -244,7 +246,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineView{
 
         }else {
             selectionAreaMode = true;
-            Log.i(TAG, "boxMovedSuccessReDraw: Index after move="+indexAfterMove);
+//            Log.i(TAG, "boxMovedSuccessReDraw: Index after move="+indexAfterMove);
             changeOneDimCsIndexToTwoDimDuIndex(indexAfterMove);
             sAreaEndSectionIndex = tempDuSectionIndex;
             sAreaEndUnitIndex = tempDuUnitIndex;

@@ -6,6 +6,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Toast;
@@ -44,6 +45,8 @@ public class BaseRhythmView extends View {
     String lyricInString_1;
     String lyricInString_2;
     ArrayList<Byte> pitchSerial;
+
+    //是否开启折行模式对连音弧的处理影响不大，采用同一套逻辑即可（其中进行判断）。
 
     /* 绘制所需*/
     float twoLinesTopYBetween;//仅在多行绘制模式下有意义。
@@ -248,7 +251,6 @@ public class BaseRhythmView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         if(checkEmptyAndDraw(canvas)){
-//            Log.i(TAG, "onDraw: Empty...");
             return;
             //是空的，绘制一个空占位线条然后直接退出绘制即可。
         }
@@ -310,7 +312,6 @@ public class BaseRhythmView extends View {
                     }
                     //注意，小节线绘制规则：起端没有小节线，小节线只存在于末尾
 
-
                     //绘制连音弧线（顶部弧形延长音，不是均分多连）
                     if (drawingUnit.isEndCodeOfLongCurve) {
                         float curveStart = 0;
@@ -321,11 +322,14 @@ public class BaseRhythmView extends View {
                         //（注：k与span的关系）索引为k时：本音符前面有k个音符存在。span则代表本音符之前的span个音符都在弧线下，所以二者一一对应不需加减处理。
                         if (span <= k) {
                             //弧线不跨节
-                            curveStart = sectionDrawingUnits.get(k - span).left;
+//                            Log.i(TAG, "drawByEachUnit: CV inside Section, end du index="+k);
+                            curveStart = sectionDrawingUnits.get(k - span+1).left;
+//                            Log.i(TAG, "drawByEachUnit: cv start index="+(k-span+1));
                             canvas.drawArc(curveStart, drawingUnit.top + additionalPointsHeight, curveEnd,
                                     drawingUnit.top + additionalPointsHeight + curveOrLinesHeight,
-                                    0, 180, false, bottomLinePaint);//绘制
+                                    0, -180, false, bottomLinePaint);//绘制
                         } else {
+
                             //弧线跨节，可能跨行
                             DrawingUnit duCurveStart = findStartDrawingUnit(k, i, span, drawingUnits);
                             if (duCurveStart == null) {
@@ -346,19 +350,17 @@ public class BaseRhythmView extends View {
 
                                 } else {
                                     //整体绘制
+                                    curveStart = duCurveStart.left;
                                     canvas.drawArc(curveStart, drawingUnit.top + additionalPointsHeight, curveEnd,
                                             drawingUnit.top + additionalPointsHeight + curveOrLinesHeight,
-                                            0, 180, false, bottomLinePaint);
+                                            0, 179, false, bottomLinePaint);
 
                                 }
                             }
                         }
                     }
-
-
                 }
             }
-
         }
     }
 
@@ -540,7 +542,7 @@ public class BaseRhythmView extends View {
     * ④73~79、83~89、103~109，总时值分别为（1/4、1/8、1/16）的均分多连音；
     * (新版中10= 1/4 =16，8 = 1/8 = 8， 7 = 1/16 = 4。便于（x/10 - 6）*4直接得对应时值)
     * 以code%10的余数表示其内含的多连音个数（3~9个）【编辑器暂时只支持3、5、7连音】
-    * ⑤112~125：连音弧结束标记，（以code-110代表其跨度，暂时支持2~15跨度）
+    * ⑤112~125：连音弧结束标记，（以code-110代表其跨度，暂时支持2~15跨度）【弧结束标记必须紧邻realCode之后，否则初始化节绘制时逻辑要改。】
     * ⑥126：拍尾标记
     * ⑦127：小节尾标记
     * */
@@ -576,7 +578,7 @@ public class BaseRhythmView extends View {
         //如果是折行的，根据各节所在位置传入相应startX（行首padding，非行首则是上一节末尾+gap；如果是单行模式则只有首节处于行首，其余向后累加即可。）
         //int totalValueBeforeThisCodeInBeat = 0;//用于计算拍子【要在循环的末尾添加，因为要使用的是“本音符之前”的总和】
         ArrayList<DrawingUnit> drawingUnitsInSection = new ArrayList<>();
-        int skipNum = 0;//由于编码序列中存在不绘制的编码比dU序列多，必须带略过的值。
+        int skipNum = 0;//由于编码序列中存在不绘制的编码比dU序列多，必须带略过的值。【该值是从小节开头计算】
 
         for (int j = 0; j < codesInThisSection.size(); j++) {
 //            Log.i(TAG, "initSectionDrawingUnit: accNUCS="+accumulationNumInCodeSerial);
@@ -585,9 +587,9 @@ public class BaseRhythmView extends View {
             if(code>125){
                 skipNum++;
             }else if(code>111) {
-                skipNum++;
                 //112~125的没有实体绘制单元，而是在其前一单元中设置专用字段(126/127则纯粹为控制编码，没有UI信息)
-                int curveSpanForward = code-110;//跨越的单元数量（比如，code=112时，指弧线覆盖本身及本身前的1个音符，跨度2）
+                //【注意编码在外部生成时就要按dU跨度考虑，否则要在此处执行从音符到dU跨度的转换比较困难。】
+                int curveSpanForward = code-110;//跨越的音符（不是编码）数量（比如，code=112时，指弧线覆盖本身及本身前的1个音符，跨度2）
                 //连音线末端可以在小节首音符后，但是末端标记必然不能是小节第一个code，可以-1。
                 if(j==0){
                     Toast.makeText(mContext, "该小节内，连音标记前没有音符，错误编码。略过该连音。", Toast.LENGTH_SHORT).show();
@@ -595,6 +597,9 @@ public class BaseRhythmView extends View {
                     drawingUnitsInSection.get(j-1-skipNum).isEndCodeOfLongCurve = true;
                     drawingUnitsInSection.get(j-1-skipNum).curveLength = curveSpanForward;
                 }
+
+                skipNum++;//注意位置。；
+
             }else {
                 /* 从这里的逻辑设计可明确：仅在111以内的编码才有dU对应，所以外部调用方的索引不应指向112+编码位*/
                 DrawingUnit drawingUnit = new DrawingUnit();
