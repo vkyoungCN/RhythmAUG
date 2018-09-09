@@ -13,6 +13,7 @@ import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 import com.vkyoungcn.learningtools.myrhythm.models.PitchSequence;
 import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmLiteForGpX;
 
 import junit.framework.Test;
 
@@ -346,6 +347,27 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         closeDB();
 
         return l;
+    }
+
+    public int createRhythmCrossGroup(int gid,ArrayList<RhythmLiteForGpX> rhythms){
+        int lines = 0;
+        getWritableDatabaseIfClosedOrNull();
+
+        for(RhythmLiteForGpX rhythm:rhythms){
+            ContentValues values = new ContentValues();
+
+            values.put(MyRhythmContract.GroupCrossModels.COLUMN_GID, gid);
+            values.put(MyRhythmContract.GroupCrossModels.COLUMN_MID, rhythm.getId());
+            values.put(MyRhythmContract.GroupCrossModels.COLUMN_MODEL_TYPE, MyRhythmContract.GroupCrossModels.MODEL_TYPE_RH);
+
+            if(mSQLiteDatabase.insert(MyRhythmContract.GroupCrossModels.TABLE_NAME, null, values)!=-1){
+                //返回值：the row ID of the newly inserted row, or -1 if an error occurred
+                lines++;
+            }
+
+        }
+        closeDB();
+        return lines;
     }
 
 

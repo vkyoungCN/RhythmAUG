@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".BackUpActivity"
+    android:orientation="vertical"
+    >
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:background="#efefef"
+        android:gravity="center"
+        android:text="@string/lyrics"
+        android:textSize="16sp" />
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="5dp"
+        android:alpha="0.4"
+        android:scaleType="centerCrop"
+        android:src="@drawable/slash_bar_orange" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        >
+
+        <TextView
+            android:layout_width="160dp"
+            android:layout_height="70dp"
+            android:layout_gravity="center"
+            android:background="#f5f5f5"
+            android:gravity="center"
+            android:text="@string/freeCreate"
+            android:textColor="@color/myRhythm_orange"
+            android:onClick="lyricAddFree"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:gravity="center"
+            android:textColor="@color/myRhythm_red"
+            android:layout_marginTop="12dp"
+            android:background="#e0e0e0"
+            />
+    </LinearLayout>
+
+    <!--横分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#e0e0e0"
+        />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_weight="1"
+        >
+
+        <TextView
+            android:layout_width="180dp"
+            android:layout_height="70dp"
+            android:layout_gravity="center"
+            android:background="#f5f5f5"
+            android:gravity="center"
+            android:text="@string/hardLink"
+            android:textColor="@color/myRhythm_cyan"
+            android:onClick="fileSelectBkRemote"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:gravity="center"
+            android:textColor="@color/myRhythm_red"
+            android:layout_marginTop="12dp"
+            android:background="#e0e0e0"
+            android:text="@string/hardLink2"
+            />
+    </LinearLayout>
+
+    <!--横分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#e0e0e0"
+        />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        >
+
+        <TextView
+            android:layout_width="180dp"
+            android:layout_height="70dp"
+            android:layout_gravity="center"
+            android:background="#f5f5f5"
+            android:gravity="center"
+            android:text="@string/weakLink"
+            android:textColor="@color/myRhythm_cyan"
+            android:onClick="fileSelectBkRemote"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:gravity="center"
+            android:textColor="@color/myRhythm_red"
+            android:layout_marginTop="12dp"
+            android:background="#e0e0e0"
+            android:text="@string/weakLink2"
+            />
+    </LinearLayout>
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_light_green"
+        android:layout_gravity="bottom"
+        />
+    <TextView
+        android:id="@+id/tv_rhythmAmount_MA"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="2dp"
+        android:gravity="center"
+        android:background="#efefef"
+        />
+</LinearLayout>

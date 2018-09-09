@@ -156,9 +156,8 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
     }
 
     public void createWords(View view){
-        Intent intentToLyricCreate = new Intent(this,LyricCreateActivity.class);
-        intentToLyricCreate.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        intentToLyricCreate.putExtra("MODEL",new Lyric());
+        Intent intentToLyricCreate = new Intent(this,LyricCreateEntranceActivity.class);
+//        intentToLyricCreate.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         this.startActivityForResult(intentToLyricCreate,REQUEST_CODE_LY_CREATE);
     }
 

@@ -1,32 +1,28 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.DialogFragment;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.vkyoungcn.learningtools.myrhythm.adapter.LyricFreeRvAdapter;
-import com.vkyoungcn.learningtools.myrhythm.adapter.RhythmRvAdapter;
-import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
-import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
+import com.vkyoungcn.learningtools.myrhythm.fragments.ChooseRhythmDiaFragment;
+import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
 import com.vkyoungcn.learningtools.myrhythm.models.Group;
-import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
+import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmLiteForGpX;
 
 import java.util.ArrayList;
 
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_GP_EDIT;
-import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_EDIT;
-import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_OVERALL_EDIT;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_GP_EDIT_DONE;
-import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_OVERALL_EDIT_DONE;
-import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_PURE_EDIT_DONE;
 
-public class GroupDetailActivity extends TwoResAllRvBaseActivity{
+public class GroupDetailActivity<T extends BaseModel> extends TwoResAllRvBaseActivity{
 //由于本页面需要从Db为Rv加载大量数据，因而不继承自BaseDetail而继承自RvActivity.
 private static final String TAG = "GroupDetailActivity";
     Group group = new Group();
@@ -35,6 +31,10 @@ private static final String TAG = "GroupDetailActivity";
     private TextView tv_id;
     private TextView tv_title;
     private TextView tv_descriptions;
+
+    //用于选择RH（使用了轻量新类型；因为两个旧列表实际传递两种旧类型，无法共存，干脆直接设计个轻量新类型）
+    ArrayList<RhythmLiteForGpX> originRhythmsLite = new ArrayList<>();
+    ArrayList<RhythmLiteForGpX> rhythmsLiteForChoose = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +94,9 @@ private static final String TAG = "GroupDetailActivity";
         dataReList_lyric = rhythmDbHelper.getFreeLyricsByGid(group.getId());
         super.reFetchLyAndSort();
     }
+     private ArrayList<Rhythm> fetchAllRhythms(){
+         return rhythmDbHelper.getAllRhythms();
+     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -143,10 +146,68 @@ private static final String TAG = "GroupDetailActivity";
     }
 
     public void addRhForGroup(View view){
+    //弹出DFG用于选定要添加的旋律，可以是一组，结果发回本Activity，在OnButtonGClick方法中向DB提交
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        Fragment prev = getFragmentManager().findFragmentByTag("CHOOSE_RHYTHM");
+
+        if (prev != null) {
+            Toast.makeText(this, "Old DialogFg still there, removing first...", Toast.LENGTH_SHORT).show();
+            transaction.remove(prev);
+        }
+
+        prepareDataForChoose();
+        Log.i(TAG, "addRhForGroup: data to send="+originRhythmsLite.toString());
+        DialogFragment dfg = ChooseRhythmDiaFragment.newInstance(originRhythmsLite,rhythmsLiteForChoose);
+        dfg.show(transaction, "CHOOSE_RHYTHM");
+    }
+
+    private void prepareDataForChoose(){
+        for(int i=0;i<dataFetched.size();i++){
+            RhythmLiteForGpX liteForGpX = new RhythmLiteForGpX((RhythmBasedCompound) (dataFetched.get(i)));
+            originRhythmsLite.add(liteForGpX);
+        }
+
+        ArrayList<Rhythm> allRhythms = rhythmDbHelper.getAllRhythms();
+        for (int j = 0; j < allRhythms.size(); j++) {
+            RhythmLiteForGpX liteForGpX = new RhythmLiteForGpX(allRhythms.get(j));
+            Log.i(TAG, "prepareDataForChoose: lite Single="+liteForGpX.toString());
+            rhythmsLiteForChoose.add(liteForGpX);
+        }
+
 
     }
 
     public void addLyForGroup(View view){
 
     }
+
+    public void confirmChose(View view){
+
+    }
+
+    @Override
+    public void onButtonClickingDfgInteraction(int dfgType, Bundle data) {
+        //接收从dfg（选择rh）传回的列表，提交到DB
+//        int modelId = data.getInt("MODEL_ID");
+        switch (dfgType){
+            case CHOOSE_RHYTHM_FOR_GROUP:
+                ArrayList<RhythmLiteForGpX> rhythmsAddForGP = data.getParcelableArrayList("RHYTHMS");
+                if(rhythmsAddForGP==null||rhythmsAddForGP.isEmpty()){
+                    Toast.makeText(this, "选定了0个项目。", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                int l = rhythmDbHelper.createRhythmCrossGroup(group.getId(),rhythmsAddForGP);
+                if(l!=0){
+                    //更新有效，刷新显示
+                    new Thread(new ReFetchRhDataRunnable()).start();
+
+                }else {
+                    Toast.makeText(this, "影响的行数为0。", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+        }
+    }
+
+
 }

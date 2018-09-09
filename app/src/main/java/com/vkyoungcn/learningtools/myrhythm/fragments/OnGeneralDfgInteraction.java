@@ -16,6 +16,9 @@ public interface OnGeneralDfgInteraction {
 
     int CREATE_RHYTHM = 2201;
 
+    int CHOOSE_RHYTHM_FOR_GROUP = 2201;
+
+
     int MODEL_TYPE_RH =201;
     int MODEL_TYPE_LY =202;
     int MODEL_TYPE_PT =203;

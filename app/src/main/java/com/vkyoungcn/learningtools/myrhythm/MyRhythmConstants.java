@@ -25,6 +25,10 @@ public interface MyRhythmConstants {
 
 
     int REQUEST_CODE_LY_CREATE = 751;
+    int REQUEST_CODE_LY_CREATE_FREE = 7511;
+    int REQUEST_CODE_LY_CREATE_HL = 7512;
+    int REQUEST_CODE_LY_CREATE_WL = 7513;
+
     int RESULT_CODE_LY_CREATED = 752;
 
 

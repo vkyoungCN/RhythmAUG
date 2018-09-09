@@ -36,6 +36,7 @@
         <activity android:name=".BackUpActivity" />
         <activity android:name=".SelectAndProcessActivity"/>
         <activity android:name=".GroupCreateActivity"/>
+        <activity android:name=".LyricCreateEntranceActivity"/>
     </application>
 
 </manifest>

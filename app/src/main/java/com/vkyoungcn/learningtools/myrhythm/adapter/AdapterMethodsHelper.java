@@ -6,11 +6,13 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 import android.widget.Toast;
 
+import com.vkyoungcn.learningtools.myrhythm.fragments.ChooseRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.fragments.DeleteModelDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
+import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
+import com.vkyoungcn.learningtools.myrhythm.models.RhythmLiteForGpX;
 
 public class AdapterMethodsHelper {
     private static final String TAG = "AdapterMethodsHelper";
@@ -19,6 +21,10 @@ public class AdapterMethodsHelper {
 //        Log.i(TAG, "toDetailActivity: model in Listener = "+model.toString());
         intentToDetailActivity.putExtra("MODEL",model);
         context.startActivity(intentToDetailActivity);
+    }
+    public static void makeChoice(ChooseRhythmDiaFragment dfg, RhythmLiteForGpX item, boolean isToAdd){
+        dfg.choseClicking(item,isToAdd);
+
     }
 
     public static void longClickingDelete(Context context, int itemId, int deleteType){

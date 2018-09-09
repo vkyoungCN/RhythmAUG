@@ -191,8 +191,17 @@
     <string name="default1">缺省</string>
     <string name="addGroup">新建分组</string>
     <string name="group">分组</string>
-    <string name="plh_groupAmount">共有分组：%1$d个。</string>
+    <string name="plh_groupAmount">共有分组：%1$d个</string>
+    <string name="plh_choseRhAmount">已选定节奏：%1$d个</string>
     <string name="groupIsGood">使用分组能够便于管理</string>
     <string name="add">+</string>
+    <string name="freeCreate">自由创作</string>
+    <string name="hardLink">（节奏）硬关联</string>
+    <string name="weakLink">弱关联创作</string>
+    <string name="hardLink2">格式、字数与选定的旋律/节奏严格对应。</string>
+    <string name="weakLink2">参考选定旋律/节奏的格式、字数进行创作</string>
+    <string name="chooseRhythm">选择节奏</string>
+    <string name="chose_done">已选定</string>
+    <string name="chose_area">备选资源</string>
 
 </resources>

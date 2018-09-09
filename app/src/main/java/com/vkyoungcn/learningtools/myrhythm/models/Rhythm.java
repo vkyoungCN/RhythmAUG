@@ -21,6 +21,7 @@ public class Rhythm extends BaseDualCodeSerialModel {
     public Rhythm() {
     }
 
+
     /* 设置字串编码不设Byte编码，构造器自动设置Byte编码*/
     public Rhythm(int id, String title, String codeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int stars, int rhythmType, int primaryLyricId, int secondLyricId, int pitchesId) {
         super(id, title, codeSerial, description, isSelfDesign, keepTop, createTime, lastModifyTime, stars);
