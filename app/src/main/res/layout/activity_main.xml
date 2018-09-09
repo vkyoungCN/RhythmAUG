@@ -98,6 +98,14 @@
                     android:text="@string/str_mostUsingRhythm_2"
                     android:textSize="16sp" />
 
+                <!--小分割线-->
+                <TextView
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="end"
+                    android:layout_marginEnd="64dp"
+                    android:background="#e0e0e0"
+                    />
                 <TextView
                     android:layout_width="56dp"
                     android:layout_height="match_parent"
@@ -105,13 +113,20 @@
                     android:text="@string/refresh1"
                     android:layout_gravity="end"
                     android:gravity="center"
-                    android:background="#e5e5e5"
+                    android:background="?android:attr/selectableItemBackground"
                     android:textSize="16sp"
                     android:textStyle="italic|bold"
                     android:onClick="refresh"
                     android:textColor="@color/myRhythm_light_green"
                     />
-
+                <!--小分割线-->
+                <!--<TextView
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="end"
+                    android:layout_marginEnd="6dp"
+                    android:background="#e0e0e0"
+                    />-->
             </FrameLayout>
 
 

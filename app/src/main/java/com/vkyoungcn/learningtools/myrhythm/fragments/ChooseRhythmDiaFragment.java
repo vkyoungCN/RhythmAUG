@@ -55,11 +55,11 @@ public class ChooseRhythmDiaFragment extends DialogFragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             dataForChoose= getArguments().getParcelableArrayList("FOR_CHOOSE");
-            Log.i(TAG, "onCreate: dfC received="+dataForChoose.toString());
+//            Log.i(TAG, "onCreate: dfC received="+dataForChoose.toString());
             choseDoneList = getArguments().getParcelableArrayList("CHOSE_DONE");
 
             adp_forChoose = new RhythmLiteRvAdapter(this,dataForChoose,true);
-            adp_choseDone = new RhythmLiteRvAdapter(this,choseDoneList,true);
+            adp_choseDone = new RhythmLiteRvAdapter(this,choseDoneList,false);
         }
     }
 
@@ -74,6 +74,7 @@ public class ChooseRhythmDiaFragment extends DialogFragment {
         rv_forChoose.setHasFixedSize(true);
         rv_forChoose.setLayoutManager(new LinearLayoutManager(getActivity()));
         rv_forChoose.setAdapter(adp_forChoose);
+
         rv_choseDone.setLayoutManager(new LinearLayoutManager(getActivity()));
         rv_choseDone.setAdapter(adp_choseDone);
 
@@ -87,6 +88,7 @@ public class ChooseRhythmDiaFragment extends DialogFragment {
                 Bundle data = new Bundle();
                 data.putParcelableArrayList("RHYTHMS",choseDoneList);
                 mListener.onButtonClickingDfgInteraction(OnGeneralDfgInteraction.CHOOSE_RHYTHM_FOR_GROUP,data);
+                dismiss();
             }
         });
 
@@ -116,17 +118,19 @@ public class ChooseRhythmDiaFragment extends DialogFragment {
     public void choseClicking(RhythmLiteForGpX choseItem, boolean isClickingToAdd) {
         //收到的是被点击项目在数据集中的ID(可直接供调用方使用)
         if (isClickingToAdd) {
-            //检索所选项目是否已在“已选定”集合中
-            int indexForCheck = choseDoneList.indexOf(choseItem);
-            Log.i(TAG, "choseClicking: cDl.siez="+choseDoneList.size());
-            if(indexForCheck!=-1){
-                Toast.makeText(getActivity(), "点击项目已在选中列表", Toast.LENGTH_SHORT).show();
-                return;//已存在
+            //int indexForCheck = choseDoneList.indexOf(choseItem);
+            //检索所选项目是否已在“已选定”集合中(实测不能直接indexOf，可能是地址检测而实际不是同一元素吧)
+            for(RhythmLiteForGpX rxDone:choseDoneList){
+                if(rxDone.getId()==choseItem.getId()){
+                    Toast.makeText(getActivity(), "点击项目已在选中列表", Toast.LENGTH_SHORT).show();
+                    return;
+                }
             }
             //未选中的项，加入到选中列表
             int choseDoneListOldSize = choseDoneList.size();
             choseDoneList.add(choseItem);
             adp_choseDone.notifyItemInserted(choseDoneListOldSize);//【待】
+            tv_choseGpAmount.setText(String.format(getResources().getString(R.string.plh_choseRhAmount),choseDoneList.size()));
 
         }else {
             //点击移除（点击的是下方已选列表）

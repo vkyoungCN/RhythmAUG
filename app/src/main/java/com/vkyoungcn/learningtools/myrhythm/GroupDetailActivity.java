@@ -157,11 +157,13 @@ private static final String TAG = "GroupDetailActivity";
 
         prepareDataForChoose();
         Log.i(TAG, "addRhForGroup: data to send="+originRhythmsLite.toString());
-        DialogFragment dfg = ChooseRhythmDiaFragment.newInstance(originRhythmsLite,rhythmsLiteForChoose);
+        DialogFragment dfg = ChooseRhythmDiaFragment.newInstance(rhythmsLiteForChoose,originRhythmsLite);
         dfg.show(transaction, "CHOOSE_RHYTHM");
     }
 
     private void prepareDataForChoose(){
+        rhythmsLiteForChoose.clear();//如果不清空，第二次调用时items重复（数量加倍（大概因为每次从DB取数据实际生成了新Rh，每次是地址不同的新元素））
+        originRhythmsLite.clear();//这个可以不清空，（实测不会重复，大概因为地址一致自动过滤了吧）
         for(int i=0;i<dataFetched.size();i++){
             RhythmLiteForGpX liteForGpX = new RhythmLiteForGpX((RhythmBasedCompound) (dataFetched.get(i)));
             originRhythmsLite.add(liteForGpX);
@@ -170,11 +172,9 @@ private static final String TAG = "GroupDetailActivity";
         ArrayList<Rhythm> allRhythms = rhythmDbHelper.getAllRhythms();
         for (int j = 0; j < allRhythms.size(); j++) {
             RhythmLiteForGpX liteForGpX = new RhythmLiteForGpX(allRhythms.get(j));
-            Log.i(TAG, "prepareDataForChoose: lite Single="+liteForGpX.toString());
+//            Log.i(TAG, "prepareDataForChoose: lite Single="+liteForGpX.toString());
             rhythmsLiteForChoose.add(liteForGpX);
         }
-
-
     }
 
     public void addLyForGroup(View view){
@@ -196,6 +196,24 @@ private static final String TAG = "GroupDetailActivity";
                     Toast.makeText(this, "选定了0个项目。", Toast.LENGTH_SHORT).show();
                     return;
                 }
+//                rhythmsAddForGP.removeAll(originRhythmsLite);//从待添加的列表中移除原本已有的。
+//                【不能如上这种操作，虽然转了一大圈，但两个List实际是同一地址的同一列表。（这也说明data传递、parcel传递是传地址的（？））
+// 同时也解释了使用foreach循环一个list对另一个list移除会产生同步改写错误的原因（本来就是同一个表）。（已实测）】
+                for (int i = 0; i < dataFetched.size(); i++) {
+                    int innerJ = -1;
+                    for (int j = 0; j < rhythmsAddForGP.size(); j++) {
+                        if(((RhythmBasedCompound)(dataFetched.get(i))).getId()==rhythmsAddForGP.get(j).getId()){
+                            innerJ = j;
+                            break;
+                        }
+                    }
+                    if(innerJ!=-1) {
+                        rhythmsAddForGP.remove(innerJ);
+                    }
+                }//大概只能这样删除吧。
+
+                Toast.makeText(this, "新选定项目数量："+rhythmsAddForGP.size(), Toast.LENGTH_SHORT).show();
+
                 int l = rhythmDbHelper.createRhythmCrossGroup(group.getId(),rhythmsAddForGP);
                 if(l!=0){
                     //更新有效，刷新显示
