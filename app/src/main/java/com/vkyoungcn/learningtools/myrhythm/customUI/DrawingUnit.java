@@ -17,6 +17,13 @@ public class DrawingUnit {
 //        public byte additionalSpotType = 0;//上下加点类型，默认0（无加点）；下加负值、上加正值。原则上不超正负3。
 //        public byte bottomLineAmount = 0;//并不是所有音符都有下划线。
 
+
+    public static final int PHRASE_START = 8801;
+    public static final int PHRASE_MIDDLE = 8802;
+    public static final int PHRASE_END = 8803;
+    public static final int PHRASE_EMPTY = 8804;//前缀、0、-；弧跨除首个dU外都设为PE。
+
+
     /* 作为一个绘制单位，其整体的左端起始位置
      * 用于使后续单位建立自己的位置*/
 
@@ -67,6 +74,9 @@ public class DrawingUnit {
 
     //为了在自动移动时，左侧不会脱离控件边缘
     public float originalLeftToCenterWhenLessThanCenter = 0;//仅在du（的左侧）（仅初始，移动后不算）不足中心时，记录本字段；其余为0。
+
+    public int phraseMark = PHRASE_MIDDLE;
+
 
     //一个字符的空间方案暂定如下：标志尺寸ss,字符区域占宽=ss（字体尺寸本身不足的留空即可），
     // 字符占高=展宽；字符上方预留半ss的顶弧线高度，其中保留一小层的高度作为上加点区域；

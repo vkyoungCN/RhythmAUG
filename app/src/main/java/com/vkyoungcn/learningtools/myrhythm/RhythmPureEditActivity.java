@@ -5,10 +5,9 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
-import com.vkyoungcn.learningtools.myrhythm.fragments.MelodyEditorFragment;
+import com.vkyoungcn.learningtools.myrhythm.fragments.EditorFragmentMelody;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
@@ -31,7 +30,7 @@ public class RhythmPureEditActivity extends AppCompatActivity implements OnGener
             transaction.remove(prev);
         }
 
-        Fragment editFragment = MelodyEditorFragment.newInstance(rhythmBasedCompound);
+        Fragment editFragment = EditorFragmentMelody.newInstance(rhythmBasedCompound);
         transaction.add(R.id.flt_fgContainer_ERA,editFragment,"EDIT_TEXT").commit();
 
     }

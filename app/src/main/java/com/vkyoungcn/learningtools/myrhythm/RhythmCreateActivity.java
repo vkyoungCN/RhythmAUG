@@ -5,12 +5,10 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
+import com.vkyoungcn.learningtools.myrhythm.fragments.CreateFragmentMelody;
 import com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction;
-import com.vkyoungcn.learningtools.myrhythm.fragments.MelodyCreateFragment;
-import com.vkyoungcn.learningtools.myrhythm.helper.CodeSerial_Rhythm;
 import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
@@ -53,7 +51,7 @@ public class RhythmCreateActivity extends AppCompatActivity implements OnGeneral
         rhythmBasedCompound.setRhythmType(rhythmType);
 //        Log.i(TAG, "onCreate: section created="+sectionForAdd.toString());
 
-        Fragment editFragment = MelodyCreateFragment.newInstance(rhythmBasedCompound);
+        Fragment editFragment = CreateFragmentMelody.newInstance(rhythmBasedCompound);
         transaction.add(R.id.flt_fgContainer_CRA,editFragment,"CREATE_RH").commit();
     }
 

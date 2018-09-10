@@ -1,17 +1,21 @@
 package com.vkyoungcn.learningtools.myrhythm.models;
 
 import android.os.Parcel;
-import android.util.Log;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 public class BaseDualCodeSerialModel extends BaseModel {
-    //部分模型在DB中使用字串存放编码，但在程序端需要使用Byte列表。
+    //在DB中使用字串存放编码，但在程序端需要使用Byte列表。持有上述两个序列。
     //新字段
     private ArrayList<Byte> codeSerialByte =new ArrayList<>();
+    /*
+    * utf8数字，英文字母占1个字节
+    * 汉字：占3个字节的：基本等同于GBK，含21000多个汉字（一说52156 个）
+    * 占4个字节的：中日韩超大字符集里面的汉字，有5万多个（一说64029 个）
+    * 【因而Lyric无法使用Byte存储的列表进行编码，应使用int】
+    * */
+
     private static final String TAG = "BaseDualCodeSerialModel";
 
     /* 构造器*/
@@ -21,7 +25,7 @@ public class BaseDualCodeSerialModel extends BaseModel {
     /* 仅使用BassModel基类字段就能完全初始本类，自动设置关联的两个编码字段*/
     public BaseDualCodeSerialModel(int id, String title, String codeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int stars) {
         super(id, title, codeSerial, description, isSelfDesign, keepTop, createTime, lastModifyTime, stars);
-        setPitchSequenceFromStr(codeSerial);
+        setCodeSerialByteFromStr(codeSerial);
     }
 
     /* 完全构造器*/
@@ -36,7 +40,7 @@ public class BaseDualCodeSerialModel extends BaseModel {
     @Override
     public void setCodeSerialString(String codeSerialString) {
         super.setCodeSerialString(codeSerialString);
-        setPitchSequenceFromStr(codeSerialString);
+        setCodeSerialByteFromStr(codeSerialString);
     }
 
     public void setCodeSerialByte(ArrayList<Byte> codeSerialByte) {
@@ -55,12 +59,12 @@ public class BaseDualCodeSerialModel extends BaseModel {
 
 
     /* 为实现两种编码互相转换而需要的一些方法*/
-    private void setPitchSequenceFromStr(String pitchesCodeSerialStr){
+    private void setCodeSerialByteFromStr(String codeSerialStr){
         this.codeSerialByte.clear();
-        if(pitchesCodeSerialStr == null){
-            pitchesCodeSerialStr = "";//排错空指针问题
+        if(codeSerialStr == null){
+            codeSerialStr = "";//排错空指针问题
         }
-        for (byte b :pitchesCodeSerialStr.getBytes()) {
+        for (byte b :codeSerialStr.getBytes()) {
             this.codeSerialByte.add(b);
         }//无法利用Arrays.asList()直接转换，基础类型。
     }
@@ -77,18 +81,26 @@ public class BaseDualCodeSerialModel extends BaseModel {
     private String getStrCodeFromByteCode(ArrayList<Byte> byteCodes) {
         Byte[] bytes = new Byte[byteCodes.size()];
         byteCodes.toArray(bytes);
-
         byte[] bytes_2 = new byte[byteCodes.size()];
         for (int i=0;i<byteCodes.size();i++) {
+            //Byte转成byte
             bytes_2[i] = bytes[i];
         }
+        try {
+            return new String(bytes_2,"ISO-8859-1");//Latin-1编码，0~127的字符与ASCII码相同，是单字节的编码方式（utf-8是变长，存取后数据有不一致现象）
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return "";//解码失败
 
+        /*
+        如果单个转换，一个byte 16会拆成1、6两个单元处理，从而出错。
         Charset cs = Charset.forName ("UTF-8");
         ByteBuffer bb = ByteBuffer.allocate (bytes.length);
         bb.put (bytes_2);
         bb.flip ();
         CharBuffer cb = cs.decode (bb);
-        return cb.toString();
+        return cb.toString();*/
     }
 
     /* 错误方式，无法正确的转换，如byte=16将被视作1、6两个字符存入（值49、54）

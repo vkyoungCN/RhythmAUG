@@ -4,7 +4,7 @@
     android:layout_width="110dp"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".fragments.MelodyEditorFragment">
+    tools:context=".fragments.EditorFragmentMelody">
 
     <!--Title-->
     <TextView

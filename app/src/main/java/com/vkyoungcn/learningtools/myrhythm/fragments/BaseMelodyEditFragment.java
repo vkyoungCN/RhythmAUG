@@ -3,7 +3,6 @@ package com.vkyoungcn.learningtools.myrhythm.fragments;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,8 +18,8 @@ import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
 import java.util.ArrayList;
 
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
-public class MelodyBaseEditFragment extends Fragment implements View.OnClickListener {
-    private static final String TAG = "MelodyBaseEditFragment";
+public class BaseMelodyEditFragment extends Fragment implements View.OnClickListener {
+    private static final String TAG = "BaseMelodyEditFragment";
 
     public static final int BOX_TYPE_BLUE = 8001;
     public static final int BOX_TYPE_GREEN_START = 8002;
@@ -145,12 +144,12 @@ public class MelodyBaseEditFragment extends Fragment implements View.OnClickList
     TextView tv_adPoint_2Neg;
 */
 
-    public MelodyBaseEditFragment() {
+    public BaseMelodyEditFragment() {
         // Required empty public constructor
     }
 
-    public static MelodyBaseEditFragment newInstance(RhythmBasedCompound rhythmBasedCompound) {
-        MelodyBaseEditFragment fragment = new MelodyBaseEditFragment();
+    public static BaseMelodyEditFragment newInstance(RhythmBasedCompound rhythmBasedCompound) {
+        BaseMelodyEditFragment fragment = new BaseMelodyEditFragment();
         Bundle bundle = new Bundle();
         bundle.putParcelable("RHYTHM", rhythmBasedCompound);
         fragment.setArguments(bundle);

@@ -1,7 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm.models;
 
 import android.os.Parcel;
-import android.util.Log;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -20,8 +19,8 @@ public class RhythmBasedCompound extends Rhythm {
     SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /* 以下5个特有字段（具备自动联动能力的字段可以没有setter；但其他三个字段要有setter，否则无法设置值）*/
-    private String primaryLyricSerial = "";
-    private String secondLyricSerial = "";
+    private ArrayList<String> primaryLyricPhrases = new ArrayList<>();
+    private ArrayList<String> secondLyricPhrases = new ArrayList<>();
 
     private ArrayList<Byte> linkingPitches = new ArrayList<>();
 
@@ -33,39 +32,54 @@ public class RhythmBasedCompound extends Rhythm {
     }
 
 
-
     /* byte编码留空，通过string编码设置后自动生成的构造器*/
-    public RhythmBasedCompound(int id, String title, String codeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int stars, int rhythmType, int primaryLyricId, int secondLyricId, int pitchesId, String primaryLyricSerial, String secondLyricSerial, ArrayList<Byte> pitchesSequence) {
+    public RhythmBasedCompound(int id, String title, String codeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int stars, int rhythmType, int primaryLyricId, int secondLyricId, int pitchesId, ArrayList<String> primaryLyricPhrases, ArrayList<String> secondLyricPhrases, ArrayList<Byte> pitchesSequence) {
         super(id, title, codeSerial, description, isSelfDesign, keepTop, createTime, lastModifyTime, stars, rhythmType, primaryLyricId, secondLyricId, pitchesId);
-        this.primaryLyricSerial = primaryLyricSerial;
-        this.secondLyricSerial = secondLyricSerial;
+        this.primaryLyricPhrases = primaryLyricPhrases;
+        this.secondLyricPhrases = secondLyricPhrases;
         this.linkingPitches = pitchesSequence;
         setCreateTimeStrFromLong(createTime);
         setLastModifyTimeStrFromLong(lastModifyTime);
     }
 
     /* 完全字段构造器*/
-    public RhythmBasedCompound(int id, String title, String codeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int stars, ArrayList<Byte> codeSerialByte, int rhythmType, int primaryLyricId, int secondLyricId, int pitchesId, String primaryLyricSerial, String secondLyricSerial, ArrayList<Byte> pitchesSequence, String createTimeStr, String lastModifyTimeStr) {
+    public RhythmBasedCompound(int id, String title, String codeSerial, String description, boolean isSelfDesign, boolean keepTop, long createTime, long lastModifyTime, int stars, ArrayList<Byte> codeSerialByte, int rhythmType, int primaryLyricId, int secondLyricId, int pitchesId, ArrayList<String> primaryLyricPhrases, ArrayList<String> secondLyricPhrases, ArrayList<Byte> pitchesSequence, String createTimeStr, String lastModifyTimeStr) {
         super(id, title, codeSerial, description, isSelfDesign, keepTop, createTime, lastModifyTime, stars, codeSerialByte, rhythmType, primaryLyricId, secondLyricId, pitchesId);
-        this.primaryLyricSerial = primaryLyricSerial;
-        this.secondLyricSerial = secondLyricSerial;
+        this.primaryLyricPhrases = primaryLyricPhrases;
+        this.secondLyricPhrases = secondLyricPhrases;
         this.linkingPitches = pitchesSequence;
         setCreateTimeStrFromLong(createTime);
         setLastModifyTimeStrFromLong(lastModifyTime);
     }
 
-    public void setPrimaryLyricSerial(String primaryLyricSerial) {
-        if (primaryLyricSerial==null){
-            primaryLyricSerial="";
+    //形参与目标字段同型版本
+    public void setPrimaryLyricPhrases(ArrayList<String> primaryLyricPhrases) {
+        if (primaryLyricPhrases ==null){
+            return;
         }
-        this.primaryLyricSerial = primaryLyricSerial;
+        this.primaryLyricPhrases = primaryLyricPhrases;
     }
 
-    public void setSecondLyricSerial(String secondLyricSerial) {
-        if (secondLyricSerial==null){
-            secondLyricSerial="";
+    public void setSecondLyricPhrases(ArrayList<String> secondLyricPhrases) {
+        if (secondLyricPhrases ==null){
+            return;
         }
-        this.secondLyricSerial = secondLyricSerial;
+        this.secondLyricPhrases = secondLyricPhrases;
+    }
+
+    //不同型版本
+    public void setPrimaryLyricPhrases(String primaryLyricSerial) {
+        if (primaryLyricSerial==null){
+            return;
+        }
+        this.primaryLyricPhrases = Lyric.toPhrasesByCodeSerialString(primaryLyricSerial);
+    }
+
+    public void setSecondLyricPhrases(String secondLyricSerial) {
+        if (secondLyricSerial==null){
+            return;
+        }
+        this.secondLyricPhrases = Lyric.toPhrasesByCodeSerialString(secondLyricSerial);
     }
 
     public void setLinkingPitches(ArrayList<Byte> linkingPitches) {
@@ -75,12 +89,12 @@ public class RhythmBasedCompound extends Rhythm {
         this.linkingPitches = linkingPitches;
     }
 
-    public String getPrimaryLyricSerial() {
-        return primaryLyricSerial;
+    public ArrayList<String> getPrimaryLyricPhrases() {
+        return primaryLyricPhrases;
     }
 
-    public String getSecondLyricSerial() {
-        return secondLyricSerial;
+    public ArrayList<String> getSecondLyricPhrases() {
+        return secondLyricPhrases;
     }
 
     public ArrayList<Byte> getLinkingPitches() {
@@ -131,8 +145,8 @@ public class RhythmBasedCompound extends Rhythm {
     public void writeToParcel(Parcel parcel, int i) {
         super.writeToParcel(parcel,i);
 
-        parcel.writeString(primaryLyricSerial);
-        parcel.writeString(secondLyricSerial);
+        parcel.writeSerializable(primaryLyricPhrases);
+        parcel.writeSerializable(secondLyricPhrases);
         parcel.writeSerializable(linkingPitches);
 
         parcel.writeString(createTimeStr);
@@ -155,8 +169,8 @@ public class RhythmBasedCompound extends Rhythm {
     private RhythmBasedCompound(Parcel in){
         super(in);
 //        Log.i(TAG, "RhythmBasedCompound: parcel constructor");
-        primaryLyricSerial = in.readString();
-        secondLyricSerial = in.readString();
+        primaryLyricPhrases = (ArrayList<String>) in.readSerializable();
+        secondLyricPhrases = (ArrayList<String>) in.readSerializable();
         linkingPitches = (ArrayList<Byte>) in.readSerializable();
         createTimeStr = in.readString();
         lastModifyTimeStr = in.readString();

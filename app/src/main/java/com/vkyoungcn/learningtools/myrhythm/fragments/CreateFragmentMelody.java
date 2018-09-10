@@ -1,7 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm.fragments;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,18 +11,18 @@ import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInterac
 
 
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
-public class MelodyCreateFragment extends MelodyBaseEditFragment {
-    private static final String TAG = "MelodyCreateFragment";
+public class CreateFragmentMelody extends BaseMelodyEditFragment {
+    private static final String TAG = "CreateFragmentMelody";
     private int valueOfSection = 64;
 
 
-    public MelodyCreateFragment() {
+    public CreateFragmentMelody() {
         // Required empty public constructor
     }
 
-    public static MelodyCreateFragment newInstance(RhythmBasedCompound rhythmBasedCompound) {
+    public static CreateFragmentMelody newInstance(RhythmBasedCompound rhythmBasedCompound) {
         //调用方负责传入空的新节奏
-        MelodyCreateFragment fragment = new MelodyCreateFragment();
+        CreateFragmentMelody fragment = new CreateFragmentMelody();
         Bundle bundle = new Bundle();
         bundle.putParcelable("RHYTHM", rhythmBasedCompound);
         fragment.setArguments(bundle);

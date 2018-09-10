@@ -20,6 +20,7 @@
     <color name="rhythmView_edBoxBlue">#1976d2</color>
     <color name="rhythmView_edBoxGreen">#88e71b</color>
     <color name="rhythmView_edBoxOrange">#ffb74d</color>
+    <color name="rhythmView_edBoxLiteGray">#f5f5f5</color>
     <color name="rhythmView_sdMaskWhite">#ffffff</color>
     <color name="rhythmView_sdBallPink">#fa75ed</color>
     <color name="rhythmView_sdVBarBlack">#212121</color>

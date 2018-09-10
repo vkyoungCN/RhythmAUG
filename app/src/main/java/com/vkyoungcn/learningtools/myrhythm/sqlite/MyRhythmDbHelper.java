@@ -12,10 +12,7 @@ import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 import com.vkyoungcn.learningtools.myrhythm.models.PitchSequence;
 import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
-import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmLiteForGpX;
-
-import junit.framework.Test;
 
 import java.util.ArrayList;
 
@@ -292,7 +289,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
         //先生成对应的Lyric数据
         Lyric lyric_p = new Lyric();
-        lyric_p.setCodeSerialString(compoundRhythm.getPrimaryLyricSerial());
+        lyric_p.setCodeSerialString(compoundRhythm.getPrimaryLyricPhrases());
 
 
 
@@ -645,8 +642,8 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
                 rhythmBasedCompound.setSecondLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_SECOND_LYRIC_ID)));
                 rhythmBasedCompound.setPitchesId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID)));
 
-                rhythmBasedCompound.setPrimaryLyricSerial(getLyricStringById_TRS(rhythmBasedCompound.getPrimaryLyricId()));
-                rhythmBasedCompound.setSecondLyricSerial(getLyricStringById_TRS(rhythmBasedCompound.getSecondLyricId()));
+                rhythmBasedCompound.setPrimaryLyricPhrases(getLyricStringById_TRS(rhythmBasedCompound.getPrimaryLyricId()));
+                rhythmBasedCompound.setSecondLyricPhrases(getLyricStringById_TRS(rhythmBasedCompound.getSecondLyricId()));
                 //暂时未存入音高序列
 
                 rhythms.add(rhythmBasedCompound);
@@ -843,8 +840,8 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
                 rhythmBasedCompound.setSecondLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_SECOND_LYRIC_ID)));
                 rhythmBasedCompound.setPitchesId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID)));
 
-                rhythmBasedCompound.setPrimaryLyricSerial(getLyricStringById_TRS(rhythmBasedCompound.getPrimaryLyricId()));
-                rhythmBasedCompound.setSecondLyricSerial(getLyricStringById_TRS(rhythmBasedCompound.getSecondLyricId()));
+                rhythmBasedCompound.setPrimaryLyricPhrases(getLyricStringById_TRS(rhythmBasedCompound.getPrimaryLyricId()));
+                rhythmBasedCompound.setSecondLyricPhrases(getLyricStringById_TRS(rhythmBasedCompound.getSecondLyricId()));
 
                 compounds.add(rhythmBasedCompound);
             }while (cursor.moveToNext());
@@ -896,8 +893,8 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
                 rhythmBasedCompound.setSecondLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_SECOND_LYRIC_ID)));
                 rhythmBasedCompound.setPitchesId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID)));
 
-                rhythmBasedCompound.setPrimaryLyricSerial(getLyricStringById_TRS(rhythmBasedCompound.getPrimaryLyricId()));
-                rhythmBasedCompound.setSecondLyricSerial(getLyricStringById_TRS(rhythmBasedCompound.getSecondLyricId()));
+                rhythmBasedCompound.setPrimaryLyricPhrases(getLyricStringById_TRS(rhythmBasedCompound.getPrimaryLyricId()));
+                rhythmBasedCompound.setSecondLyricPhrases(getLyricStringById_TRS(rhythmBasedCompound.getSecondLyricId()));
 
                 compounds.add(rhythmBasedCompound);
             }while (cursor.moveToNext());
@@ -944,10 +941,10 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
             cRhythm.setPitchesId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID)));
         }
         String primaryLyricSerial = getLyricStringById_TRS(cRhythm.getPrimaryLyricId());
-        cRhythm.setPrimaryLyricSerial(primaryLyricSerial);
+        cRhythm.setPrimaryLyricPhrases(primaryLyricSerial);
 
         String secondLyricSerial = getLyricStringById_TRS(cRhythm.getSecondLyricId());
-        cRhythm.setSecondLyricSerial(secondLyricSerial);
+        cRhythm.setSecondLyricPhrases(secondLyricSerial);
 
 
         try {
@@ -989,10 +986,10 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
             cRhythm.setPitchesId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PITCH_SEQUENCE_ID)));
         }
         String primaryLyricSerial = getLyricStringById_TRS(cRhythm.getPrimaryLyricId());
-        cRhythm.setPrimaryLyricSerial(primaryLyricSerial);
+        cRhythm.setPrimaryLyricPhrases(primaryLyricSerial);
 
         String secondLyricSerial = getLyricStringById_TRS(cRhythm.getSecondLyricId());
-        cRhythm.setSecondLyricSerial(secondLyricSerial);
+        cRhythm.setSecondLyricPhrases(secondLyricSerial);
 
 
        /* try {

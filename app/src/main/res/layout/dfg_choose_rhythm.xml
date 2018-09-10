@@ -20,7 +20,7 @@
         />
 
     <!--上方预备显示区-->
-    <LinearLayout
+    <!--<LinearLayout
         android:layout_width="match_parent"
         android:layout_height="72dp"
         android:orientation="vertical"
@@ -39,12 +39,12 @@
             />
 
 
-    </LinearLayout>
+    </LinearLayout>-->
 
     <!--选择区-->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="190dp"
         android:orientation="vertical"
         >
         <TextView
@@ -73,7 +73,7 @@
     <!--选定展示-->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="190dp"
         android:orientation="vertical"
         >
         <TextView
