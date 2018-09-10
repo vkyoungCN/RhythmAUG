@@ -203,5 +203,12 @@
     <string name="chooseRhythm">选择节奏</string>
     <string name="chose_done">已选定</string>
     <string name="chose_area">备选资源</string>
+    <string name="move">移动</string>
+    <string name="actionArea">操作区域</string>
+    <string name="plh_currentAmount">本句容量：%1$d字，已输入：%2$d字。</string>
+    <string name="totalModify">整体修改（需手动同步）</string>
+    <string name="syncByHand">↑↑\n同步</string>
+    <string name="syncByHand2">↓↓\n同步</string>
+    <string name="plh_currentIndex_LY">光标位置：第%1$d乐句中的第%2$d字。</string>
 
 </resources>

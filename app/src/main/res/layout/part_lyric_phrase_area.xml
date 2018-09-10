@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".fragments.EditorFragmentMelody">
+
+    <!--Title-->
+    <TextView
+        android:id="@+id/tv_title_partAR"
+        android:layout_width="match_parent"
+        android:layout_height="22dp"
+        android:background="#f5f5f5"
+        android:gravity="center"
+        android:text="@string/zone_selection" />
+
+    <!--横分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_orange" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        >
+
+        <TextView
+            android:layout_width="42dp"
+            android:layout_height="match_parent"
+            android:layout_margin="2dp"
+            android:background="#fffde7"
+            android:gravity="center"
+            />
+
+        <TextView
+            android:layout_width="42dp"
+            android:layout_height="match_parent"
+            android:layout_margin="2dp"
+            android:background="#efefef"
+            android:gravity="center"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        >
+
+        <TextView
+            android:layout_width="44dp"
+            android:layout_height="match_parent"
+            android:layout_margin="1dp"
+            android:background="#e8f5e9"
+            android:gravity="center"
+            />
+
+        <TextView
+            android:layout_width="44dp"
+            android:layout_height="match_parent"
+            android:layout_margin="1dp"
+            android:background="#efefef"
+            android:gravity="center"
+            />
+
+
+    </LinearLayout>
+
+    <!--<TextView
+        android:id="@+id/tv_over_7"
+        android:layout_width="38dp"
+        android:layout_height="32dp"
+        android:layout_below="@+id/tv_dvLine_subT_mCp"
+        android:layout_margin="1dp"
+        android:layout_toRightOf="@+id/tv_over_5"
+        android:background="#efefef"
+        android:gravity="center"
+        android:text="@string/over_7" />
+-->
+
+</LinearLayout>

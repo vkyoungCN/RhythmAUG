@@ -62,7 +62,7 @@
 
                 <include layout="@layout/part_rhythm_confirm" />
 
-                <include layout="@layout/part_edit_move" />
+                <include layout="@layout/part_rhythm_move" />
 
                 <!--分割线-->
                 <TextView
