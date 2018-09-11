@@ -10,22 +10,26 @@
 
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
+        android:layout_height="140dp"
         android:layout_margin="2dp"
         app:cardCornerRadius="8dp">
 
         <com.vkyoungcn.learningtools.myrhythm.customUI.LyricEditorBaseOnRSLE
-            android:id="@+id/rh_editor_FELP"
+            android:id="@+id/rh_editor_LE"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="4dp"
+            android:layout_gravity="center"
 
             />
 
 
     </android.support.v7.widget.CardView>
-
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        />
 
 
 
@@ -36,58 +40,62 @@
         android:background="#e0e0e0" />
 
 
+    <!--当选区涵盖了不能承载字的EmptyDu时，给出警告-->
+    <!--<TextView
+        android:id="@+id/tv_warningInfo_EL"
+        android:layout_width="match_parent"
+        android:layout_height="22dp"
+        android:textSize="16sp"
+        android:layout_marginStart="4dp"
+        android:textColor="@color/myRhythm_indigo"
+        />-->
+    <!--横分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/myRhythm_indigo" />
+
+    <TextView
+        android:id="@+id/tv_infoTop_LE"
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:layout_marginBottom="2dp"
+        android:background="#bdbdbd"
+        android:gravity="center"
+        android:text="@string/singleDuToModify"
+        android:textColor="#ff5722" />
+
+
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
-        android:orientation="vertical"
-        android:gravity="center"
-        >
-        <!--再加一层llt的意图是控制各控件的高度-->
+        android:layout_height="152dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <include layout="@layout/part_lyric_phrase_structure" />
+        <!--分割线-->
         <TextView
-            android:id="@+id/tv_infoTop_FELP"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="2dp"
-            android:background="#bdbdbd"
-            android:gravity="center"
-            android:text="@string/singleDuToModify"
-            android:textSize="16sp"
-            android:textColor="#ff5722" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="152dp"
-            android:gravity="center_horizontal"
-            android:orientation="horizontal">
-
-            <include layout="@layout/part_lyric_phrase_structure" />
-            <!--分割线-->
-            <TextView
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:layout_margin="2dp"
-                android:background="#e0e0e0" />
-
-            <include layout="@layout/part_lyric_phrase_input_cursor" />
-            <!--分割线-->
-            <TextView
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:layout_margin="2dp"
-                android:background="#e0e0e0" />
-
-
-        </LinearLayout>
-
-        <!--横分割线-->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_margin="2dp"
             android:background="#e0e0e0" />
+
+        <include layout="@layout/part_lyric_phrase_input_cursor" />
+        <!--分割线-->
+        <TextView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_margin="2dp"
+            android:background="#e0e0e0" />
+
+
     </LinearLayout>
 
+    <!--横分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#e0e0e0" />
 
     <!--横分割线-->
     <TextView
@@ -113,10 +121,12 @@
             android:layout_height="match_parent"
             android:layout_marginTop="28dp"
             android:layout_marginEnd="50dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             >
 
             <EditText
-                android:id="@+id/edt_modifyBH_FELP"
+                android:id="@+id/edt_modifyBH_LE"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="12dp"
@@ -135,7 +145,7 @@
             android:background="#e0e0e0" />
 
         <TextView
-            android:id="@+id/tv_syncFromRhv_FELP"
+            android:id="@+id/tv_syncFromRhv_LE"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginTop="28dp"
@@ -146,7 +156,7 @@
             android:background="@color/myRhythm_cyan"
             />
         <TextView
-            android:id="@+id/tv_syncToRhv_FELP"
+            android:id="@+id/tv_syncToRhv_LE"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginTop="78dp"
@@ -170,7 +180,7 @@
         android:layout_width="match_parent"
         android:layout_height="48dp">
         <TextView
-            android:id="@+id/tv_infoBottom_amount_FELP"
+            android:id="@+id/tv_infoBottom_amount_LE"
             android:layout_width="wrap_content"
             android:layout_height="24dp"
             android:layout_marginStart="4dp"
@@ -178,7 +188,7 @@
             android:text="@string/plh_currentAmount"
             android:textColor="@color/myRhythm_green" />
         <TextView
-            android:id="@+id/tv_infoBottom_cI_FELP"
+            android:id="@+id/tv_infoBottom_cI_LE"
             android:layout_width="wrap_content"
             android:layout_height="24dp"
             android:layout_marginStart="4dp"
@@ -188,7 +198,7 @@
             android:textColor="@color/myRhythm_indigo" />
 
         <TextView
-            android:id="@+id/tv_confirm_FELP"
+            android:id="@+id/tv_confirm_LE"
             android:layout_width="99dp"
             android:layout_height="match_parent"
             android:gravity="center"

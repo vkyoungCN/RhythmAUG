@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 
@@ -15,7 +16,7 @@ public class LyricCreateEntranceActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_back_up_main);
+        setContentView(R.layout.activity_create_entrance_lyric);
 
     }
 
@@ -31,12 +32,14 @@ public class LyricCreateEntranceActivity extends AppCompatActivity {
     public void lyricAddHardLink(View view){
         //①选定旋律，
         // ②然后进入创作页
+        Toast.makeText(this, "施工中。", Toast.LENGTH_SHORT).show();
     }
 
     public void lyricAddWeakLink(View view){
         //①选定参考旋律，
         // ②然后进入创作页
         //·创作过程中，参考旋律可更换。（没有实质限制）
+        Toast.makeText(this, "施工中", Toast.LENGTH_SHORT).show();
     }
 
 

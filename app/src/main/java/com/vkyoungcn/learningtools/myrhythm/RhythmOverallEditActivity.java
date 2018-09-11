@@ -14,7 +14,9 @@ import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
+import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_LYPH_EDIT;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_EDIT;
+import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_LYPH_EDIT_DONE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_OVERALL_EDIT_CANCEL;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_PURE_EDIT_DONE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_OVERALL_EDIT_DONE;
@@ -60,7 +62,23 @@ public class RhythmOverallEditActivity extends BaseModelEditActivity {
 
     }
 
+    public void goEditLyricA(View view){
+        Intent intentToLyEditor = new Intent(this,LyricPhrasesEditActivity.class);
+        intentToLyEditor.putExtra("COMPOUND_RHYTHM", model);
+        intentToLyEditor.putExtra("IS_PRIMARY",true);
+        intentToLyEditor.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
 
+        startActivityForResult(intentToLyEditor,REQUEST_CODE_LYPH_EDIT);
+    }
+
+    public void goEditLyricB(View view){
+        Intent intentToLyEditor = new Intent(this,LyricPhrasesEditActivity.class);
+        intentToLyEditor.putExtra("COMPOUND_RHYTHM", model);
+        intentToLyEditor.putExtra("IS_PRIMARY",false);
+        intentToLyEditor.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+
+        startActivityForResult(intentToLyEditor,REQUEST_CODE_LYPH_EDIT);
+    }
 
     /* 以下一个方法只可能是从rh的编码专用修改页返回
     * 是节奏编辑页独有方法，其他资源不需要*/
@@ -68,7 +86,7 @@ public class RhythmOverallEditActivity extends BaseModelEditActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         //返回之后，就是编码数据有所改变，从新加载rhV的显示
-        if(resultCode == RESULT_CODE_RH_PURE_EDIT_DONE){
+        if(resultCode == RESULT_CODE_RH_PURE_EDIT_DONE||resultCode==RESULT_CODE_LYPH_EDIT_DONE){
             model = data.getParcelableExtra("MODEL");
 //            由于从新的activity返回，需要对所有控件再次加载
             initUiData();

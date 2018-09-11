@@ -37,6 +37,18 @@
             android:gravity="center"
             android:text="@string/local_bak"
             android:textColor="@color/myRhythm_orange"
+            android:onClick="bakToLocal"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="72dp"
+            android:layout_height="46dp"
+            android:layout_gravity="end|bottom"
+            android:layout_margin="4dp"
+            android:background="#f5f5f5"
+            android:gravity="center"
+            android:text="@string/local_ReCover"
+            android:textColor="@color/myRhythm_orange"
             android:onClick="fileSelectBkLocal"
             android:textSize="24sp" />
     </FrameLayout>

@@ -8,7 +8,6 @@
 
     <!--Title-->
     <TextView
-        android:id="@+id/tv_title_partAR"
         android:layout_width="match_parent"
         android:layout_height="22dp"
         android:background="#f5f5f5"
@@ -30,6 +29,7 @@
         >
 
         <TextView
+            android:id="@+id/lastPr_LE"
             android:layout_width="42dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
@@ -39,6 +39,7 @@
             />
 
         <TextView
+            android:id="@+id/nextPr_LE"
             android:layout_width="42dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
@@ -53,16 +54,18 @@
             android:layout_height="match_parent"
             android:layout_margin="1dp"
             android:background="#e0e0e0" />
+
         <TextView
+            android:id="@+id/phraseStart_LE"
             android:layout_width="42dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
             android:background="#efefef"
-            android:text="@string/phraseStart"
             android:gravity="center"
-            />
+            android:text="@string/phraseStart" />
 
         <TextView
+            android:id="@+id/phraseEnd_LE"
             android:layout_width="42dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
@@ -81,6 +84,7 @@
         android:orientation="horizontal">
 
         <TextView
+            android:id="@+id/phraseEntireDelete_LE"
             android:layout_width="42dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
@@ -95,6 +99,7 @@
             android:background="#e0e0e0" />
 
         <TextView
+            android:id="@+id/toLeft_LE"
             android:layout_width="42dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
@@ -103,6 +108,7 @@
             android:text="@string/toLeft" />
 
         <TextView
+            android:id="@+id/toRight_LE"
             android:layout_width="42dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
@@ -117,10 +123,11 @@
             android:background="#e0e0e0" />
 
         <TextView
+            android:id="@+id/phraseAddAuto_LE"
             android:layout_width="42dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
-            android:background="#e8eaf6"
+            android:background="#efefef"
             android:gravity="center"
             android:text="@string/phraseAddAuto" />
 
@@ -135,12 +142,13 @@
         android:gravity="center"
         >
         <TextView
+            android:id="@+id/deleteTag_LE"
             android:layout_width="42dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
             android:background="#ffebee"
             android:gravity="center"
-            android:text="@string/deletePhrase" />
+            android:text="@string/deletePhraseTag" />
 
         <!--分割线-->
         <TextView
@@ -149,6 +157,7 @@
             android:layout_margin="1dp"
             android:background="#e0e0e0" />
         <TextView
+            android:id="@+id/freeSelect_LE"
             android:layout_width="42dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
@@ -157,6 +166,7 @@
             android:text="@string/select_area" />
 
         <TextView
+            android:id="@+id/amountResize_LE"
             android:layout_width="42dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
@@ -172,24 +182,13 @@
 
 
         <TextView
+            android:id="@+id/phraseAddAtSelectedArea_LE"
             android:layout_width="42dp"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
-            android:background="#e8f5e9"
+            android:background="#efefef"
             android:gravity="center"
-            android:text="@string/phraseAdd" />
+            android:text="@string/phraseAdd_atSelectArea" />
     </LinearLayout>
-
-    <!--<TextView
-        android:id="@+id/tv_over_7"
-        android:layout_width="38dp"
-        android:layout_height="32dp"
-        android:layout_below="@+id/tv_dvLine_subT_mCp"
-        android:layout_margin="1dp"
-        android:layout_toRightOf="@+id/tv_over_5"
-        android:background="#efefef"
-        android:gravity="center"
-        android:text="@string/over_7" />
--->
 
 </LinearLayout>

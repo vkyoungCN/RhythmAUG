@@ -411,6 +411,18 @@ public class CodeSerial_Rhythm {
             return 3077;//被连音弧覆盖，退出。
         }
         //不必检测区域时值是否符合，调用方限定1整拍、单点单拍情形
+        //要求不能位于小节首各拍子
+        for (int k = startIndex-1; k>0 ; k--) {
+            if(codeSerial.get(k)==127){
+                //向左走，在遇到126之前先遇到了小节结尾
+                return 3078;//不能位于节首
+            }
+            if(codeSerial.get(k)==126){
+                //在遇到127之前先遇到126，不是节首，ok
+                break;
+            }
+        }
+
         //逐个删除
         for(int i=startIndex;i<=endIndex;i++){
             codeSerial.remove(startIndex);
@@ -817,6 +829,31 @@ public class CodeSerial_Rhythm {
         }
         return false;
     }
+
+    //当前位置是否被弧跨（的非首位位置）覆盖（用在判断本位置的音符能否承载字词）
+    public boolean checkCurveRearCovering(int index){
+        int duSpan = 0;//【这个span是codeSerial的跨度，126等也要计入其内！】
+        int curveEndIndex = -1; //初始值采用不可能值
+        int curveRearStartIndex = -1;
+        int skipNum = 0;
+        Log.i(TAG, "checkCurveRearCovering: check index="+index);
+        for(int i=index;i<codeSerial.size();i++){
+            //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
+            byte b = codeSerial.get(i);
+            if(b >125){
+                skipNum++;
+            }else if(b>111){
+                //112~125是连音弧结束标记
+                duSpan = b-109;//少减1（原来是-110）就是判断弧跨后半部（即非首位位置）
+                curveEndIndex = i;//结尾index是curve结束标记所在位置(编码位置)。
+                curveRearStartIndex = i-duSpan-skipNum;//编码的跨度，需要再加上无dU的编码数（由于向前，实际是减去）。
+                return ((curveRearStartIndex<=index)&&(curveEndIndex>index));
+                //前提是不允许多层连音弧。
+            }
+        }
+        return false;
+    }
+
     public ArrayList<Byte> getCurrentSection(int index){
         int startIndex= 0;
         int endIndex = codeSerial.size()-1;
@@ -1492,6 +1529,10 @@ public class CodeSerial_Rhythm {
     }
 
 
+    public void autoPhrases(){
+
+    }
+
     public boolean checkIsFinalRealUnit(int currentIndex){
         for(int i = currentIndex+1; i< codeSerial.size(); i++){
             if(codeSerial.get(i)<110){
@@ -1503,10 +1544,43 @@ public class CodeSerial_Rhythm {
         return true;
     }
 
+    //用于Lyric结构修改时，检查是否是最后一个可承载实际字词的实际音符。
+    //说明：使用125判断不严密，因为125是代表前一个音符
+    public boolean checkIsFinalAvailableRealUnit(int currentIndex){
+        for(int i = currentIndex+1; i< codeSerial.size(); i++){
+            if(codeSerial.get(i)<110&&codeSerial.get(i)>0){
+                //其后仍然 有实际音符
+                //判断该音符是否在弧跨下（非首位）
+                if(!checkCurveRearCovering(i)){
+                    return false;
+                    //如果不在弧跨后部，则可以承载字词；
+                    //否则继续寻找看后方是否还有。
+                }
+            }
+        }
+        //循环完了都没找到则是最后一个了
+        return true;
+    }
+
+    public int getNextAvailableRealUnit(int currentIndex){
+        for(int i = currentIndex+1; i< codeSerial.size(); i++){
+            if(codeSerial.get(i)<110&&codeSerial.get(i)>0){
+                //判断该音符是否在弧跨下（非首位）
+                if(!checkCurveRearCovering(i)){
+                    return i;
+                    //如果不在弧跨后部，则可以承载字词；
+                    //否则继续寻找看后方是否还有。
+                }
+            }
+        }
+        //循环完了都没找到则是最后一个了
+        return -2;
+    }
+
     public boolean checkIsFirstRealUnit(int currentIndex){
         for(int i=currentIndex-1; i>=0;i--){
             if(codeSerial.get(i)<110){
-                //左侧仍然 有实际音符
+                //左侧有乐句开头标记（开头本身也能承载），因而不是第一个位置
                 return false;
             }
         }
@@ -1514,8 +1588,42 @@ public class CodeSerial_Rhythm {
         return true;
     }
 
+    public boolean checkIsFirstAvailableRealUnit(int currentIndex){
+        for(int i=currentIndex-1; i>=0;i--){
+            if(codeSerial.get(i)<110){
+               /* if(!checkCurveRearCovering(i)){
+                    return false;
+                    //如果不在弧跨后部，则可以承载字词；
+                    //否则继续寻找看后方是否还有。
+                }*/
+               return false;//就算是弧跨，也总有弧头，无需检测覆盖情况。
+            }
+        }
+        //循环完了都没找到
+        return true;
+    }
 
-    public int getFistRealUnitIndex(){
+    public int getLastAvailableRealUnit(int currentIndex){
+        for(int i=currentIndex-1; i>=0;i--){
+            if(codeSerial.get(i)<110&&codeSerial.get(i)>0){
+                if(!checkCurveRearCovering(i)){
+                    return i;
+                    //如果不在弧跨后部，则可以承载字词；
+                    //否则继续寻找看后方是否还有。
+                }
+            }
+        }
+        //如果找不到，返回首字
+        for(int j=0; j<currentIndex; j++) {
+            if (codeSerial.get(j) < 110 && codeSerial.get(j) > 0) {
+                return j;//该位置一定不在弧跨后部
+            }
+        }
+            return currentIndex;//最次就不移动了（决定暂不返回-1）
+    }
+
+
+       public int getFistRealUnitIndex(){
         for(int i=0; i<codeSerial.size();i++){
             if(codeSerial.get(i)<110){
                 //左侧仍然 有实际音符
@@ -1537,6 +1645,21 @@ public class CodeSerial_Rhythm {
         //循环完了都没找到则是最后一个了
         return -1;
     }
+
+    public int getNextRealAvailableUnitIndex(int currentIndex){
+        for(int i = currentIndex+1; i< codeSerial.size(); i++){
+            byte b = codeSerial.get(i);
+            if(b<110&&b>0){
+                //延音-是同前面的音唱做一个音的（强行不允许安排承载）;125本身是不能承载的，
+                // 只是表示其前一个可以承载，但前一个一般是可承载的实际音符，已被条件涵盖。
+//                Log.i(TAG, "getNextRealUnitIndex: i(index after move/next real code)="+i);
+                return i;
+            }
+        }
+        //循环完了都没找到则是最后一个了
+        return -1;
+    }
+
 
     public int getLastRealUnitIndex(int currentIndex){
         for(int i=currentIndex-1; i>=0;i--){
@@ -1562,6 +1685,37 @@ public class CodeSerial_Rhythm {
         }
 
         return -1;
+    }
+
+
+    public int getRealAvailableUnitIndexOfNextPhrase(int currentIndex) {
+        //条件：当前选定的位置必然是可承载的位置。
+
+        boolean encounterUnAvailable = false;//越过本句后，置真
+//        int finalAvailableIndexBeforeBoolChange = currentIndex+1;//与i同步
+        for (int i = currentIndex+1; i < codeSerial.size(); i++) {
+            byte b = codeSerial.get(i);
+
+            if (b == 125 || b<=0) {
+                //好像就只有这几种有实际作用
+                encounterUnAvailable = true;
+            }
+
+            if((b>0&&b<110)&&encounterUnAvailable){//暗含>0
+                if(!checkCurveRearCovering(i)){
+                    return i;
+                }
+            }
+
+        }
+
+        //如果找不到，返回本乐句的最后一词。
+        for (int k = codeSerial.size()-1; k >currentIndex ; k--) {
+            if(codeSerial.get(k)<110&&codeSerial.get(k)>0){
+                return k;
+            }
+        }
+        return -5;
     }
 
     public int getRealUnitIndexOfLastSection() {
@@ -1609,10 +1763,11 @@ public class CodeSerial_Rhythm {
             }
         }
 */
-
-
-
     }
+
+
+
+
 
     public boolean checkIsFirstSection(int currentIndex) {
         for (int i = currentIndex; i >=0; i--) {
@@ -1643,24 +1798,32 @@ public class CodeSerial_Rhythm {
     }
 
 
+    public int getLastAvailableUnitIndexOfLastSection(int currentIndex) {
+        boolean encounterUnAvailable = false;//越过本节的节尾127后，置真
 
+        for (int i = currentIndex; i >= 0; i--) {
+            byte b = codeSerial.get(i);
 
+            if (b == 125 || b <= 0) {
+                //好像就只有这几种有实际作用
+                encounterUnAvailable = true;
+            }
 
+            if ((b > 0 && b < 110) && encounterUnAvailable) {//暗含>0
+                if (!checkCurveRearCovering(i)) {
+                    return i;
+                    //如果不在弧跨后部，则可以承载字词；
+                    //否则继续寻找看后方是否还有。
+                }
+            }
+        }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        //如果找不到，返回首字
+        for (int j = 0; j < currentIndex; j++) {
+            if (codeSerial.get(j) < 110 && codeSerial.get(j) > 0) {
+                return j;//该位置一定不在弧跨后部
+            }
+        }
+            return currentIndex;//最次就不移动了（决定暂不返回-1）
+    }
 }

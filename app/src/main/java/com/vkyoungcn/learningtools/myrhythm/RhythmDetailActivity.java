@@ -12,6 +12,8 @@ import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
+import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_LYPH_EDIT;
+import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_LY_EDIT;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_EDIT;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_OVERALL_EDIT;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_OVERALL_EDIT_DONE;
@@ -46,6 +48,23 @@ private static final String TAG = "RhythmDetailActivity";
 
     }
 
+    public void goEditLyricA(View view){
+        Intent intentToLyEditor = new Intent(this,LyricPhrasesEditActivity.class);
+        intentToLyEditor.putExtra("COMPOUND_RHYTHM", model);
+        intentToLyEditor.putExtra("IS_PRIMARY",true);
+        intentToLyEditor.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+
+        startActivityForResult(intentToLyEditor,REQUEST_CODE_LYPH_EDIT);
+    }
+
+    public void goEditLyricB(View view){
+        Intent intentToLyEditor = new Intent(this,LyricPhrasesEditActivity.class);
+        intentToLyEditor.putExtra("COMPOUND_RHYTHM", model);
+        intentToLyEditor.putExtra("IS_PRIMARY",false);
+        intentToLyEditor.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+
+        startActivityForResult(intentToLyEditor,REQUEST_CODE_LYPH_EDIT);
+    }
     @Override
     public void toEditActivity(View view){
         //这个是跳到全修改页面（但是其中编码仍是展示而非修改，因为编码的修改必须要开启专用页面）

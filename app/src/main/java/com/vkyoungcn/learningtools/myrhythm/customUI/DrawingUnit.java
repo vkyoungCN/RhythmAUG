@@ -76,7 +76,7 @@ public class DrawingUnit {
     public float originalLeftToCenterWhenLessThanCenter = 0;//仅在du（的左侧）（仅初始，移动后不算）不足中心时，记录本字段；其余为0。
 
     public int phraseMark = PHRASE_MIDDLE;
-    public int phraseAmount = 0;//在PHRASE_END位置上标记数量。
+    public int orderNumInPharse = 0;//在PHRASE_END位置上标记数量。(现在代表各du（能承载的）位于该句第几个位置，1起。)
 
     //一个字符的空间方案暂定如下：标志尺寸ss,字符区域占宽=ss（字体尺寸本身不足的留空即可），
     // 字符占高=展宽；字符上方预留半ss的顶弧线高度，其中保留一小层的高度作为上加点区域；

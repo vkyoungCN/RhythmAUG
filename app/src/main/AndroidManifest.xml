@@ -34,9 +34,10 @@
         <activity android:name=".GroupEditActivity" />
         <activity android:name=".AllModelsActivity" />
         <activity android:name=".BackUpActivity" />
-        <activity android:name=".SelectAndProcessActivity"/>
-        <activity android:name=".GroupCreateActivity"/>
-        <activity android:name=".LyricCreateEntranceActivity"/>
+        <activity android:name=".SelectAndProcessActivity" />
+        <activity android:name=".GroupCreateActivity" />
+        <activity android:name=".LyricCreateEntranceActivity" />
+        <activity android:name=".LyricPhrasesEditActivity"></activity>
     </application>
 
 </manifest>

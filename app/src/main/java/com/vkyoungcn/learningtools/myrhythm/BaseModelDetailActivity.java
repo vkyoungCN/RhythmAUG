@@ -18,6 +18,7 @@ import java.util.Date;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_LY_EDIT;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_EDIT;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_GP_EDIT_DONE;
+import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_LYPH_EDIT_DONE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_LY_EDIT_DONE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_OVERALL_EDIT_DONE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_PURE_EDIT_DONE;
@@ -99,6 +100,7 @@ public class BaseModelDetailActivity extends AppCompatActivity {
 
         switch (resultCode){
             case RESULT_CODE_LY_EDIT_DONE:
+            case RESULT_CODE_LYPH_EDIT_DONE:
             case RESULT_CODE_GP_EDIT_DONE://（本条实际没有意义，因为GDA实际是继承自ThreadRvActivity.）
             case RESULT_CODE_RH_OVERALL_EDIT_DONE:
             case RESULT_CODE_RH_PURE_EDIT_DONE://即使是仅仅编辑的rh编码，也需要全部ui重设（毕竟是从新的act返回。）

@@ -205,7 +205,7 @@
     <string name="chose_area">备选资源</string>
     <string name="move">移动</string>
     <string name="actionArea">操作区域</string>
-    <string name="plh_currentAmount">本句容量：%1$d字，已输入：%2$d字。</string>
+    <string name="plh_currentAmount">本句已输入：%1$d字。</string>
     <string name="totalModify">整体修改（需手动同步）</string>
     <string name="syncByHand">↑↑\n同步</string>
     <string name="syncByHand2">↓↓\n同步</string>
@@ -218,16 +218,25 @@
     <string name="phraseStartAdd">新增\n句首</string>
     <string name="phraseEndAdd">新增\n句尾</string>
     <string name="singleDuToModify">选定单个位置进行词的改动。\n输入多个字会向后覆盖。</string>
-    <string name="deletePhrase">删</string>
+    <string name="deletePhraseTag">Tag\n删</string>
     <string name="deletePhrase2">句删</string>
     <string name="toLeft"><![CDATA[<]]></string>
     <string name="toRight"><![CDATA[>]]></string>
     <string name="select_area">自由\n选区</string>
     <string name="amountResize">容量\n调整</string>
-    <string name="phraseAdd">新增</string>
+    <string name="phraseAdd_atSelectArea">选区\n新增</string>
     <string name="phraseAddAuto">自动\n新增</string>
     <string name="phrase_structure">乐句结构</string>
     <string name="inputSwitch">输入开关</string>
     <string name="inputCursor">编辑位置选择</string>
+    <string name="partConfirmAndInput">部分提交和输入控制</string>
+    <string name="partConfirm_structure">结构\n部分提交</string>
+    <string name="partConfirm_input">输入\n部分提交</string>
+    <string name="warningForCoveringPME">！所选区域包含不能承载字词的音符位置，请检查</string>
+    <string name="autoPhrases">自动\n划分</string>
+    <string name="clickToEditLyA">歌词A</string>
+    <string name="clickToEditLyB">歌词B</string>
+    <string name="str_lyricPhrases_edit">歌词编辑\n（按关联节奏的格式）</string>
+    <string name="local_ReCover">本地恢复/导入</string>
 
 </resources>

@@ -125,7 +125,6 @@ public class RhythmSingleLineWithTwoTypeBoxBaseView extends RhythmSingleLineView
         if(!selectionAreaMode){
             //单点选择模式，绘制蓝框
             DrawingUnit drawingUnit = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
-//            Log.i(TAG, "onDraw: this du isOutOfUi = "+drawingUnit.isOutOfUi);
             canvas.drawRect(drawingUnit.left, drawingUnit.top, drawingUnit.right, drawingUnit.bottomNoLyric, blueBoxPaint);
         }else {
             //选区模式

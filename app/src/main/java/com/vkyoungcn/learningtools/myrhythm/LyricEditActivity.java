@@ -84,4 +84,7 @@ public class LyricEditActivity extends BaseModelEditActivity {
 
         edt_LyricString.setText(model.getCodeSerialString());
     }
+
+    //稍后添加按#换行；修改好后按换行添加#
+
 }
