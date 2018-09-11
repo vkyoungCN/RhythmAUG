@@ -36,27 +36,33 @@
         android:background="#e0e0e0" />
 
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="2"
+        android:orientation="vertical"
+        android:gravity="center"
         >
         <!--再加一层llt的意图是控制各控件的高度-->
+        <TextView
+            android:id="@+id/tv_infoTop_FELP"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="2dp"
+            android:background="#bdbdbd"
+            android:gravity="center"
+            android:text="@string/singleDuToModify"
+            android:textSize="16sp"
+            android:textColor="#ff5722" />
+
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="112dp"
-            android:layout_gravity="center"
+            android:layout_height="152dp"
             android:gravity="center_horizontal"
             android:orientation="horizontal">
 
-            <include layout="@layout/part_lyric_phrase_area" />
-            <!--分割线-->
-            <TextView
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:layout_margin="2dp"
-                android:background="#e0e0e0" />
-            <include layout="@layout/part_lyric_phrase_move" />
+            <include layout="@layout/part_lyric_phrase_structure" />
             <!--分割线-->
             <TextView
                 android:layout_width="1dp"
@@ -64,7 +70,13 @@
                 android:layout_margin="2dp"
                 android:background="#e0e0e0" />
 
-            <include layout="@layout/part_rhythm_confirm" />
+            <include layout="@layout/part_lyric_phrase_input_cursor" />
+            <!--分割线-->
+            <TextView
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_margin="2dp"
+                android:background="#e0e0e0" />
 
 
         </LinearLayout>
@@ -74,7 +86,7 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="#e0e0e0" />
-    </FrameLayout>
+    </LinearLayout>
 
 
     <!--横分割线-->
@@ -86,7 +98,6 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="125dp"
-        android:layout_marginBottom="4dp"
         >
 
         <TextView
@@ -155,22 +166,39 @@
 
     </FrameLayout>
 
-    <TextView
-        android:id="@+id/tv_infoBottom_amount_FELP"
-        android:layout_width="wrap_content"
-        android:layout_height="24dp"
-        android:layout_marginStart="4dp"
-        android:gravity="center"
-        android:text="@string/plh_currentAmount"
-        android:textColor="@color/myRhythm_green" />
-    <TextView
-        android:id="@+id/tv_infoBottom_cI_FELP"
-        android:layout_width="wrap_content"
-        android:layout_height="24dp"
-        android:layout_marginStart="4dp"
-        android:gravity="center"
-        android:text="@string/plh_currentIndex_LY"
-        android:textColor="@color/myRhythm_indigo" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp">
+        <TextView
+            android:id="@+id/tv_infoBottom_amount_FELP"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:layout_marginStart="4dp"
+            android:gravity="center"
+            android:text="@string/plh_currentAmount"
+            android:textColor="@color/myRhythm_green" />
+        <TextView
+            android:id="@+id/tv_infoBottom_cI_FELP"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:layout_marginStart="4dp"
+            android:gravity="center"
+            android:layout_gravity="bottom"
+            android:text="@string/plh_currentIndex_LY"
+            android:textColor="@color/myRhythm_indigo" />
+
+        <TextView
+            android:id="@+id/tv_confirm_FELP"
+            android:layout_width="99dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/confirm"
+            android:layout_gravity="end"
+            android:background="@color/myRhythm_orange"
+            />
+
+    </FrameLayout>
+
 
 
 </LinearLayout>

@@ -599,7 +599,6 @@ public class BaseRhythmView extends View {
         //int totalValueBeforeThisCodeInBeat = 0;//用于计算拍子【要在循环的末尾添加，因为要使用的是“本音符之前”的总和】
         ArrayList<DrawingUnit> drawingUnitsInSection = new ArrayList<>();
         int skipNum = 0;//由于编码序列中存在不绘制的编码比dU序列多，必须带略过的值。【该值是从小节开头计算】
-
         for (int j = 0; j < codesInThisSection.size(); j++) {
 //            Log.i(TAG, "initSectionDrawingUnit: accNUCS="+accumulationNumInCodeSerial);
             byte code = codesInThisSection.get(j);
@@ -903,17 +902,20 @@ public class BaseRhythmView extends View {
         int charAmountAccumulation = 0;//dU位置和文字位置不一一对应（-、0、前缀要跳过，多连音、弧跨算作一个）
         //且要在换句时归零。
         int phrasesIndex = 0;//乐句的索引（乐句在lyric列表的位置和du在dU中的位置不对应，要转换）
+        int phraseNum = 0;
 
         for(int i=0;i<drawingUnits.size();i++){
             ArrayList<DrawingUnit> currentDuSection = drawingUnits.get(i);
             for (int k=0;k<currentDuSection.size();k++){
                 DrawingUnit drawingUnit = currentDuSection.get(k);
-                if(drawingUnit.phraseMark == PHRASE_EMPTY){
-                    continue;
-                }else {
+                if(drawingUnit.phraseMark!=PHRASE_EMPTY){
                     //可以安置
+                    phraseNum++;
                     if(drawingUnit.phraseMark == PHRASE_END){
                         phrasesIndex++;
+                        drawingUnit.phraseAmount = phraseNum;
+                    }if(drawingUnit.phraseMark == PHRASE_START){
+                        phraseNum=1;//重置计数
                     }
 
                     if (drawingUnit.mCurveNumber == 0) {

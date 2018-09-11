@@ -12,8 +12,6 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.customUI.LyricEditorBaseOnRSLE;
-import com.vkyoungcn.learningtools.myrhythm.helper.CodeSerial_Rhythm;
-import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
@@ -33,6 +31,8 @@ public class BaseLyricPhrasesEditFragment extends Fragment implements View.OnCli
 
 
     RhythmBasedCompound rhythmBasedCompound;//传递进来的数据
+    ArrayList<Byte> codeSerial;
+
     boolean modifyPrimary = true;//传递数据时一并传递选择（对哪个词条进行处理）
     String modifyAllPhrasesInOne = "";
     //数据说明：rbc中Lyric的ArrayList数据仅用于初始时向Editor传递数据；
@@ -122,11 +122,12 @@ public class BaseLyricPhrasesEditFragment extends Fragment implements View.OnCli
 
         }
 //        this.csRhythmHelper = new CodeSerial_Rhythm(rhythmBasedCompound);
-//        this.codeSerial = rhythmBasedCompound.getCodeSerialByte();
+        this.codeSerial = rhythmBasedCompound.getCodeSerialByte();//插入124、125还是要修改cs的。
 //        this.valueOfBeat = RhythmHelper.calculateValueBeat(rhythmBasedCompound.getRhythmType());
 //        Log.i(TAG, "onCreate: rhBc type="+rhythmBasedCompound.getRhythmType());
 
     }
+    功能待：调整乐句容量（移动124、125）。
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -179,7 +180,7 @@ public class BaseLyricPhrasesEditFragment extends Fragment implements View.OnCli
                 if(indexAfterMove == -1){
                     return;
                 }
-                currentUnitIndex = checkMoveModeAndSetResultIndex(indexAfterMove);
+                currentUnitIndex = indexAfterMove;
                 ly_editor_LE.boxMovedSuccessReDraw(currentUnitIndex);
                 checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
                 break;
@@ -189,7 +190,7 @@ public class BaseLyricPhrasesEditFragment extends Fragment implements View.OnCli
                 if(indexAfterMove == -1){
                     return;
                 }
-                currentUnitIndex = checkMoveModeAndSetResultIndex(indexAfterMove);
+                currentUnitIndex = indexAfterMove;
                 ly_editor_LE.boxMovedSuccessReDraw(currentUnitIndex);
                 checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
                 break;
@@ -199,7 +200,7 @@ public class BaseLyricPhrasesEditFragment extends Fragment implements View.OnCli
                 if(indexAfterMove == -1){
                     return;
                 }
-                currentUnitIndex = checkMoveModeAndSetResultIndex(indexAfterMove);
+                currentUnitIndex = indexAfterMove;
                 ly_editor_LE.boxMovedSuccessReDraw(currentUnitIndex);
                 checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
                 break;
@@ -209,7 +210,7 @@ public class BaseLyricPhrasesEditFragment extends Fragment implements View.OnCli
                 if(indexAfterMove == -1){
                     return;
                 }
-                currentUnitIndex = checkMoveModeAndSetResultIndex(indexAfterMove);
+                currentUnitIndex = indexAfterMove;
                 ly_editor_LE.boxMovedSuccessReDraw(currentUnitIndex);
                 checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
                 break;
@@ -219,11 +220,11 @@ public class BaseLyricPhrasesEditFragment extends Fragment implements View.OnCli
 
                 break;
             case R.id.tv_syncFromRhv_FELP:
-                syncFromRhv();
+                syncFromRhv();//方法中自带对下方tv信息的更新时设置。
 
                 break;
             case R.id.tv_confirmAddRhythm_EM:
-                checkNotEmptyAndCommit();
+                checkNotEmptyAndCommitBack();
                 break;
 
         }
@@ -231,175 +232,20 @@ public class BaseLyricPhrasesEditFragment extends Fragment implements View.OnCli
 
 
 
-    /*
-    * 多次重复的代码，抽离成方法
-    * 从选取模式转单点模式
-    * 还用于合并，选区转附点等“字符实际减少”的操作之后，自动转单点以避免（位于最后时）选区越界
-    * （本方法暂时只负责①设顶部tv；②bool关；
-    * 其余操作：UI刷新box显示、底部tv设置等暂未操作。）
-    *（暂时只有少量位置替换成了本方法）
-    * */
-    private void switchToSpotAndOffBool(){
-        tv_topInfo.setText("单点模式");
-        moveAreaStart = false;
-        moveAreaEnd = false;
-        oneBeatModeOn = false;
-        dualBeatModeOn = false;
-        freeAreaModeOn = false;
-    }
 
-    private boolean checkSectionAmountEqualsOne(){
-        boolean passOne = false;
-        for(int i=0;i<codeSerial.size();i++){
-            if(codeSerial.get(i)==127&&!passOne){
-                passOne = true;
-            }else if(codeSerial.get(i)==127){
-                return false;
-            }
-        }
-        return true;
-    }
 
     /* 部分需要对fg中全局变量进行操作的辅助方法（无法转移到csRH辅助类）*/
     /* 返回的值是移动后的索引值（或者在移动无效时是移动前的值），但都是当前模式对应的正确的索引项的值
     * 增加一个返回值的原因是便于后续的利用（不必再判断模式）
     * */
-    private int checkMoveModeAndSetResultIndex(int resultIndex) {
-        if (moveAreaStart) {
-            //选区起端移动模式
-            if(resultIndex>selectEndIndex){
-                Toast.makeText(getContext(), "不允许交叉起止端。", Toast.LENGTH_SHORT).show();
-                return selectStartIndex;//选区的起端不允许越过选区末端(仍旧返回旧值)
-            }
-            selectStartIndex = resultIndex;
-            return selectStartIndex;//返回新值
-        } else if (moveAreaEnd) {
-            //选区末端移动模式
-            if(resultIndex<selectStartIndex){
-                Toast.makeText(getContext(), "不允许交叉起止端。", Toast.LENGTH_SHORT).show();
-                return selectEndIndex;//不允许交叉起止端。返回的是旧值
-            }
-            selectEndIndex = resultIndex;
-            return selectEndIndex;
-        } else {
-            //单点移动模式
-            selectStartIndex = selectEndIndex = currentUnitIndex = resultIndex;
-            return currentUnitIndex;
-        }
-    }
+
 
     private void checkMoveModeAndSetBottomInfo(){
-        if(!freeAreaModeOn){
-            //如果是单点移动，需要把改写底部信息栏的光标指示。【设置要在rhUi更新后才有效】
-            tv_bottomInfoCursorIndex.setText(String.format(getResources().getString(R.string.plh_currentIndex),
+            //改写底部信息栏的光标指示。【设置要在rhUi更新后才有效】
+            tv_bottomInfoCursorIndex.setText(String.format(getResources().getString(R.string.plh_currentIndex_LY),
                     ly_editor_LE.getBlueBoxSectionIndex(), ly_editor_LE.getBlueBoxUnitIndex()));
-            tv_bottomInfo_Acursor.setText(getResources().getString(R.string.bar2));//初始
-        }else{
-            tv_bottomInfo_Acursor.setText(String.format(getResources().getString(R.string.plh_areaIndex),
-                    ly_editor_LE.getSAStartSectionIndex(), ly_editor_LE.getSAStartUnitIndex(),
-                    ly_editor_LE.getSAEndSectionIndex(), ly_editor_LE.getSAEndUnitIndex()));
-        }
+//            tv_bottomInfo_Acursor.setText(getResources().getString(R.string.bar2));//初始
     }
-
-    /* 开始移动之前，判断要使哪个光标移动（返回该光标的当前位置作为后续计算的当前点）*/
-    private int checkMoveModeAndGetCurrentIndex(){
-        if (moveAreaStart) {
-            //选区起端移动模式
-            return selectStartIndex;
-        } else if (moveAreaEnd) {
-            //选区末端移动模式
-            return selectEndIndex;
-        } else {
-            //单点移动模式
-            return currentUnitIndex;
-        }
-
-    }
-
-    /* 选定当前光标所在的单个整拍子，将区域选定标记的起止坐标记录器设置为结果值*/
-    private void resetSelectionAreaToTotalBeat(){
-        int index = switchCursorForArea();
-        selectStartIndex = csRhythmHelper.findBeatStartIndex(index);
-        selectEndIndex = csRhythmHelper.findBeatEndIndex(index);
-    }
-
-    private int switchCursorForArea(){
-        //为了防止“蠕动移位”现象。
-        int index;
-        if(moveAreaStart){
-            index = selectStartIndex;
-            moveAreaStart = false;
-            moveAreaEnd = true;
-        }else if(moveAreaEnd){
-            index = selectEndIndex;
-            moveAreaEnd = false;
-            moveAreaStart =true;
-        }else {
-            index = currentUnitIndex;
-        }
-        return index;
-    }
-    /* 选定当前光标所在的两个整拍子，将区域选定标记的起止坐标记录器设置为结果值*/
-    private void resetSelectionAreaToDualBeat(){
-        int index = switchCursorForArea();
-        if(!dualForward){
-            //执行向右扩展
-            //切换扩展方向（从当前光标所在拍开始）
-            dualForward = true;
-
-            selectStartIndex= csRhythmHelper.findBeatStartIndex(index);//区域开头仍然是本拍拍首
-//            Log.i(TAG, "resetSelectionAreaToDualBeat: index="+index);
-            int areaEndIndex = csRhythmHelper.findNextBeatEndIndex(index);//拍尾要选用下一拍（除非跨节（不允许））
-//            Log.i(TAG, "resetSelectionAreaToDualBeat: nextBE index="+areaEndIndex);
-//            int fakeNextBeatStartIndex = csRhythmHelper.getRealNextBeatStartIndexIfInSameSection(areaEndIndex);
-            if(areaEndIndex == -1){
-                //(-1是跨节了)，只实际选定单拍
-                Toast.makeText(getContext(), "不许跨节→选定，只选定单拍。", Toast.LENGTH_SHORT).show();
-                selectEndIndex = csRhythmHelper.findBeatEndIndex(index);
-            }else {
-                //选定下一拍的拍尾
-//                Log.i(TAG, "resetSelectionAreaToDualBeat: aeI="+areaEndIndex);
-                selectEndIndex = areaEndIndex;
-            }
-        }else {
-
-            dualForward = false;
-
-            selectEndIndex = csRhythmHelper.findBeatEndIndex(index);
-//            Log.i(TAG, "resetSelectionAreaToDualBeat: index="+index);
-            int areaStartIndex = csRhythmHelper.findLastBeatStartIndex(index);
-//            Log.i(TAG, "resetSelectionAreaToDualBeat: nextBE index="+areaStartIndex);
-
-            if(areaStartIndex==-1){
-                Toast.makeText(getContext(), "不许跨节←选定，只选定单拍。", Toast.LENGTH_SHORT).show();
-                selectStartIndex = csRhythmHelper.findBeatStartIndex(index);
-            }else {
-                selectStartIndex = areaStartIndex;
-            }
-        }
-    }
-
-
-
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnGeneralDfgInteraction) {
-            mListener = (OnGeneralDfgInteraction) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnGeneralDfgInteraction");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-
 
 
     public int moveBox(int currentIndex,int moveType){
@@ -471,6 +317,28 @@ public class BaseLyricPhrasesEditFragment extends Fragment implements View.OnCli
         return 0;
     }
 
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnGeneralDfgInteraction) {
+            mListener = (OnGeneralDfgInteraction) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnGeneralDfgInteraction");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
+
+
+
+
     /* 检测选定坐标所在的节内是否有框*/
   /*  private boolean checkBoxInThisSection(int index,int cursorIndex){
         int sectionStart = 0;//如果最后sS还是0一般代表当前节在最前。
@@ -494,16 +362,80 @@ public class BaseLyricPhrasesEditFragment extends Fragment implements View.OnCli
 
     }*/
 
-    public void checkNotEmptyAndCommit(){
-        if(csRhythmHelper.checkAllListEmpty()){
-            Toast.makeText(getContext(), "提交空节奏？没有意义的。", Toast.LENGTH_SHORT).show();
-            listIsEmpty = true;
+    private void syncToRhv(){
+        //将fg中的一维长串同步到RhV中，待Rhv重绘后，获取新的Amount值（本乐句容量、实际容量）
+        //在dfg中直接对一维长串进行的修改只有同步到Rhv后才会更新下方显示。
+        if(modifyAllPhrasesInOne.isEmpty()){
+            Toast.makeText(getContext(), "将歌词改为空？这是无意义的操作请返回检查。", Toast.LENGTH_SHORT).show();
+//            listIsEmpty = true;
+            return;
+        }
+        ly_editor_LE.updatePhrasesAndReDraw(Lyric.toPhrasesByCodeSerialString(modifyAllPhrasesInOne));
+        int designSizeCurrentPhase = checkCurrentPhraseDesignSize(ly_editor_LE.getCurrentDuCsIndex());
+        tv_bottomInfoAmount.setText(String.format(getResources().getString(R.string.plh_currentAmount),designSizeCurrentPhase,ly_editor_LE.getCurrentPhaseRealSize()));
+
+    }
+
+
+    //由本方法可见，不传递完整rbc似乎无法正常工作。
+    public int checkCurrentPhraseDesignSize(int currentCsIndex){
+        int availableNum = 0;
+        //向后遍历找乐句结尾
+        for (int i=currentCsIndex; i <codeSerial.size() ; i++) {
+            byte b = codeSerial.get(i);
+            if(b==125){//如果在125前先遇到124则实际是错误。
+                break;//125乐句结束
+            }else if(b<120&&b>111){
+                //连音弧跨
+                //弧跨下只能是X（每个之前/或之后向前遍历时已个计算了一个位置），但是弧跨仅提供一个位置因而要把跨度减去
+                availableNum -= (b-111);
+
+            }else if(b>73){
+                availableNum += b%10 ;//算多个
+            }else if(b>=0){
+                availableNum++;//算一个
+            }//<0,111,126,127不记
+        }
+
+        //接下来向前遍历。累加(当前索引只计一次哦，上一遍历已计)
+        for (int j=currentCsIndex-1;j>0;j--) {
+            byte b = codeSerial.get(j);
+            if (b == 124) {//如果在125前先遇到124则实际是错误。
+                break;
+            } else if (b < 120 && b > 111) {
+                //连音弧跨
+                //弧跨下只能是X（每个之前/或之后向前遍历时已个计算了一个位置），但是弧跨仅提供一个位置因而要把跨度减去
+                availableNum -= (b - 111);
+
+            } else if (b > 73) {
+                availableNum += b % 10;//算多个
+            } else if (b >= 0) {
+                availableNum++;//算一个
+            }//<0,111,126,127不记.如果遍历到头也是可以的
+        }
+            return availableNum;
+    }
+
+
+
+    private void syncFromRhv(){
+        this.modifyAllPhrasesInOne = Lyric.toCodeSerialStringByPhrases(ly_editor_LE.getPrimaryPhrases());
+        //不需对tvInfo做任何修改。
+    }
+
+
+
+    public void checkNotEmptyAndCommitBack(){
+
+        if(modifyAllPhrasesInOne.isEmpty()){
+            Toast.makeText(getContext(), "将歌词改为空？这是无意义的操作请返回检查。", Toast.LENGTH_SHORT).show();
+//            listIsEmpty = true;
             return;
         }
 //        rhythmBasedCompound.setCodeSerialByte(csRhythmHelper.getCodeSerial());//【不知是否需要这样操作一下？】
 
         bundleForSendBack = new Bundle();
-        bundleForSendBack.putString("STRING", );//传来的时候是rbc(因为显示Rhv需要全部信息)
+        bundleForSendBack.putString("STRING", modifyAllPhrasesInOne);//传来的时候是rbc(因为显示Rhv需要全部信息)
         //传回的时候只传整体字串就行了（就算phrases都不用传因为转换就行了），
 
         //子类实现后面的

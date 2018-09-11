@@ -210,5 +210,24 @@
     <string name="syncByHand">↑↑\n同步</string>
     <string name="syncByHand2">↓↓\n同步</string>
     <string name="plh_currentIndex_LY">光标位置：第%1$d乐句中的第%2$d字。</string>
+    <string name="phraseStart">句首</string>
+    <string name="phraseEnd">句尾</string>
+    <string name="duSelect">dU\n选定</string>
+    <string name="lastPhrase">上句</string>
+    <string name="nextPhrase">下句</string>
+    <string name="phraseStartAdd">新增\n句首</string>
+    <string name="phraseEndAdd">新增\n句尾</string>
+    <string name="singleDuToModify">选定单个位置进行词的改动。\n输入多个字会向后覆盖。</string>
+    <string name="deletePhrase">删</string>
+    <string name="deletePhrase2">句删</string>
+    <string name="toLeft"><![CDATA[<]]></string>
+    <string name="toRight"><![CDATA[>]]></string>
+    <string name="select_area">自由\n选区</string>
+    <string name="amountResize">容量\n调整</string>
+    <string name="phraseAdd">新增</string>
+    <string name="phraseAddAuto">自动\n新增</string>
+    <string name="phrase_structure">乐句结构</string>
+    <string name="inputSwitch">输入开关</string>
+    <string name="inputCursor">编辑位置选择</string>
 
 </resources>

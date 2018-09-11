@@ -37,7 +37,7 @@ public class DrawingUnit {
     public float right;
     public float top;
     public float bottomNoLyric;//没有歌词时的绘制底边位置。【几乎一半的Du组件的纵向要依赖本字段完成。】
-    public float bottomWithLyric;//有歌词时（可能一行，最多两行）
+//    public float bottomWithLyric;//有歌词时（可能一行，最多两行）
 
     public String code = "X";//默认是X，当作为旋律绘制时绘制具体音高的数值。
     public float codeCenterX;//用于字符绘制（字符底边中点）//计算时保证按中点计算就可行。
@@ -76,7 +76,7 @@ public class DrawingUnit {
     public float originalLeftToCenterWhenLessThanCenter = 0;//仅在du（的左侧）（仅初始，移动后不算）不足中心时，记录本字段；其余为0。
 
     public int phraseMark = PHRASE_MIDDLE;
-
+    public int phraseAmount = 0;//在PHRASE_END位置上标记数量。
 
     //一个字符的空间方案暂定如下：标志尺寸ss,字符区域占宽=ss（字体尺寸本身不足的留空即可），
     // 字符占高=展宽；字符上方预留半ss的顶弧线高度，其中保留一小层的高度作为上加点区域；

@@ -14,8 +14,9 @@ import java.util.ArrayList;
 
 import static com.vkyoungcn.learningtools.myrhythm.customUI.DrawingUnit.PHRASE_EMPTY;
 import static com.vkyoungcn.learningtools.myrhythm.customUI.DrawingUnit.PHRASE_END;
+import static com.vkyoungcn.learningtools.myrhythm.customUI.DrawingUnit.PHRASE_START;
 
-public class LyricEditorBaseOnRSLE extends RhythmSingleLineView{
+public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseView{
 // 同时只修改一列词；允许多字输入（一次输入一串字）；允许输入超过容量的字，不予显示但会保存
 // 点击确定时为各句增加#结束号；同时检测相应l_Id是否存在（存在则更新其cs；不存在则新建）
 // 词的显示使用RhV即可（本就带词的显示能力）
@@ -30,24 +31,22 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineView{
 //    （不可对dU结构再做改动若觉得不合适退出先改dU【本逻辑后期可能改进】）
     private static final String TAG = "LyricEditorBaseOnRSLE";
 
-    /*改写*/
-    private int blueBoxSectionIndex = 0;//蓝框位置，小节的索引【注意，是针对dU列表而言的索引，由于code中多一个延音弧尾端标记，所以无法对应。】
-    private int blueBoxUnitIndex = 0;//蓝框位置(小节内du的索引)
-
+    /* 本类特有 */
     boolean modifyPrimary = true;
     private int tempDuSectionIndex = 0;
     private int tempDuUnitIndex = 0;
     int phraseIndex = 0;
     int wordInPhraseIndex = 0;
 
+
     /* 画笔组*/
-    private Paint blueBoxPaint;
     private Paint unEmptyUnitBkgPaint;//添加上弧连音线时的另一端位置选择框。
+    private Paint phraseNumPaint;//绘制乐句容量
 
     /* 尺寸组 */
     /* 色彩组 */
-    private int boxBlue;
     private int unEmptyUnitBkg_gray;
+
 
 
     public LyricEditorBaseOnRSLE(Context context) {
@@ -71,49 +70,66 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineView{
     void initSizeAndColor() {
         super.initSizeAndColor();
         //本子类特有的（蓝色框的颜色）
-        boxBlue = ContextCompat.getColor(mContext, R.color.rhythmView_edBoxBlue);
         unEmptyUnitBkg_gray = ContextCompat.getColor(mContext, R.color.rhythmView_edBoxLiteGray);
-
     }
 
     void initPaint() {
         super.initPaint();
         //本类特有
-        blueBoxPaint = new Paint();
-        blueBoxPaint.setStyle(Paint.Style.STROKE);
-        blueBoxPaint.setStrokeWidth(2);
-        blueBoxPaint.setColor(boxBlue);
-
         unEmptyUnitBkgPaint = new Paint();
         unEmptyUnitBkgPaint.setStyle(Paint.Style.FILL_AND_STROKE);
         unEmptyUnitBkgPaint.setStrokeWidth(2);
         unEmptyUnitBkgPaint.setColor(unEmptyUnitBkg_gray);
+
+        phraseNumPaint = new Paint();
+        phraseNumPaint.setTextSize(32);
+        phraseNumPaint.setStrokeWidth(4);
+        phraseNumPaint.setColor(unEmptyUnitBkg_gray);
+//        phraseNumPaint.setTextAlign(Paint.Align.CENTER);
+//        phraseNumPaint.setFakeBoldText(true);
     }
 
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        //本类特有：①LY位置的蓝框；②LY位置非空单位的浅灰背景；
-        //绘制灰色背景（可装词的dU处）
+        //本类特有：①LY位置非空单位的浅灰背景；②背景末端的各句容量数字；③LY位置的蓝框；
+        //绘制灰色背景（可装词的dU处；尺寸少小）
         for(ArrayList<DrawingUnit> duList:drawingUnits){
             for (DrawingUnit drawingUnit :duList) {
-                canvas.drawRect(drawingUnit.left+4, drawingUnit.bottomNoLyric+4, drawingUnit.right-4, drawingUnit.bottomNoLyric+unitHeight-4, blueBoxPaint);
+                canvas.drawRect(drawingUnit.left+4, drawingUnit.bottomNoLyric+4, drawingUnit.right-4, drawingUnit.bottomNoLyric+unitHeight-4, unEmptyUnitBkgPaint);
                 //左右留出间隔
+                if(drawingUnit.phraseMark==PHRASE_END){//绘制容量数字
+                    canvas.drawText(String.valueOf(drawingUnit.phraseAmount),drawingUnit.right,drawingUnit.bottomNoLyric+unitHeight+36, phraseNumPaint);
+                }
             }
         }
 
-        // 绘制蓝框[]
-        DrawingUnit drawingUnit = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
-        canvas.drawRect(drawingUnit.left, drawingUnit.bottomNoLyric, drawingUnit.right, drawingUnit.bottomNoLyric+unitHeight, blueBoxPaint);
+        //画框（取决于是单个字选定的蓝框、或是乐句调整的绿框）
 
+        if(!selectionAreaMode){
+            //单点选择模式，绘制蓝框
+            DrawingUnit drawingUnit = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
+//            Log.i(TAG, "onDraw: this du isOutOfUi = "+drawingUnit.isOutOfUi);
+            canvas.drawRect(drawingUnit.left, drawingUnit.bottomNoLyric, drawingUnit.right, drawingUnit.bottomNoLyric+unitHeight, blueBoxPaint);
+        }else {
+            //选区模式
+            DrawingUnit duStart = drawingUnits.get(sAreaStartSectionIndex).get(sAreaStartUnitIndex);
+            DrawingUnit duEnd = drawingUnits.get(sAreaEndSectionIndex).get(sAreaEndUnitIndex);
+            canvas.drawRect(duStart.left, duStart.bottomNoLyric, duEnd.right, duEnd.bottomNoLyric+unitHeight, greenBoxPaint);
+        }
+
+/*        DrawingUnit drawingUnit = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
+        canvas.drawRect(drawingUnit.left, drawingUnit.bottomNoLyric, drawingUnit.right, drawingUnit.bottomNoLyric+unitHeight, blueBoxPaint);*/
         //            invalidate();
+
     }
 
 
 
     /* 原设置方法重写，仅允许设置一条词条（默认主词条）；如果设置两项，只有一项有效*/
-    /* 此外提供一个可以选择设置哪条的设置方法*/
+
+    /* 新方法：可以选择设置哪条*/
     public void setRhythmViewData(RhythmBasedCompound rhythmBasedCompound,boolean modifyPrimary) {
         this.modifyPrimary = modifyPrimary;
         this.bcRhythm = rhythmBasedCompound;
@@ -143,7 +159,6 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineView{
         }
         initDrawingUnits(false);
     }
-
 
     @Override
     public void setRhythmViewData(RhythmBasedCompound rhythmBasedCompound) {
@@ -193,6 +208,67 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineView{
         initDrawingUnits(false);
 
     }
+
+
+    public void updatePhrasesAndReDraw(ArrayList<String> phrases){
+        this.primaryPhrases = phrases;
+        initPrimaryLyric();
+        invalidate();
+    }
+
+    /* 用于和fg间的数据交互*/
+    public ArrayList<String> getPrimaryPhrases(){
+        return primaryPhrases;
+    }
+
+    //当前乐句已填入的实际容量
+    public int getCurrentPhaseRealSize(){
+        return primaryPhrases.get(phraseIndex).length();
+    }
+
+    public int getCurrentDuCsIndex(){//用于进一步（由fg执行）获取当前乐句设计容量
+        return drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).indexInCodeSerial;
+    }
+
+    public int getCurrentPhaseDesignSize(){
+        int phraseNum = 0;
+        for(int i=blueBoxSectionIndex;i<drawingUnits.size();i++){
+            ArrayList<DrawingUnit> duList = drawingUnits.get(i);
+            for (int j=blueBoxUnitIndex; j<duList.size(); j++) {
+                DrawingUnit du = duList.get(j);
+                if(du.phraseMark==PHRASE_END){
+                    phraseNum = du.phraseAmount;
+                    return phraseNum;
+                }else if(du.phraseMark==PHRASE_START){
+                    //先遇到124说明在句外
+                    return 0;
+                }
+            }
+        }
+        //后面124、125都没有（可能是最后一句之后的空白区；或是全节奏未分句）,pN还是0。
+        //向前检索
+        for(int k=blueBoxSectionIndex-1;k>0;k--){
+            ArrayList<DrawingUnit> duList = drawingUnits.get(k);
+            for (int h=blueBoxUnitIndex; h<duList.size(); h++) {
+                DrawingUnit du = duList.get(h);
+                if(du.phraseMark==PHRASE_END){
+                    return 0;//说明有分句，刚才是在句末外，返回0
+                }
+            }
+        }
+        return -1;//未做分句，由外部处理（可以显示--）
+
+    }
+
+    /*
+    * 句首调整、句末调整；删除所在分句；增加分句（增加开头和结束的标记）；
+    * 自动生成句界（通常，旋律节奏中0后开始，-前结束；和声伴奏可能没有这种规律但很多乐器本身也不需要气口）；
+    *
+    *   乐句划分原则上需要同节奏中的0和-的存在有关；否则没有换气气口（可以给出提示；毕竟是用于诵唱的歌节奏）
+    * 移动：左、右；（句界的移动规则不同于蓝框，可到所有位置）（蓝框移动规则重写：只允许在非空位置移动）
+    *
+    * */
+
     /* 蓝框特征不需在du中存储，只是额外持有两个索引坐标而已。*/
 
     //本控件不涉及编码数据的改变
