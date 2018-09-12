@@ -38,5 +38,8 @@ public interface OnGeneralDfgInteraction {
 
     int RHYTHM_PURE_EDIT_DONE = 2217;
 
+
+    int SELECT_FILE = 2231;
+
     void onButtonClickingDfgInteraction(int dfgType, Bundle data);
 }

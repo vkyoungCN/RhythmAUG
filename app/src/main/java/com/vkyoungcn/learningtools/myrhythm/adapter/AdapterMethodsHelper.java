@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.fragments.ChooseRhythmDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.fragments.DeleteModelDiaFragment;
+import com.vkyoungcn.learningtools.myrhythm.fragments.SelectFileNameDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.models.BaseModel;
 import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmLiteForGpX;
@@ -24,6 +25,10 @@ public class AdapterMethodsHelper {
     }
     public static void makeChoice(ChooseRhythmDiaFragment dfg, RhythmLiteForGpX item, boolean isToAdd){
         dfg.choseClicking(item,isToAdd);
+
+    }
+    public static void makeChoice(SelectFileNameDiaFragment dfg, String item){
+        dfg.choseClicking(item);
 
     }
 
