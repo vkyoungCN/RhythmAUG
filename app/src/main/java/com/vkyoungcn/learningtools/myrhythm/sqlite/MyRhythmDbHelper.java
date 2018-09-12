@@ -525,6 +525,21 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         return affectedRows;
     }
 
+    public int updateRhythmCodesByRid(Rhythm rhythm){
+        int affectedRows = 0;
+        getReadableDatabaseIfClosedOrNull();
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MyRhythmContract.Rhythm.COLUMN_C0DES, rhythm.getCodeSerialString());//以字串形式存放
+        contentValues.put(MyRhythmContract.Rhythm.COLUMN_LAST_MODIFY_TIME,rhythm.getLastModifyTime());
+
+        affectedRows = mSQLiteDatabase.update(MyRhythmContract.Rhythm.TABLE_NAME,contentValues,
+                MyRhythmContract.Rhythm._ID+" = ? ",new String[]{String.valueOf(rhythm.getId())} );
+        closeDB();
+        return affectedRows;
+    }
+
+
     public int updateLyricById(Lyric lyric){
         int affectedRows = 0;
         getReadableDatabaseIfClosedOrNull();

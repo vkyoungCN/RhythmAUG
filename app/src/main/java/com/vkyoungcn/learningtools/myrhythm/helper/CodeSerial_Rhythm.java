@@ -836,7 +836,7 @@ public class CodeSerial_Rhythm {
         int curveEndIndex = -1; //初始值采用不可能值
         int curveRearStartIndex = -1;
         int skipNum = 0;
-        Log.i(TAG, "checkCurveRearCovering: check index="+index);
+//        Log.i(TAG, "checkCurveRearCovering: check index="+index);
         for(int i=index;i<codeSerial.size();i++){
             //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
             byte b = codeSerial.get(i);
@@ -846,6 +846,42 @@ public class CodeSerial_Rhythm {
                 //112~125是连音弧结束标记
                 duSpan = b-109;//少减1（原来是-110）就是判断弧跨后半部（即非首位位置）
                 curveEndIndex = i;//结尾index是curve结束标记所在位置(编码位置)。
+                curveRearStartIndex = i-duSpan-skipNum;//编码的跨度，需要再加上无dU的编码数（由于向前，实际是减去）。
+                return ((curveRearStartIndex<=index)&&(curveEndIndex>index));
+                //前提是不允许多层连音弧。
+            }
+        }
+        return false;
+    }
+
+    //被除最后一个位置外的区域覆盖
+    public boolean checkCurveFrontCovering(int index){
+        int duSpan = 0;//【这个span是codeSerial的跨度，126等也要计入其内！】
+        int curveEndIndex = -1; //初始值采用不可能值
+        int curveRearStartIndex = -1;
+        int skipNum = 0;
+//        Log.i(TAG, "checkCurveRearCovering: check index="+index);
+        for(int i=index;i<codeSerial.size();i++){
+            //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
+            byte b = codeSerial.get(i);
+            if(b >125){
+                skipNum++;
+            }else if(b>111){
+                //112~125是连音弧结束标记
+                duSpan = b-101;
+
+                //还要额外对连音弧与其所属音符code之间的skip数量做计算
+                int skipNum2 = 0;
+                for(int j=i;j>=index;j--){
+                    byte b2 = codeSerial.get(j);
+                    if(b2<25){
+                        break;
+                    }
+                    if(b2>120){
+                        skipNum2++;
+                    }
+                }
+                curveEndIndex = i-1-skipNum2;//结尾index向前调整（原就是i）以让出最后一个位置(编码位置)。
                 curveRearStartIndex = i-duSpan-skipNum;//编码的跨度，需要再加上无dU的编码数（由于向前，实际是减去）。
                 return ((curveRearStartIndex<=index)&&(curveEndIndex>index));
                 //前提是不允许多层连音弧。
@@ -1826,4 +1862,73 @@ public class CodeSerial_Rhythm {
         }
             return currentIndex;//最次就不移动了（决定暂不返回-1）
     }
+
+    //如果涉及跨节，一定要让125在127前面（为了保证code前一定存在可承载式dU）
+    public int addPhrasesTagAfter(int currentIndex){
+        //检测是否符合XX（时值不限）的情形。（两侧都是>0 <25）
+        int tempLastAvaIndex = currentIndex;
+        for (int i = currentIndex; i >=0 ; i--) {
+            byte b = codeSerial.get(i);
+            if(b<=0||b==125) {
+                //前方（先于2分支遇到的）是0、-、另一结尾标记则不符合
+                return -1;
+            }
+            /*if((b>0&&b<25)||(b>111&&b<125)){
+                //可以。遇到弧尾也可以
+            }
+            */
+            if(b<25){
+                tempLastAvaIndex = i;
+                break;
+            }
+        }
+        //检测是否在连音弧之下（弧下最后一个位置可以）
+        if(checkCurveFrontCovering(tempLastAvaIndex)){
+            return -2;
+        }
+
+        //向后检测
+        int tempNextAvaIndex = currentIndex;
+        for (int i = currentIndex; i <codeSerial.size() ; i++) {
+            byte b = codeSerial.get(i);
+            if(b<=0||b==125) {
+                //前方（先于2分支遇到的）是0、-、另一结尾标记则不符合
+                return -3;
+            }
+            /*if((b>0&&b<25)||(b>111&&b<125)){
+                //可以。遇到弧尾也可以
+            }
+            */
+            if(b<25){
+                tempNextAvaIndex = i;
+                break;
+            }
+        }
+        //检测是否在连音弧之下（弧下最后一个位置可以）
+        if(checkCurveFrontCovering(tempNextAvaIndex)){
+            return -4;
+        }
+
+        //未退出，说明条件符合可以添加
+        //在当前code之后（紧邻）
+        codeSerial.add(currentIndex+1,(byte)125);
+
+        return currentIndex;
+    }
+
+
+
+    public int deletePhrasesTagAt(int currentIndex){
+        byte code = codeSerial.get(currentIndex+1);
+        if(code == 125){
+            codeSerial.remove(currentIndex+1);
+            return currentIndex;
+        }else {
+            return -4;//后面（紧邻）不是结尾【现在添加逻辑是紧邻添加的。】
+        }
+
+
+    }
+
+
 }

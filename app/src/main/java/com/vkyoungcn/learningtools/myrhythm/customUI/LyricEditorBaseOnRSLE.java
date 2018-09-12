@@ -258,7 +258,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         //绘制灰色背景（可装词的dU处；尺寸少小）
         float bkTop_Y;
         float bkBottom_Y;
-        /*for(ArrayList<DrawingUnit> duList:drawingUnits){
+        for(ArrayList<DrawingUnit> duList:drawingUnits){
             for (DrawingUnit drawingUnit :duList) {
                 bkTop_Y = drawingUnit.bottomNoLyric+4;
                 bkBottom_Y = drawingUnit.bottomNoLyric+unitHeight*2-4;
@@ -269,14 +269,13 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
                     canvas.drawText(String.valueOf(drawingUnit.orderNumInPharse),drawingUnit.right,drawingUnit.bottomNoLyric+unitHeight+36, phraseNumPaint);
                 }
             }
-        }*/
+        }
 
         //画框（取决于是单个字选定的蓝框、或是乐句调整的绿框）
 
         if(!selectionAreaMode){
             //单点选择模式，绘制蓝框
             DrawingUnit drawingUnit = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
-//            .i(TAG, "onDraw: this du isOutOfUi = "+drawingUnit.isOutOfUi);
             canvas.drawRect(drawingUnit.left, drawingUnit.bottomNoLyric, drawingUnit.right, drawingUnit.bottomNoLyric+unitHeight*2, blueBoxPaint);
         }else {
             //选区模式
@@ -285,10 +284,23 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             canvas.drawRect(duStart.left, duStart.bottomNoLyric, duEnd.right, duEnd.bottomNoLyric+unitHeight, greenBoxPaint);
         }
 
-/*        DrawingUnit drawingUnit = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
-        canvas.drawRect(drawingUnit.left, drawingUnit.bottomNoLyric, drawingUnit.right, drawingUnit.bottomNoLyric+unitHeight, blueBoxPaint);*/
+        drawLyricAgain(canvas);
+
         //            invalidate();
 
+    }
+
+    void drawLyric_1(Canvas canvas) {
+       //为了防止被后绘的背景挡住，先留空跳过绘制
+    }
+
+    void drawLyricAgain(Canvas canvas) {
+        //遍历方式进行
+        for (ArrayList<DrawingUnit> drawingUnitsInSections : drawingUnits) {
+            for (DrawingUnit drawingUnit : drawingUnitsInSections) {
+                canvas.drawText(drawingUnit.lyricWord_1, drawingUnit.lyricWord_1_CenterX, drawingUnit.lyricWord_1_BaseY, codePaint);
+            }
+        }
     }
 
 

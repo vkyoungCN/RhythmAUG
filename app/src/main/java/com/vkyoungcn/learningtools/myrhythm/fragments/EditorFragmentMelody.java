@@ -4,8 +4,10 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
+import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 
 import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.RHYTHM_PURE_EDIT_DONE;
 
@@ -54,9 +56,16 @@ public class EditorFragmentMelody extends BaseMelodyEditFragment {
     public void checkNotEmptyAndCommit() {
         super.checkNotEmptyAndCommit();
         if (listIsEmpty){
+//            Toast.makeText(getContext(), "列表为空。", Toast.LENGTH_SHORT).show();基类已有提示
             return;
         }
-        mListener.onButtonClickingDfgInteraction(RHYTHM_PURE_EDIT_DONE,bundleForSendBack);
 
+        MyRhythmDbHelper rhythmDbHelper = MyRhythmDbHelper.getInstance(getContext());
+
+        rhythmBasedCompound.setLastModifyTime(System.currentTimeMillis());
+        rhythmDbHelper.updateRhythmCodesByRid(rhythmBasedCompound);
+
+        mListener.onButtonClickingDfgInteraction(RHYTHM_PURE_EDIT_DONE,bundleForSendBack);
+        //“全修改”页面会有确认保存，“详情”页面没有保存，因而在此单独存一次cs。
     }
 }

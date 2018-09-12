@@ -14,6 +14,9 @@ import com.vkyoungcn.learningtools.myrhythm.R;
 
 import java.util.ArrayList;
 
+import static com.vkyoungcn.learningtools.myrhythm.customUI.DrawingUnit.PHRASE_EMPTY;
+import static com.vkyoungcn.learningtools.myrhythm.customUI.DrawingUnit.PHRASE_END;
+
 public class RhythmSingleLineView extends BaseRhythmView {
 //* 单行模式，绘制中的小节位于屏幕中。
     static final String TAG = "RhythmSingleLineView";
@@ -227,6 +230,9 @@ public class RhythmSingleLineView extends BaseRhythmView {
             totalRequiredLength += sectionRequiredLength;//【仍然需要，最终滑动时需要】
         }
     }
+
+
+
 
 
     //与调用方的交互

@@ -229,7 +229,7 @@
     <string name="phrase_structure">乐句结构</string>
     <string name="inputSwitch">输入开关</string>
     <string name="inputCursor">编辑位置选择</string>
-    <string name="partConfirmAndInput">部分提交和输入控制</string>
+    <string name="partConfirmAndInput">输入控制</string>
     <string name="partConfirm_structure">结构\n部分提交</string>
     <string name="partConfirm_input">输入\n部分提交</string>
     <string name="warningForCoveringPME">！所选区域包含不能承载字词的音符位置，请检查</string>
@@ -238,5 +238,7 @@
     <string name="clickToEditLyB">歌词B</string>
     <string name="str_lyricPhrases_edit">歌词编辑\n（按关联节奏的格式）</string>
     <string name="local_ReCover">本地恢复/导入</string>
+    <string name="xPlusX">..X|X</string>
+    <string name="xMinusX">|..XX|</string>
 
 </resources>

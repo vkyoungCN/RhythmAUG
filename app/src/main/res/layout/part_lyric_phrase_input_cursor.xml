@@ -4,8 +4,6 @@
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
     android:layout_gravity="center"
-    android:layout_marginEnd="2dp"
-    android:layout_marginStart="2dp"
     android:orientation="vertical"
     tools:context=".fragments.EditorFragmentMelody">
 
@@ -25,7 +23,7 @@
 
 
     <!--模式选择区-->
-、 <!--移动按钮组-->
+    <!--移动按钮组-->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="48dp"
@@ -79,84 +77,4 @@
 
 
     </LinearLayout>
-
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="22dp"
-        android:layout_marginTop="4dp"
-        android:background="#efefef"
-        android:gravity="center"
-        android:text="@string/partConfirmAndInput" />
-    <!--横分割线-->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/myRhythm_light_green" />
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="46dp"
-        android:layout_marginTop="2dp"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <!--<TextView
-            android:id="@+id/tv_partConfirmStructure_EL"
-            android:layout_width="65dp"
-            android:layout_height="match_parent"
-            android:layout_margin="1dp"
-            android:background="#fffde7"
-            android:textStyle="italic"
-            android:textSize="12sp"
-            android:gravity="center"
-            android:text="@string/partConfirm_structure" />-->
-     <!--   <TextView
-            android:id="@+id/tv_partConfirmInput_EL"
-            android:layout_width="65dp"
-            android:layout_height="match_parent"
-            android:layout_margin="1dp"
-            android:background="#e8eaf6"
-            android:textStyle="italic"
-            android:textSize="12sp"
-            android:gravity="center"
-            android:text="@string/partConfirm_input" />-->
-
-        <TextView
-            android:id="@+id/tv_reAutoPhrasesConfirm_EL"
-            android:layout_width="42dp"
-            android:layout_height="match_parent"
-            android:layout_margin="1dp"
-            android:gravity="center"
-            android:text="@string/confirm" />
-        <TextView
-            android:id="@+id/tv_autoPhrases_EL"
-            android:layout_width="52dp"
-            android:layout_height="match_parent"
-            android:layout_margin="1dp"
-            android:background="#e8eaf6"
-            android:gravity="center"
-            android:text="@string/autoPhrases" />
-        <!--分割线-->
-        <TextView
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_margin="2dp"
-            android:background="#e0e0e0" />
-        
-        <TextView
-            android:id="@+id/tv_onAndOff_EL"
-            android:layout_width="96dp"
-            android:layout_height="match_parent"
-            android:layout_margin="1dp"
-            android:background="#e0f7fa"
-            android:gravity="center"
-            android:text="@string/inputSwitch" />
-
-
-        
-
-
-    </LinearLayout>
-    
-
 </LinearLayout>

@@ -35,9 +35,6 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
     public static final int MOVE_NEXT_PHRASE = 2922;
     public static final int MOVE_LAST_UNIT = 2923;
     public static final int MOVE_LAST_PHRASE = 2924;
-//    public static final int MOVE_FINAL_PHRASE = 2925;
-//    public static final int DELETE_MOVE_LAST_PHRASE = 2926;
-//    public static final int MOVE_ADJACENT_PHRASE = 2927;
 
 
     RhythmBasedCompound rhythmBasedCompound;//传递进来的数据
@@ -64,61 +61,29 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
 
     /* 当前选中区域的两端坐标，单code模式下，sI==eI（暂定需要这样判断实际选择区域）*/
     int currentUnitIndex = 0;
-//    int selectStartIndex = 0;
-//    int selectEndIndex = 0;
-//    int realIndex = 0;//临时使用。
     //注意，由于界限索引需要同UI控件交互，需要指示到可绘制的code上（所以126、127、112+都是不能指向的）
-
-//    boolean dualForward = true;//选定两个拍子时，存在朝向问题；选定其一为正另一为反。暂定向右为正，默认方向。
-
-//    boolean freeAreaModeOn = false;//必须多设这个变量才能正确判断【？】
-//    boolean moveAreaStart = false;//为逻辑安全起见，只要是手动移动，下方1BMO,2BMO自动关闭。
     // （否则需要每步移动都检测是否恰好是1/2拍）
-//    boolean moveAreaEnd = false;
-//    boolean oneBeatModeOn = false;//转切分、转附点在单、双拍选区下起作用；(或则单点恰=vb)
-//    boolean dualBeatModeOn = false;//转前后十六尽在单拍模式下起作用。
     //切换到单点（单符）模式、或者移动后置否；进入到选定单拍、双拍后置真。
 
-//    boolean sectionAddToEnd = false;
-
-//    int currentUnitIndex;//不区分哪个指针（仅用在方法中的特殊场景）
-//    int indexAfterMove;
-    int indexAfterMove;
 
     /* 控件*/
     /*结构*/
-//    TextView tv_lastPr;
-//    TextView tv_nextPr;
-//    TextView tv_prStart;
-//    TextView tv_prEnd;
-
-//    TextView tv_prEntireDelete;
-//    TextView tv_prTagDelete;
-//    TextView tv_toLeft;
-//    TextView tv_toRight;
-
-//    TextView tv_freeSelect;
-//    TextView tv_amountResize;
-//    TextView tv_prAdd;
-//    TextView tv_prAddAuto;
-//    TextView tv_rePrAutoConfirm;
-    
     TextView tv_lastSection;
     TextView tv_nextSection;
     TextView tv_lastUnit;
     TextView tv_nextUnit;
     TextView tv_inputSwitch;
+    TextView tv_addTag;
+    TextView tv_deleteTag;
+
 
     TextView tv_allConfirm;
-//    TextView tv_partConfirmStructure;
-//    TextView tv_partConfirmInput;
 
     EditText edt_handModifyAllInOne;
     TextView tv_syncToRhv;
     TextView tv_syncFromRhv;
     TextView tv_bottomInfoAmount;
     TextView tv_bottomInfoCursorIndex;
-//    TextView tv_warningTop;
 
     LyricEditorBaseOnRSLE ly_editor_LE;
 
@@ -158,7 +123,6 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
         }
         this.csRhythmHelper = new CodeSerial_Rhythm(rhythmBasedCompound);
         this.codeSerial = rhythmBasedCompound.getCodeSerialByte();
-//        this.valueOfBeat = RhythmHelper.calculateValueBeat(rhythmBasedCompound.getRhythmType());
 
     }
 
@@ -173,32 +137,15 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
         ly_editor_LE.setCodeChangeListener(this);
         ly_editor_LE.requestFocus();
 
-     /*   tv_lastPr = rootView.findViewById(R.id.lastPr_LE);
-        tv_nextPr = rootView.findViewById(R.id.nextPr_LE);
-        tv_prStart = rootView.findViewById(R.id.phraseStart_LE);
-        tv_prEnd = rootView.findViewById(R.id.phraseEnd_LE);
-        
-        tv_prEntireDelete = rootView.findViewById(R.id.phraseEntireDelete_LE);
-        tv_prTagDelete = rootView.findViewById(R.id.deleteTag_LE);
-        tv_toLeft = rootView.findViewById(R.id.toLeft_LE);
-        tv_toRight = rootView.findViewById(R.id.toRight_LE);
-        
-        tv_prAdd = rootView.findViewById(R.id.phraseAddAtSelectedArea_LE);
-        tv_freeSelect = rootView.findViewById(R.id.freeSelect_LE);
-        tv_amountResize = rootView.findViewById(R.id.amountResize_LE);*/
-
-
-
         tv_lastSection = rootView.findViewById(R.id.tv_lastPhrase_LE);
         tv_nextSection = rootView.findViewById(R.id.tv_nextPhrase_LE);
         tv_lastUnit=rootView.findViewById(R.id.tv_lastUnit_LE);
         tv_nextUnit = rootView.findViewById(R.id.tv_nextUnit_LE);
                 
         tv_allConfirm =rootView.findViewById(R.id.tv_confirm_LE);//这个没变，就是用的旧布局的
-//        tv_partConfirmInput =rootView.findViewById(R.id.tv_partConfirmInput_EL);
-//        tv_partConfirmStructure =rootView.findViewById(R.id.tv_partConfirmStructure_EL);
         tv_inputSwitch =rootView.findViewById(R.id.tv_onAndOff_EL);
-//        tv_prAddAuto = rootView.findViewById(R.id.tv_autoPhrases_EL);
+        tv_addTag = rootView.findViewById(R.id.tv_addPhrasesTag_EL);
+        tv_deleteTag = rootView.findViewById(R.id.tv_deletePhrasesTag_EL);
 
         edt_handModifyAllInOne =  rootView.findViewById(R.id.edt_modifyBH_LE);
         edt_handModifyAllInOne.addTextChangedListener(new TextWatcher() {
@@ -223,40 +170,20 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
 
         tv_bottomInfoAmount = rootView.findViewById(R.id.tv_infoBottom_amount_LE);
         tv_bottomInfoCursorIndex = rootView.findViewById(R.id.tv_infoBottom_cI_LE);
-//        tv_warningTop = rootView.findViewById(R.id.tv_warningInfo_EL);
 
         tv_bottomInfoAmount.setText("");//暂时无法从Rhv获取数据
-        //String.format(getResources().getString(R.string.plh_currentAmount),0,0
-        tv_bottomInfoCursorIndex.setText("");//初始
-/*String.format(getResources().getString(R.string.plh_currentIndex_LY),
-                ly_editor_LE.getBlueBoxSectionIndex(), ly_editor_LE.getBlueBoxUnitIndex())*/
-        
-//设监听
+        tv_bottomInfoCursorIndex.setText(String.format(getResources().getString(R.string.plh_currentIndex_LY),0,0));
 
-      /*  tv_lastPr.setOnClickListener(this);
-        tv_nextPr.setOnClickListener(this);
-        tv_prStart.setOnClickListener(this);
-        tv_prEnd.setOnClickListener(this);
-
-        tv_prEntireDelete.setOnClickListener(this);
-        tv_prTagDelete.setOnClickListener(this);
-        tv_toLeft.setOnClickListener(this);
-        tv_toRight.setOnClickListener(this);
-
-        tv_prAdd.setOnClickListener(this);
-        tv_prAddAuto.setOnClickListener(this);
-        tv_freeSelect.setOnClickListener(this);
-        tv_amountResize.setOnClickListener(this);*/
-
+        //设监听
         tv_lastSection.setOnClickListener(this);
         tv_nextSection.setOnClickListener(this);
         tv_lastUnit.setOnClickListener(this);
         tv_nextUnit.setOnClickListener(this);
+        tv_addTag.setOnClickListener(this);
+        tv_deleteTag.setOnClickListener(this);
         tv_allConfirm.setOnClickListener(this);
 
         tv_inputSwitch.setOnClickListener(this);
-//        tv_partConfirmStructure.setOnClickListener(this);
-//        tv_partConfirmInput.setOnClickListener(this);
 
         tv_syncToRhv.setOnClickListener(this);
         tv_syncFromRhv.setOnClickListener(this);
@@ -265,8 +192,6 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
         return rootView;
 
     }
-
-
 
 
 
@@ -299,7 +224,6 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
                 moveReDrawAndSetBottom(moveType);
                 break;
 
-
             case R.id.tv_syncToRhv_LE:
                 syncToRhv();
                 break;
@@ -312,75 +236,39 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
                 checkNotEmptyAndCommitBack();
                 break;
 
-/*
-            case R.id.lastPr_LE:
-                //直接选定上一句（整句，区域）
-                break;
-            case R.id.nextPr_LE:
-                //直接选定下一句（整句，区域）
-                break;
-            case R.id.phraseStart_LE:
-                //后续的移动对本句的开头标记有效
 
-                break;
-            case R.id.phraseEnd_LE:
-                //后续的移动对本句的结尾标记有效
-                break;
-
-            case R.id.phraseEntireDelete_LE:
-                //删除所在的整句
-                break;
-            case R.id.deleteTag_LE:
-                //删除所在句的句首或句末标记（不常用，基于之前的移动端选定）
-                break;
-            case R.id.toLeft_LE:
-                //调整选区容量（已选定的端头向左一个位置（可以到空位置上去））
-                break;
-            case R.id.toRight_LE:
-                //调整选区容量（已选定的端头向右一个位置（可以到空位置上去））
-                break;
-
-            case R.id.phraseAddAtSelectedArea_LE:
-                //按选定选区，新增一个乐句。（当然，需要先检测是否重叠已有乐句）
-                break;
-
-            case R.id.freeSelect_LE:
-                //自由选区（用于新增乐句）；与容量调整相对
-                break;
-            case R.id.amountResize_LE:
-                //用于选定的一端标记的移动，使当前乐句的容量微调。
-                break;
-
-//            case R.id.tv_partConfirmInput_EL:
-                //对输入内容所做的更改进行提交（到DB）
-
-//                break;
-//            case R.id.tv_partConfirmStructure_EL:
-                //对结构做出的更改提交到DB
-
-//                break;*/
             case R.id.tv_onAndOff_EL:
                 //InputMethodManager来控制输入法弹起和缩回。
                 InputMethodManager methodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 methodManager.toggleSoftInput(0,InputMethodManager.RESULT_SHOWN);
                 break;
-            case R.id.tv_autoPhrases_EL:
-                //根据节奏中的0、-自动划分乐句范围【重点方法】
-                if(!beenAutoPhrased) {
-                    csRhythmHelper.autoPhrases();
+
+
+            case R.id.tv_addPhrasesTag_EL:
+                //在XX中间插入乐句分隔标记125（仅限XX情形）【实际为在当前选定X的后面】
+                int resultNum = csRhythmHelper.addPhrasesTagAfter(currentUnitIndex);
+                if(resultNum<0){
+                    Toast.makeText(getContext(), "Something goes wrong..."+resultNum, Toast.LENGTH_SHORT).show();
                 }else {
-                    Toast.makeText(getContext(), "再次调整乐句结构？请点击一次旁边的确认再重新执行。", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "成功。", Toast.LENGTH_SHORT).show();
+                    ly_editor_LE.codeChangedReDraw();
                 }
 
                 break;
-            case R.id.tv_reAutoPhrasesConfirm_EL:
-                if(beenAutoPhrased){
-                   beenAutoPhrased = false;
+            case R.id.tv_deletePhrasesTag_EL:
+                //删除乐句中间的间隔（仅限XX情形）
+
+                if(csRhythmHelper.deletePhrasesTagAt(currentUnitIndex)<0){
+                    Toast.makeText(getContext(), "Something goes wrong...", Toast.LENGTH_SHORT).show();
+                }else {
+                    Toast.makeText(getContext(), "成功。", Toast.LENGTH_SHORT).show();
+                    ly_editor_LE.codeChangedReDraw();
                 }
 
                 break;
 
 //【恰当的使用规范】：①自动划分乐句，②手动选定乐句，选定一端进行微调（通常是句末）；③提交（结构更改）
+// [1~3步骤已略去。要求按节奏的规则进行不需手动调整。仅对XX型中间的分隔进行插入划分]
 // ④开启文字输入（选区光标退出，蓝框开始显示，系统输入法面板展开）（可以输入单字或多字，按容量显示一部分；
 // 未显示的也可保留只是不显示。）⑤调整输入光标的位置，微调或输入其他句内容；⑥提交（文字变动）；
 // 整体修改功能一般不使用，使用时，通过#号手动分隔乐句。
@@ -417,7 +305,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
     private void checkMoveModeAndSetBottomInfo(){
             //改写底部信息栏的光标指示。【设置要在rhUi更新后才有效】
             tv_bottomInfoCursorIndex.setText(String.format(getResources().getString(R.string.plh_currentIndex_LY),
-                    ly_editor_LE.getBlueBoxSectionIndex(), ly_editor_LE.getBlueBoxUnitIndex()));
+                    ly_editor_LE.getPhraseIndex(), ly_editor_LE.getWordInPhraseIndex()));
 //            tv_bottomInfo_Acursor.setText(getResources().getString(R.string.bar2));//初始
     }
 
