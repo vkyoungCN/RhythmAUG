@@ -64,9 +64,13 @@ public class BaseDualCodeSerialModel extends BaseModel {
         if(codeSerialStr == null){
             codeSerialStr = "";//排错空指针问题
         }
-        for (byte b :codeSerialStr.getBytes()) {
-            this.codeSerialByte.add(b);
-        }//无法利用Arrays.asList()直接转换，基础类型。
+        try {
+            for (byte b :codeSerialStr.getBytes("ISO-8859-1")) {
+                this.codeSerialByte.add(b);
+            }//无法利用Arrays.asList()直接转换，基础类型。
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
 
     /* 由于两种编码联动式改变，因而直接获取getString即可
@@ -88,6 +92,7 @@ public class BaseDualCodeSerialModel extends BaseModel {
         }
         try {
             return new String(bytes_2,"ISO-8859-1");//Latin-1编码，0~127的字符与ASCII码相同，是单字节的编码方式（utf-8是变长，存取后数据有不一致现象）
+//            return new String(bytes_2,"utf-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }

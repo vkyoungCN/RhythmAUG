@@ -160,8 +160,8 @@
             android:layout_marginTop="28dp"
             android:background="@color/myRhythm_cyan"
             android:gravity="center"
-            android:text="@string/syncByHand" />
-
+            android:text="@string/syncFromRH"
+            />
         <TextView
             android:id="@+id/tv_syncToRhv_LE"
             android:layout_width="48dp"
@@ -171,7 +171,9 @@
             android:layout_marginTop="78dp"
             android:background="@color/myRhythm_teal"
             android:gravity="center"
-            android:text="@string/syncByHand2" />
+            android:text="@string/syncToRH" />
+
+
 
         <TextView
             android:layout_width="match_parent"

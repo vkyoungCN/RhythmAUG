@@ -42,12 +42,16 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
     /* 业务逻辑变量*/
     private boolean isFabPanelExtracted = false;//FAB面板组默认处于回缩状态。
     int rhythmsAllAmount;
+    boolean changeToTrueInOnCreate = false;//onPause置否
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        Log.i(TAG, "onCreate: b");
         setContentView(R.layout.activity_main);
+
+        changeToTrueInOnCreate = true;
 
         rlt_fabPanel = findViewById(R.id.rlt_fabPanel_MA);
         maskView = findViewById(R.id.flt_mask_MA);
@@ -70,6 +74,20 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
         new Thread(new FetchDataRunnable()).start();//使用基类中的实现
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(!changeToTrueInOnCreate){
+            //如果是从其他页面返回，通常没有经过onCreate，数据还是旧的需要再获取一遍。
+            new Thread(new ReFetchDataRunnable()).start();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        changeToTrueInOnCreate = false;
+    }
 
     void fetchAndSort() {
 //        Log.i(TAG, "fetchAndSort: main reFetch");
@@ -86,7 +104,7 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
 
     void reFetchAndSort(){
         //获取节奏数据
-        dataReFetched =rhythmDbHelper.getAllCompoundRhythms();
+//        dataReFetched =rhythmDbHelper.getAllCompoundRhythms();
         super.reFetchAndSort();
 
         //对返回的节奏进行排序（按修改时间降序？）
@@ -238,7 +256,7 @@ public class MainActivity extends RhythmRvBassActivity implements OnGeneralDfgIn
         switch (resultCode){
             case RESULT_CODE_RH_CREATE_DONE:
 //                Log.i(TAG, "onActivityResult: CREATED DONE.");
-                new Thread(new ReFetchDataRunnable()).start();
+//                new Thread(new ReFetchDataRunnable()).start();【在onResume中有重新获取的操作了】
                 break;
             case RESULT_CODE_RH_CREATE_FAILURE:
             case DELIVER_ERROR:

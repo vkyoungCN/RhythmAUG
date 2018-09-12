@@ -207,8 +207,8 @@
     <string name="actionArea">操作区域</string>
     <string name="plh_currentAmount">本句已输入：%1$d字。</string>
     <string name="totalModify">整体修改（需手动同步）</string>
-    <string name="syncByHand">↑↑\n同步</string>
-    <string name="syncByHand2">↓↓\n同步</string>
+    <string name="syncToRH">↑↑\n同步</string>
+    <string name="syncFromRH">↓↓\n同步</string>
     <string name="plh_currentIndex_LY">光标位置：第%1$d乐句中的第%2$d字。</string>
     <string name="phraseStart">句首</string>
     <string name="phraseEnd">句尾</string>
@@ -238,7 +238,8 @@
     <string name="clickToEditLyB">歌词B</string>
     <string name="str_lyricPhrases_edit">歌词编辑\n（按关联节奏的格式）</string>
     <string name="local_ReCover">本地恢复/导入</string>
-    <string name="xPlusX">..X|X</string>
-    <string name="xMinusX">|..XX|</string>
+    <string name="xXAdd">..X|X</string>
+    <string name="xX_delete">|..XX|</string>
+    <string name="test">测试</string>
 
 </resources>

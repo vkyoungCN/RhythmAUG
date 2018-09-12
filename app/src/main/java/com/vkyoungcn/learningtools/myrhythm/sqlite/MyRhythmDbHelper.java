@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.vkyoungcn.learningtools.myrhythm.models.Group;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
@@ -17,7 +18,7 @@ import com.vkyoungcn.learningtools.myrhythm.models.RhythmLiteForGpX;
 import java.util.ArrayList;
 
 public class MyRhythmDbHelper extends SQLiteOpenHelper {
-//    private static final String TAG = "MyRhythmDbHelper";
+    private static final String TAG = "MyRhythmDbHelper";
 
     public static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "MyRhythm.db";
@@ -530,6 +531,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         getReadableDatabaseIfClosedOrNull();
 
         ContentValues contentValues = new ContentValues();
+//        Log.i(TAG, "updateRhythmCodesByRid: cs in db="+rhythm.getCodeSerialString());
         contentValues.put(MyRhythmContract.Rhythm.COLUMN_C0DES, rhythm.getCodeSerialString());//以字串形式存放
         contentValues.put(MyRhythmContract.Rhythm.COLUMN_LAST_MODIFY_TIME,rhythm.getLastModifyTime());
 
@@ -667,6 +669,8 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
                 rhythmBasedCompound.setStars(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_STAR)));
                 rhythmBasedCompound.setTitle(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_TITLE)));
                 rhythmBasedCompound.setCodeSerialString(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_C0DES)));
+//                Log.i(TAG, "getAllCompoundRhythms: csStr just fetched="+rhythmBasedCompound.getCodeSerialString());
+//                Log.i(TAG, "getAllCompoundRhythms: relatively cs="+rhythmBasedCompound.getCodeSerialByte());
 
                 rhythmBasedCompound.setPrimaryLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_PRIMARY_LYRIC_ID)));
                 rhythmBasedCompound.setSecondLyricId(cursor.getInt(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_SECOND_LYRIC_ID)));
@@ -1022,12 +1026,12 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         cRhythm.setSecondLyricPhrases(secondLyricSerial);
 
 
-       /* try {
+      try {
             cursor.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        mSQLiteDatabase.setTransactionSuccessful();
+         /* mSQLiteDatabase.setTransactionSuccessful();
         mSQLiteDatabase.endTransaction();
 
         closeDB();*/
@@ -1054,12 +1058,12 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
             lyric.setTitle(cursor.getString(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_TITLE)));
         }
 
-       /* try {
+       try {
             cursor.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        mSQLiteDatabase.setTransactionSuccessful();
+        /* mSQLiteDatabase.setTransactionSuccessful();
         mSQLiteDatabase.endTransaction();
 
         closeDB();*/
@@ -1079,11 +1083,11 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
             lyricStr = cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_C0DES));
         }
 
-        /*try {
+        try {
             cursor.close();
         } catch (Exception e) {
             e.printStackTrace();
-        }*/
+        }
 //        mSQLiteDatabase.setTransactionSuccessful();
 //        mSQLiteDatabase.endTransaction();
 

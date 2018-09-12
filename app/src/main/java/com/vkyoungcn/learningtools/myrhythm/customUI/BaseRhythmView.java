@@ -55,6 +55,7 @@ public class BaseRhythmView extends View {
      * span就已经代表了dU的跨度而非编码跨度，故9的容量较充足了)
      * （但是位于125之后，不过理论上弧的末端不安排唱词！（弧内唱作一个音因而安排一个字且位于弧首）
      * 【计算乐句的词容量时，要扣除弧跨部分】（弧尾在125后）
+     * 【由于弧跨最大支持9音符，相应的最大可能的code跨度（可按*3.0+1计算）为28（暂记32），遍历查弧尾的方法要修改；】
      *
      * ⑥125：乐句辅助分隔标记。(在Lyric的存储字串中，以#作为乐句split标记。另：最后没有#以免拆分时最后产生空组)
      * （乐句的划分，依照管理是0后开始、-前借宿结束；此外，在某些情况下，相连的XX可能划分到两个乐句中去，
@@ -439,9 +440,10 @@ public class BaseRhythmView extends View {
 
     /* 用在数据设置方法中*/
     void checkAndSetThreeStates(){
-            useLyric_1 = true;
-            useLyric_2 = false;
-            drawPitches = false;
+        useLyric_1 = !(primaryPhrases==null||primaryPhrases.isEmpty());//目前其实没有判断的必要了，因为现有逻辑下此处始终=真。
+//        Log.i(TAG, "checkAndSetThreeStates: useLy1="+useLyric_1);
+        useLyric_2 = !(secondPhrases==null||secondPhrases.isEmpty());
+        drawPitches = false;
     }
 
     /* 用在数据设置方法中*/
@@ -523,6 +525,7 @@ public class BaseRhythmView extends View {
     }
 
     void initDrawingUnits(boolean isTriggerFromSC){
+//        Log.i(TAG, "initDrawingUnits: cs="+co);
         initDrawingUnits_step1();
 
         initDrawingUnits_step2();
@@ -562,6 +565,8 @@ public class BaseRhythmView extends View {
 
 
     void initDrawingUnits_step1() {
+        isFirstAvailableCode = true;//每次对全局进行重新初始计算时，要重置的变量之一。
+
         //子类根据具体规则实现
         //（折行模式要判断各节、各行与屏宽关系；单行模式向后累加）
 
@@ -862,7 +867,8 @@ public class BaseRhythmView extends View {
                 if(duInCurrentSection.code.equals("-")||duInCurrentSection.code.equals("0")){
                     return;//先遇到-、0
                 }
-                if(duInCurrentSection.phraseMark!=PHRASE_EMPTY){
+                if(duInCurrentSection.phraseMark ==PHRASE_MIDDLE){
+                    //只有Middle能改（Start不能改，否则出错）
                     duInCurrentSection.phraseMark = PHRASE_END;
                     return;//先遇到可承载
                 }
@@ -877,7 +883,8 @@ public class BaseRhythmView extends View {
                 if(duInSection.code.equals("-")||duInSection.code.equals("0")){
                     return;//先遇到-、0
                 }
-                if(duInSection.phraseMark!=PHRASE_EMPTY){
+                if(duInSection.phraseMark==PHRASE_MIDDLE){
+                    //只有Middle能改（Start不能改，否则出错）
                     duInSection.phraseMark = PHRASE_END;
                     return;//先遇到可承载
                 }
@@ -896,11 +903,13 @@ public class BaseRhythmView extends View {
                 DrawingUnit du = drawingUnits.get(i).get(j);
                 //无论遇到此二者的哪种情况，都是直接处理完成后结束循环；
                 // 遇到Empty则继续；
-                if(du.phraseMark == PHRASE_END){
+                if(du.phraseMark == PHRASE_END||du.phraseMark==PHRASE_START){
+                    //极端情况下，只剩1个X，即是开始又是结尾则要设开始（否则初始化是乐句索引卡在-1崩溃）
+                    // 缺点是无法显示容量(就一个X还显示啥容量？)；
                     finishLoop = true;
                     break;
                 }
-                if(du.phraseMark == PHRASE_MIDDLE||du.phraseMark==PHRASE_START){
+                if(du.phraseMark == PHRASE_MIDDLE){
                     du.phraseMark = PHRASE_END;
 
                     finishLoop = true;
@@ -1006,7 +1015,7 @@ public class BaseRhythmView extends View {
 
 
     void initPrimaryLyric(boolean onlyCurrentPhrase,int currentPhraseIndex){
-        int charAmountAccumulation = 0;//dU位置和文字位置不一一对应（-、0、前缀要跳过，多连音、弧跨算作一个）
+//        int charAmountAccumulation = 0;//dU位置和文字位置不一一对应（-、0、前缀要跳过，多连音、弧跨算作一个）
         //且要在换句时归零。
         int phrIndex = -1;//乐句的索引（乐句在lyric列表的位置和du在dU中的位置不对应，要转换）
         int phraseNum = 0;
@@ -1017,7 +1026,7 @@ public class BaseRhythmView extends View {
             ArrayList<DrawingUnit> currentDuSection = drawingUnits.get(i);
             for (int k=0;k<currentDuSection.size();k++) {
                 DrawingUnit drawingUnit = currentDuSection.get(k);
-
+//                Log.i(TAG, "initPrimaryLyric: du.pmk="+drawingUnit.phraseMark);
                 if(onlyCurrentPhrase){
                     if(drawingUnit.phraseMark!= PHRASE_START&&phrIndex!=currentPhraseIndex){
                         continue;//未到本句，直接跳过，不更新
@@ -1044,32 +1053,33 @@ public class BaseRhythmView extends View {
                         //一层数据未越界（毕竟有时数据比格子少）
                         phrase = primaryPhrases.get(phrIndex);
 
-                        if (!phrase.isEmpty()) {
-                            //一层非空
+//                        if (!phrase.isEmpty()) {
+                            //一层非空(逻辑合并，如果是空，其length=0最后留空，可以同逻辑处理)
+                        // 否则在单句删空时最后一字无法更新消除。；
 
                             //根据单个dU的容量执行不同逻辑
                             if (drawingUnit.mCurveNumber == 0) {
                                 //单个容量，单个汉字
                                 String singleWord = "";
                                 //判断二层数据
-                                if (charAmountAccumulation < phrase.length()) {
+                                if (phraseNum-1 < phrase.length()) {
                                     //检测1个长度单位即可
-                                    singleWord = String.valueOf(phrase.charAt(charAmountAccumulation));
+                                    singleWord = String.valueOf(phrase.charAt(phraseNum-1));
                                 }//越界则留空
 
                                 drawingUnit.lyricWord_1 = singleWord;
                                 drawingUnit.lyricWord_1_BaseY = drawingUnit.bottomNoLyric + unitHeight;
                                 drawingUnit.lyricWord_1_CenterX = drawingUnit.codeCenterX;
-                                charAmountAccumulation++;
+//                                charAmountAccumulation++;
 
                             } else {  //均分多连音
                                 String subString = "";
-                                if ((charAmountAccumulation + drawingUnit.mCurveNumber) < phrase.length()) {
+                                if ((phraseNum-1 + drawingUnit.mCurveNumber) < phrase.length()) {
                                     //整体未超
-                                    subString = phrase.substring(charAmountAccumulation, charAmountAccumulation + drawingUnit.mCurveNumber);
-                                } else if (charAmountAccumulation < phrase.length()) {
+                                    subString = phrase.substring(phraseNum-1, phraseNum-1 + drawingUnit.mCurveNumber);
+                                } else if (phraseNum-1 < phrase.length()) {
                                     //部分未超
-                                    subString = phrase.substring(charAmountAccumulation, phrase.length() - 1);//部分截取
+                                    subString = phrase.substring(phraseNum-1, phrase.length() - 1);//部分截取
                                 } else {
                                     //都超了
                                     subString = "";
@@ -1078,13 +1088,11 @@ public class BaseRhythmView extends View {
                                 drawingUnit.lyricWord_1_BaseY = drawingUnit.bottomNoLyric + unitHeight;
                                 drawingUnit.lyricWord_1_CenterX = drawingUnit.codeCenterX;
                                 //【已查API：截取从起坐标本身到终坐标左侧（起坐标字符将算入，终坐标字符不算入，终坐标左侧临字符算入。）】
-                                charAmountAccumulation += drawingUnit.mCurveNumber;
                                 //为容量计数器做补充
                                 phraseNum += drawingUnit.mCurveNumber - 1;
                                 drawingUnit.orderNumInPharse = phraseNum;//重设（注意，均分多连音是一个dU，多个汉字。）
 
                             }
-                        }
                             //一层空 phrase is Empty
                             //不安排汉字，只计算、累进容量
                             //归并到上一层分支的else一并进行（如下）
@@ -1097,7 +1105,6 @@ public class BaseRhythmView extends View {
                         }
                     }
                 }
-
             }
         }
 
@@ -1110,7 +1117,7 @@ public class BaseRhythmView extends View {
 
 
     void initSecondLyric(boolean onlyCurrentPhrase,int currentPhraseIndex){
-        int charAmountAccumulation = 0;//dU位置和文字位置不一一对应（-、0、前缀要跳过，多连音、弧跨算作一个）
+//        int phraseNum-1 = 0;//dU位置和文字位置不一一对应（-、0、前缀要跳过，多连音、弧跨算作一个）
         //且要在换句时归零。
         int phrIndex = -1;//乐句的索引（乐句在lyric列表的位置和du在dU中的位置不对应，要转换）
         int phraseNum = 0;
@@ -1146,7 +1153,7 @@ public class BaseRhythmView extends View {
                         //一层数据未越界（毕竟有时数据比格子少）
                         phrase = secondPhrases.get(phrIndex);
 
-                        if (!phrase.isEmpty()) {
+//                        if (!phrase.isEmpty()) {
                             //一层非空
 
                             //根据单个dU的容量执行不同逻辑
@@ -1154,25 +1161,23 @@ public class BaseRhythmView extends View {
                                 //单个容量，单个汉字
                                 String singleWord = "";
                                 //判断二层数据
-                                if (charAmountAccumulation < phrase.length()) {
+                                if (phraseNum-1 < phrase.length()) {
                                     //检测1个长度单位即可
-                                    singleWord = String.valueOf(phrase.charAt(charAmountAccumulation));
+                                    singleWord = String.valueOf(phrase.charAt(phraseNum-1));
                                 }//越界则留空
 
                                 drawingUnit.lyricWord_2 = singleWord;
                                 drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric + unitHeight;
                                 drawingUnit.lyricWord_2_CenterX = drawingUnit.codeCenterX;
 
-                                charAmountAccumulation++;
-
                             } else {  //均分多连音
                                 String subString = "";
-                                if ((charAmountAccumulation + drawingUnit.mCurveNumber) < phrase.length()) {
+                                if ((phraseNum-1 + drawingUnit.mCurveNumber) < phrase.length()) {
                                     //整体未超
-                                    subString = phrase.substring(charAmountAccumulation, charAmountAccumulation + drawingUnit.mCurveNumber);
-                                } else if (charAmountAccumulation < phrase.length()) {
+                                    subString = phrase.substring(phraseNum-1, phraseNum-1 + drawingUnit.mCurveNumber);
+                                } else if (phraseNum-1 < phrase.length()) {
                                     //部分未超
-                                    subString = phrase.substring(charAmountAccumulation, phrase.length() - 1);//部分截取
+                                    subString = phrase.substring(phraseNum-1, phrase.length() - 1);//部分截取
                                 } else {
                                     //都超了
                                     subString = "";
@@ -1181,13 +1186,12 @@ public class BaseRhythmView extends View {
                                 drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric + unitHeight;
                                 drawingUnit.lyricWord_2_CenterX = drawingUnit.codeCenterX;
                                 //【已查API：截取从起坐标本身到终坐标左侧（起坐标字符将算入，终坐标字符不算入，终坐标左侧临字符算入。）】
-                                charAmountAccumulation += drawingUnit.mCurveNumber;
                                 //为容量计数器做补充
                                 phraseNum += drawingUnit.mCurveNumber - 1;
                                 drawingUnit.orderNumInPharse = phraseNum;//重设（注意，均分多连音是一个dU，多个汉字。）
 
                             }
-                        }
+//                        }
                         //一层空 phrase is Empty
                         //不安排汉字，只计算、累进容量
                         //归并到上一层分支的else一并进行（如下）
@@ -1211,73 +1215,6 @@ public class BaseRhythmView extends View {
 
     }
 
-    /*
-    //旧版方法有错误，未补齐空数据。
-    void initSecondLyric(){
-        int charAmountAccumulation = 0;//dU位置和文字位置不一一对应（-、0、前缀要跳过，多连音、弧跨算作一个）
-        //且要在换句时归零。
-        int phrasesIndex = 0;//乐句的索引（乐句在lyric列表的位置和du在dU中的位置不对应，要转换）
-
-        for(int i=0;i<drawingUnits.size();i++){
-            ArrayList<DrawingUnit> currentDuSection = drawingUnits.get(i);
-            for (int k=0;k<currentDuSection.size();k++){
-                DrawingUnit drawingUnit = currentDuSection.get(k);
-                if(drawingUnit.phraseMark!=PHRASE_EMPTY){
-                    //可以安置
-                    if(drawingUnit.phraseMark==PHRASE_END){
-                        phrasesIndex++;
-                    }
-
-                    if (drawingUnit.mCurveNumber == 0) {
-                        //不是均分多连音,安置1个字符即可
-                        *//*if (drawingUnit.code.equals("-") || drawingUnit.code.equals("0")) {
-//                        charAmountAccumulation++;【现已通过dU.pM判断】
-                            continue;//如果是空拍、延音符则跳过本次。（索引不再同步增加，因为是不再采用填充方案）
-                        }*//*
-                        drawingUnit.lyricWord_2 = String.valueOf(secondPhrases.get(phrasesIndex).charAt(charAmountAccumulation));
-                        drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric + unitHeight;
-                        drawingUnit.lyricWord_2_CenterX = drawingUnit.codeCenterX;
-                        charAmountAccumulation++;
-                    } else {
-                        //均分多连音
-                        drawingUnit.lyricWord_2 = secondPhrases.get(phrasesIndex).substring(charAmountAccumulation,charAmountAccumulation+drawingUnit.mCurveNumber);
-                        drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric + unitHeight;
-                        drawingUnit.lyricWord_2_CenterX = drawingUnit.codeCenterX;
-                        //【已查API：截取从起坐标本身到终坐标左侧（起坐标字符将算入，终坐标字符不算入，终坐标左侧临字符算入。）】
-                        charAmountAccumulation+=drawingUnit.mCurveNumber;
-                    }
-                }
-            }
-        }
-    }
-*/
-    /*void initSecondLyric(){
-        int charAmountAccumulation = 0;
-        for(int i=0;i<drawingUnits.size();i++){
-            ArrayList<DrawingUnit> currentDuSection = drawingUnits.get(i);
-            for (int k=0;k<currentDuSection.size();k++){
-                DrawingUnit drawingUnit = currentDuSection.get(k);
-                if(drawingUnit.mCurveNumber == 0){
-                    //不是均分多连音,安置1个字符即可
-                    if(drawingUnit.code.equals("-")||drawingUnit.code.equals("0")){
-//                        charAmountAccumulation++;
-                        continue;//如果是空拍、延音符则跳过本次。
-                    }
-                    drawingUnit.lyricWord_2 = String.valueOf(secondPhrases.charAt(charAmountAccumulation));
-                    drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric+unitHeight;
-                    drawingUnit.lyricWord_2_CenterX = drawingUnit.codeCenterX;
-                    charAmountAccumulation++;
-                }else {
-                    //均分多连音
-                    drawingUnit.lyricWord_2 = secondPhrases.substring(charAmountAccumulation,charAmountAccumulation+drawingUnit.mCurveNumber);
-                    drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric+unitHeight;
-                    drawingUnit.lyricWord_2_CenterX = drawingUnit.codeCenterX;
-                    //【已查API：截取从起坐标本身到终坐标左侧（起坐标字符将算入，终坐标字符不算入，终坐标左侧临字符算入。）】
-                    charAmountAccumulation+=drawingUnit.mCurveNumber;
-                }
-            }
-        }
-    }*/
 
 
     //只对有dU信息的位置编码

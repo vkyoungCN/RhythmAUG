@@ -60,7 +60,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
 
 
     /* 当前选中区域的两端坐标，单code模式下，sI==eI（暂定需要这样判断实际选择区域）*/
-    int currentUnitIndex = 0;
+    int currentUnitCsIndex = 0;
     //注意，由于界限索引需要同UI控件交互，需要指示到可绘制的code上（所以126、127、112+都是不能指向的）
     // （否则需要每步移动都检测是否恰好是1/2拍）
     //切换到单点（单符）模式、或者移动后置否；进入到选定单拍、双拍后置真。
@@ -148,6 +148,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
         tv_deleteTag = rootView.findViewById(R.id.tv_deletePhrasesTag_EL);
 
         edt_handModifyAllInOne =  rootView.findViewById(R.id.edt_modifyBH_LE);
+        edt_handModifyAllInOne.setText(modifyAllPhrasesInOne.isEmpty()?"":modifyAllPhrasesInOne);
         edt_handModifyAllInOne.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -172,7 +173,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
         tv_bottomInfoCursorIndex = rootView.findViewById(R.id.tv_infoBottom_cI_LE);
 
         tv_bottomInfoAmount.setText("");//暂时无法从Rhv获取数据
-        tv_bottomInfoCursorIndex.setText(String.format(getResources().getString(R.string.plh_currentIndex_LY),0,0));
+        tv_bottomInfoCursorIndex.setText(String.format(getResources().getString(R.string.plh_currentIndex_LY),1,1));
 
         //设监听
         tv_lastSection.setOnClickListener(this);
@@ -239,6 +240,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
 
             case R.id.tv_onAndOff_EL:
                 //InputMethodManager来控制输入法弹起和缩回。
+                ly_editor_LE.requestFocus();
                 InputMethodManager methodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 methodManager.toggleSoftInput(0,InputMethodManager.RESULT_SHOWN);
                 break;
@@ -246,9 +248,10 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
 
             case R.id.tv_addPhrasesTag_EL:
                 //在XX中间插入乐句分隔标记125（仅限XX情形）【实际为在当前选定X的后面】
-                int resultNum = csRhythmHelper.addPhrasesTagAfter(currentUnitIndex);
+                int resultNum = csRhythmHelper.addPhrasesTagAfter(currentUnitCsIndex);
                 if(resultNum<0){
-                    Toast.makeText(getContext(), "Something goes wrong..."+resultNum, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Something goes wrong...", Toast.LENGTH_SHORT).show();
+//                    Log.i(TAG, "onClick: resultNum="+resultNum);
                 }else {
                     Toast.makeText(getContext(), "成功。", Toast.LENGTH_SHORT).show();
                     ly_editor_LE.codeChangedReDraw();
@@ -258,7 +261,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
             case R.id.tv_deletePhrasesTag_EL:
                 //删除乐句中间的间隔（仅限XX情形）
 
-                if(csRhythmHelper.deletePhrasesTagAt(currentUnitIndex)<0){
+                if(csRhythmHelper.deletePhrasesTagAt(currentUnitCsIndex)<0){
                     Toast.makeText(getContext(), "Something goes wrong...", Toast.LENGTH_SHORT).show();
                 }else {
                     Toast.makeText(getContext(), "成功。", Toast.LENGTH_SHORT).show();
@@ -280,7 +283,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
 //考虑新增跨越/涵盖空位置时的提示【现在根本不允许了】
 
     private void moveReDrawAndSetBottom(int moveType){
-        int tempIndex = moveBox(currentUnitIndex,moveType);
+        int tempIndex = moveBox(currentUnitCsIndex,moveType);
         checkMoveValidAndReDrawOrRevert(tempIndex);
         checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
     };
@@ -291,7 +294,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
             Toast.makeText(getContext(), "移动错误。不予移动。", Toast.LENGTH_SHORT).show();
         }else {
             ly_editor_LE.boxMovedSuccessReDraw(targetIndex);
-            currentUnitIndex = targetIndex;
+            currentUnitCsIndex = targetIndex;
         }
 
     }
@@ -431,11 +434,13 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
     private void syncToRhv(){
         //将fg中的一维长串同步到RhV中，待Rhv重绘后，获取新的Amount值（本乐句容量、实际容量）
         //在dfg中直接对一维长串进行的修改只有同步到Rhv后才会更新下方显示。
-        if(modifyAllPhrasesInOne.isEmpty()){
+        String edtStr = edt_handModifyAllInOne.getText().toString();
+        if(edtStr.isEmpty()){
             Toast.makeText(getContext(), "将歌词改为空？这是无意义的操作请返回检查。", Toast.LENGTH_SHORT).show();
 //            listIsEmpty = true;
             return;
         }
+        modifyAllPhrasesInOne = edtStr;
         ly_editor_LE.updatePhrasesAndReDraw(Lyric.toPhrasesByCodeSerialString(modifyAllPhrasesInOne));
         modifiedAllInOne = false;//更新过去后，此标记也要重置。
 //        int designSizeCurrentPhase = checkCurrentPhraseDesignSize(ly_editor_LE.getCurrentDuCsIndex());

@@ -159,7 +159,7 @@ public class CodeSerial_Rhythm {
 
     //获取选定编码的值
     private int getCodeValue(byte code,int valueOfBeat){
-        if(code>111){
+        if(code>110){
             return 0;
         }
         if(code>73||code==0){
@@ -462,7 +462,7 @@ public class CodeSerial_Rhythm {
     public boolean checkAreaUnderCurve(int startIndex,int endIndex){
         //检测内部
         for(int i=startIndex;i<=endIndex;i++){
-            if(codeSerial.get(i)>111&&codeSerial.get(i)<126){
+            if(codeSerial.get(i)>111&&codeSerial.get(i)<125){
                 return true;
             }
         }
@@ -734,6 +734,7 @@ public class CodeSerial_Rhythm {
     }
 
     public int changeCodeToZeroAt(int index) {
+//        Log.i(TAG, "changeCodeToZeroAt: index="+index);
         //主要是判断原音符的值
         byte currentCode = codeSerial.get(index);
             //不能位于连音弧下方
@@ -781,6 +782,7 @@ public class CodeSerial_Rhythm {
                 return 3077;//无意义。
             }
 
+//        Log.i(TAG, "changeCodeToZeroAt: emptyCode="+emptyCode+",(byte)="+(byte)emptyCode);
             //修改
             codeSerial.set(index,(byte)emptyCode);
             return emptyCode;
@@ -794,7 +796,7 @@ public class CodeSerial_Rhythm {
         for(int i=index;i<codeSerial.size();i++){
             //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
             byte b = codeSerial.get(i);
-            if(b>111&&b<126){
+            if(b>111&&b<125){
                     codeSerial.remove(i);//移除
                 return b;
             }
@@ -809,12 +811,13 @@ public class CodeSerial_Rhythm {
         int curveEndIndex = -1; //初始值采用不可能值
         int curveStartIndex = -1;
         int skipNum = 0;
-        for(int i=index;i<codeSerial.size();i++){
+        int endIndex = Math.min(codeSerial.size(),index+32);
+        for(int i=index;i<endIndex;i++){
             //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
             byte b = codeSerial.get(i);
             if(b >125){
                 skipNum++;
-            }else if(b>111){
+            }else if(b>111&&b<125){
                 //112~125是连音弧结束标记
                 duSpan = b-110;
 //                Log.i(TAG, "checkCurveCovering: Curvel end index="+i+",span="+duSpan+",current index="+index);
@@ -836,13 +839,15 @@ public class CodeSerial_Rhythm {
         int curveEndIndex = -1; //初始值采用不可能值
         int curveRearStartIndex = -1;
         int skipNum = 0;
-//        Log.i(TAG, "checkCurveRearCovering: check index="+index);
-        for(int i=index;i<codeSerial.size();i++){
+        int endIndex = Math.min(codeSerial.size(),index+32);
+
+        //找弧的结尾
+        for(int i=index;i<endIndex;i++){
             //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
             byte b = codeSerial.get(i);
             if(b >125){
                 skipNum++;
-            }else if(b>111){
+            }else if(b>111&&b<125){
                 //112~125是连音弧结束标记
                 duSpan = b-109;//少减1（原来是-110）就是判断弧跨后半部（即非首位位置）
                 curveEndIndex = i;//结尾index是curve结束标记所在位置(编码位置)。
@@ -860,13 +865,15 @@ public class CodeSerial_Rhythm {
         int curveEndIndex = -1; //初始值采用不可能值
         int curveRearStartIndex = -1;
         int skipNum = 0;
-//        Log.i(TAG, "checkCurveRearCovering: check index="+index);
-        for(int i=index;i<codeSerial.size();i++){
+        int endIndex = Math.min(codeSerial.size(),index+32);
+
+        //找弧结束标记
+        for(int i=index;i<endIndex;i++){
             //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
             byte b = codeSerial.get(i);
             if(b >125){
                 skipNum++;
-            }else if(b>111){
+            }else if(b>111&&b<125){
                 //112~125是连音弧结束标记
                 duSpan = b-101;
 
@@ -1084,7 +1091,7 @@ public class CodeSerial_Rhythm {
 
          byte currentCode = codeSerial.get(index);
 
-         if (currentCode > 111) {
+         if (currentCode > 110) {
              //如果要修改的位置原本是112+(连音弧结束标记),126，127，则不允许修改
              return 3015;
          }
@@ -1156,7 +1163,7 @@ public class CodeSerial_Rhythm {
 
         byte currentCode = codeSerial.get(index);
 
-        if (currentCode > 111) {
+        if (currentCode > 110) {
             //如果要修改的位置原本是112+(连音弧结束标记),126，127，则不允许修改
             return 3015;
         }
@@ -1415,7 +1422,7 @@ public class CodeSerial_Rhythm {
     public int getRealNextBeatStartIndexIfInSameSection(int currentBeatEndIndex){
         int nextBeatStartIndex = currentBeatEndIndex;
         for(int i = currentBeatEndIndex+1; i< codeSerial.size(); i++){
-            if(codeSerial.get(i)<111){
+            if(codeSerial.get(i)<110){
                 nextBeatStartIndex = i;
                 break;
             }
@@ -1499,7 +1506,7 @@ public class CodeSerial_Rhythm {
             byte b = codeSerial.get(i);
             if(b == 126){
                 //末尾即使在节尾也必然要存在126符号，不需考虑127
-                if(codeSerial.get(i-1)>111){
+                if(codeSerial.get(i-1)>111&&codeSerial.get(i)<125){
                     //剔除连音弧尾
                     return i-2;
                 }
@@ -1543,8 +1550,8 @@ public class CodeSerial_Rhythm {
 
 
     public int checkCodeValue(byte code) {
-        if (code > 111) {
-            //上弧连音专用符号，不记时值
+        if (code > 110) {
+            //上弧连音专用符号、标记符号、前缀，不记时值
             return 0;//但是由于实际上不会选中结束符，因而这种状态是错误的
         }else if(code>92){
             return 16;//三类均分多连音的时值的定值，不随内容数量改变，也与vb无关。
@@ -1601,8 +1608,10 @@ public class CodeSerial_Rhythm {
     public int getNextAvailableRealUnit(int currentIndex){
         for(int i = currentIndex+1; i< codeSerial.size(); i++){
             if(codeSerial.get(i)<110&&codeSerial.get(i)>0){
+//                Log.i(TAG, "getNextAvailableRealUnit: code="+codeSerial.get(i)+",+"+i);
                 //判断该音符是否在弧跨下（非首位）
                 if(!checkCurveRearCovering(i)){
+//                    Log.i(TAG, "getNextAvailableRealUnit: cI="+currentIndex+",resultI="+i);
                     return i;
                     //如果不在弧跨后部，则可以承载字词；
                     //否则继续寻找看后方是否还有。
@@ -1867,7 +1876,7 @@ public class CodeSerial_Rhythm {
     public int addPhrasesTagAfter(int currentIndex){
         //检测是否符合XX（时值不限）的情形。（两侧都是>0 <25）
         int tempLastAvaIndex = currentIndex;
-        for (int i = currentIndex; i >=0 ; i--) {
+        for (int i = currentIndex-1; i >=0 ; i--) {
             byte b = codeSerial.get(i);
             if(b<=0||b==125) {
                 //前方（先于2分支遇到的）是0、-、另一结尾标记则不符合
@@ -1889,7 +1898,7 @@ public class CodeSerial_Rhythm {
 
         //向后检测
         int tempNextAvaIndex = currentIndex;
-        for (int i = currentIndex; i <codeSerial.size() ; i++) {
+        for (int i = currentIndex+1; i <codeSerial.size() ; i++) {
             byte b = codeSerial.get(i);
             if(b<=0||b==125) {
                 //前方（先于2分支遇到的）是0、-、另一结尾标记则不符合
@@ -1908,10 +1917,11 @@ public class CodeSerial_Rhythm {
         if(checkCurveFrontCovering(tempNextAvaIndex)){
             return -4;
         }
-
+//        Log.i(TAG, "addPhrasesTagAfter: cs="+codeSerial.toString());
         //未退出，说明条件符合可以添加
         //在当前code之后（紧邻）
         codeSerial.add(currentIndex+1,(byte)125);
+        Log.i(TAG, "addPhrasesTagAfter: cs="+codeSerial);
 
         return currentIndex;
     }
@@ -1922,6 +1932,7 @@ public class CodeSerial_Rhythm {
         byte code = codeSerial.get(currentIndex+1);
         if(code == 125){
             codeSerial.remove(currentIndex+1);
+            Log.i(TAG, "deletePhrasesTagAt: cs="+codeSerial.toString());
             return currentIndex;
         }else {
             return -4;//后面（紧邻）不是结尾【现在添加逻辑是紧邻添加的。】

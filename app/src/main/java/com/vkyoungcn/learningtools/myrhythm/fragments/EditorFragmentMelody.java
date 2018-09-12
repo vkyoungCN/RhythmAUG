@@ -1,6 +1,7 @@
 package com.vkyoungcn.learningtools.myrhythm.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,7 +64,9 @@ public class EditorFragmentMelody extends BaseMelodyEditFragment {
         MyRhythmDbHelper rhythmDbHelper = MyRhythmDbHelper.getInstance(getContext());
 
         rhythmBasedCompound.setLastModifyTime(System.currentTimeMillis());
-        rhythmDbHelper.updateRhythmCodesByRid(rhythmBasedCompound);
+//        Log.i(TAG, "checkNotEmptyAndCommit: rbc.cs="+rhythmBasedCompound.getCodeSerialByte()+",csStr="+rhythmBasedCompound.getCodeSerialString());
+        int resultNum = rhythmDbHelper.updateRhythmCodesByRid(rhythmBasedCompound);
+//        Log.i(TAG, "checkNotEmptyAndCommit: resultNum="+resultNum);
 
         mListener.onButtonClickingDfgInteraction(RHYTHM_PURE_EDIT_DONE,bundleForSendBack);
         //“全修改”页面会有确认保存，“详情”页面没有保存，因而在此单独存一次cs。

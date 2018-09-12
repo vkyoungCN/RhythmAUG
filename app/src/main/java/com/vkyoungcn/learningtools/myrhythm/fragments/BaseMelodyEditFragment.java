@@ -3,6 +3,7 @@ package com.vkyoungcn.learningtools.myrhythm.fragments;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -324,10 +325,10 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 }
                 /*if(!moveAreaStart&&!moveAreaEnd){
                     //从单点模式切换而来
-                    selectStartIndex = selectEndIndex =currentUnitIndex;
+                    selectStartIndex = selectEndIndex =currentUnitCsIndex;
                 }else if(!moveAreaStart&&moveAreaEnd){
                     //从终点模式切换而来（），保留原终点位置；只改变原起点
-                    selectStartIndex = currentUnitIndex;
+                    selectStartIndex = currentUnitCsIndex;
                 }*///剩余一种情形是重复点击
                 moveAreaStart = true;
                 moveAreaEnd = false;
@@ -347,9 +348,9 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 }
                 /*if(!moveAreaEnd&&!moveAreaStart){
                     //从单点模式切换而来
-                    selectStartIndex = selectEndIndex =currentUnitIndex;
+                    selectStartIndex = selectEndIndex =currentUnitCsIndex;
                 }else if(!moveAreaEnd&&moveAreaStart){
-                    selectEndIndex = currentUnitIndex;
+                    selectEndIndex = currentUnitCsIndex;
 
                 }*///剩余一种情形是重复点击
 
@@ -1150,6 +1151,8 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
             Toast.makeText(getContext(), "提交空节奏？没有意义的。", Toast.LENGTH_SHORT).show();
             listIsEmpty = true;
             return;
+        }else {
+            listIsEmpty =false;
         }
         rhythmBasedCompound.setCodeSerialByte(csRhythmHelper.getCodeSerial());//【不知是否需要这样操作一下？】
 

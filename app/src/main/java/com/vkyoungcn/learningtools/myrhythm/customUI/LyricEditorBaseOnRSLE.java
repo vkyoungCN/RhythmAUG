@@ -56,13 +56,15 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
     boolean modifyPrimary = true;
     private int tempDuSectionIndex = 0;
     private int tempDuUnitIndex = 0;
-    int phraseIndex = 0;
-    int wordInPhraseIndex = 0;
+    int phraseIndex = 1;//数字是从1起。代表物理位置。如果代表索引则-1；在进行1维2维转换时，会重置计算。
+    int wordInPhraseIndex = 1;
 
 
     /* 画笔组*/
     private Paint unEmptyUnitBkgPaint;//添加上弧连音线时的另一端位置选择框。
     private Paint phraseNumPaint;//绘制乐句容量
+    private Paint pointPaint_A;//绘制起端的下标点
+    private Paint pointPaint_B;//绘制终端的下标点
 
     /* 尺寸组 */
     /* 色彩组 */
@@ -112,11 +114,23 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         unEmptyUnitBkgPaint.setColor(unEmptyUnitBkg_gray);
 
         phraseNumPaint = new Paint();
-        phraseNumPaint.setTextSize(32);
-        phraseNumPaint.setStrokeWidth(4);
-        phraseNumPaint.setColor(unEmptyUnitBkg_gray);
+        phraseNumPaint.setTextSize(40);
+        phraseNumPaint.setStrokeWidth(2);
+        phraseNumPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        phraseNumPaint.setColor(generalColor_Gray);
 //        phraseNumPaint.setTextAlign(Paint.Align.CENTER);
 //        phraseNumPaint.setFakeBoldText(true);
+
+        pointPaint_A = new Paint();
+        pointPaint_A.setStrokeWidth(8);
+        pointPaint_A.setColor(editBox_blue);
+        pointPaint_A.setStyle(Paint.Style.FILL_AND_STROKE);
+
+        pointPaint_B = new Paint();
+        pointPaint_B.setStrokeWidth(6);
+        pointPaint_B.setColor(generalColor_Gray);
+        pointPaint_B.setStyle(Paint.Style.FILL);
+
     }
 
 
@@ -148,7 +162,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         public boolean commitText(CharSequence text, int newCursorPosition) {
             setPhraseProperly(text.toString());
 
-            initPrimaryLyric(true,phraseIndex);
+            initPrimaryLyric(true,phraseIndex-1);
             postInvalidate();
 
 
@@ -164,7 +178,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
                 if (event.getKeyCode() == KeyEvent.KEYCODE_DEL) {
                     //删除按键
                     deletePhraseProperly();
-                    initPrimaryLyric(true,phraseIndex);
+                    initPrimaryLyric(true,phraseIndex-1);
 
                 } /*else if (event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
                     //回车按键
@@ -197,7 +211,8 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
 
     /* 安全设置新数据，检测当前蓝框所在位置对应的乐句位置是否数据越界；若是，补齐；然后改动或添加数据*/
     private void setPhraseProperly(String text){
-        String currentPhrase = primaryPhrases.get(phraseIndex);//由于初始化时已对primaryPhrases数据补齐（元素是empty字串）
+        String currentPhrase = primaryPhrases.get(phraseIndex-1);//由于初始化时已对primaryPhrases数据补齐（元素是empty字串）
+        // [注意句计数器是1起。]
         // 所以不须再检测其安全性
 
         StringBuilder tempSbd = new StringBuilder(currentPhrase);
@@ -219,13 +234,13 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             tempSbd.append(text);
 
         }
-        primaryPhrases.set(phraseIndex,tempSbd.toString());
+        primaryPhrases.set(phraseIndex-1,tempSbd.toString());
         mListener.onCodeChanged();
     }
 
 
     private void deletePhraseProperly(){
-        String currentPhrase = primaryPhrases.get(phraseIndex);//由于初始化时已对primaryPhrases数据补齐（元素是empty字串）
+        String currentPhrase = primaryPhrases.get(phraseIndex-1);//由于初始化时已对primaryPhrases数据补齐（元素是empty字串）
         // 所以不须再检测其安全性
 
         StringBuilder tempSbd = new StringBuilder(currentPhrase);
@@ -238,7 +253,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
 
         }//不足时删除无意义，无反应
 
-        primaryPhrases.set(phraseIndex,tempSbd.toString());
+        primaryPhrases.set(phraseIndex-1,tempSbd.toString());
         mListener.onCodeChanged();
 
     }
@@ -255,6 +270,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         //本类特有：①LY位置非空单位的浅灰背景；②背景末端的各句容量数字；③LY位置的蓝框；
+
         //绘制灰色背景（可装词的dU处；尺寸少小）
         float bkTop_Y;
         float bkBottom_Y;
@@ -266,7 +282,8 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
                 canvas.drawRect(drawingUnit.left+4, bkTop_Y, drawingUnit.right-4, bkBottom_Y, unEmptyUnitBkgPaint);
                 //左右留出间隔
                 if(drawingUnit.phraseMark==PHRASE_END){//绘制容量数字
-                    canvas.drawText(String.valueOf(drawingUnit.orderNumInPharse),drawingUnit.right,drawingUnit.bottomNoLyric+unitHeight+36, phraseNumPaint);
+//                    Log.i(TAG, "onDraw: du End");
+                    canvas.drawText(String.valueOf(drawingUnit.orderNumInPharse),drawingUnit.codeCenterX,drawingUnit.bottomNoLyric+2.8f*unitHeight, phraseNumPaint);
                 }
             }
         }
@@ -284,8 +301,11 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             canvas.drawRect(duStart.left, duStart.bottomNoLyric, duEnd.right, duEnd.bottomNoLyric+unitHeight, greenBoxPaint);
         }
 
-        drawLyricAgain(canvas);
+        //起止位置特殊表现
+        drawStartAndEndMarks(canvas);
 
+        //绘制歌词（之前的已跳过未绘制）
+        drawLyricAgain(canvas);
         //            invalidate();
 
     }
@@ -299,6 +319,19 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         for (ArrayList<DrawingUnit> drawingUnitsInSections : drawingUnits) {
             for (DrawingUnit drawingUnit : drawingUnitsInSections) {
                 canvas.drawText(drawingUnit.lyricWord_1, drawingUnit.lyricWord_1_CenterX, drawingUnit.lyricWord_1_BaseY, codePaint);
+//                Log.i(TAG, "drawLyricAgain: word="+drawingUnit.lyricWord_1+",i="+drawingUnitsInSections.indexOf(drawingUnit));
+            }
+        }
+    }
+    void drawStartAndEndMarks(Canvas canvas ){
+        for (ArrayList<DrawingUnit> drawingUnitsInSections : drawingUnits) {
+            for (DrawingUnit drawingUnit : drawingUnitsInSections) {
+                if(drawingUnit.phraseMark==PHRASE_START){
+                    canvas.drawPoint(drawingUnit.codeCenterX, drawingUnit.bottomNoLyric+2.3f*unitHeight,pointPaint_A);
+//                    canvas.drawPoint(drawingUnit.left, drawingUnit.bottomNoLyric+3*unitHeight, pointPaint_A);
+                }/*else if(drawingUnit.phraseMark==PHRASE_END){
+                    canvas.drawPoint(drawingUnit.right, drawingUnit.bottomNoLyric+2.5f*unitHeight, pointPaint_B);
+                }*/
             }
         }
     }
@@ -388,6 +421,12 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
     }
 
 
+    void checkAndSetThreeStates(){
+        useLyric_1 = true;
+        useLyric_2 = false;
+        drawPitches = false;
+    }
+
     public void updatePhrasesAndReDraw(ArrayList<String> phrases){
         this.primaryPhrases = phrases;
         initPrimaryLyric(false,0);//要全部更新
@@ -404,7 +443,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         if(primaryPhrases.isEmpty()){
             return 0;
         }
-        return primaryPhrases.get(phraseIndex).length();
+        return primaryPhrases.get(phraseIndex-1).length();
     }
 
     public int getCurrentDuCsIndex(){//用于进一步（由fg执行）获取当前乐句设计容量
@@ -460,7 +499,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             changeOneDimCsIndexToTwoDimDuIndex(indexAfterMove);
             blueBoxSectionIndex = tempDuSectionIndex;
             blueBoxUnitIndex = tempDuUnitIndex;
-            updatePhraseIndex();
+//            updatePhraseIndex();【一维光标转二维方法内已更新该数据】
 
             //判断是否超出绘制区
             checkAndShiftWhenOutOfUI(blueBoxSectionIndex,blueBoxUnitIndex);
@@ -468,6 +507,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         invalidate();
     }
 
+    /*方法存在错误，计数器不对
     private void updatePhraseIndex(){
         int tempPrIndex = 0;
         for (int i = 0; i <= blueBoxSectionIndex; i++) {
@@ -483,7 +523,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         phraseIndex = tempPrIndex;
 
     }
-
+*/
     void checkAndShiftWhenOutOfUI(int sectionIndex, int unitIndex){
         DrawingUnit drawingUnit = drawingUnits.get(sectionIndex).get(unitIndex);
         if(drawingUnit.checkIsOutOfUi(padding,padding,sizeChangedWidth-padding,sizeChangedHeight-padding)){
@@ -505,19 +545,26 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
     void changeOneDimCsIndexToTwoDimDuIndex(int index){
         //遍历查找正确位置上的dU,以及其二维坐标【同时设置供返回的乐句位置数据】
 //        boolean passEnd = false;//设置这个变量的意图是确保“跨过end”后（到下一个非空dU时）乐句计数器才+1。
+
+        //先进行附带的乐句计数操作
         wordInPhraseIndex =0;
         phraseIndex=0;
 
+        //由于下方的return，循环只会进行懂啊当前光标处。
         for(int i=0; i<drawingUnits.size();i++){
             ArrayList<DrawingUnit> duList = drawingUnits.get(i);
             for(int j=0;j<duList.size();j++){
                 DrawingUnit drawingUnit = duList.get(j);
+//                Log.i(TAG, "changeOneDimCsIndexToTwoDimDuIndex: du.pm="+drawingUnit.phraseMark);
                 if(drawingUnit.phraseMark!=PHRASE_EMPTY){
                     wordInPhraseIndex++;
                     if(drawingUnit.phraseMark==PHRASE_START){
                         phraseIndex++;
+                        wordInPhraseIndex=1;//遇到新一句，句内计数器置1。
                     }
                 }//不支持只有一个字的乐句（也无支持之的无意义）
+
+                //当前光标位置转二维
                 if(drawingUnit.indexInCodeSerial == index){
                     tempDuUnitIndex = j;
                     tempDuSectionIndex = i;

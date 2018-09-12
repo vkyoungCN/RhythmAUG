@@ -2,6 +2,7 @@ package com.vkyoungcn.learningtools.myrhythm.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +16,7 @@ import java.util.List;
 * 相对的是“LFR”，后者携带了交叉表中的“所归属的节奏id、是否是该节奏的主要歌词”两额外字段
 * */
 public class Lyric extends BaseModel {
+    private static final String TAG = "Lyric";
 // 由于汉字占3~4字节，向Byte的转换（再利用byte判断乐句标记等）意义不大（主数据是错误的而且还要转回去）
 // 考虑直接使用字串，乐句结束标记使用特殊字符（#）表示；拆分后本类内新设一个Array<String>用于按分句管理。
 // （基类中的主存储字段是单个String。）
@@ -64,6 +66,7 @@ public class Lyric extends BaseModel {
     /* 对外提供一套*/
     public static ArrayList<String> toPhrasesByCodeSerialString(String codeSerialString){
         String[] phrasesInArray = codeSerialString.split("#");
+//        Log.i(TAG, "toPhrasesByCodeSerialString: str arr="+phrasesInArray[0]+","+phrasesInArray[1]);
         /* ArrayList<String> phrases = new ArrayList<>();
         if(phrasesInArray.length==0){
             return phrases;

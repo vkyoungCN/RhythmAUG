@@ -176,7 +176,7 @@ public class RhythmSingleLineView extends BaseRhythmView {
     void initDrawingUnits(boolean isTriggerFromSC){
         initDrawingUnits_step1(h_shiftedAmount);//因为要调用的方法虽然与基类同名但实际签名不同从而无法由基类直接调用。
         //所以在此重写了主initDU
-
+//        Log.i(TAG, "initDrawingUnits: useLy1"+useLyric_1);
         initDrawingUnits_step2();
         if(!isTriggerFromSC){
             invalidate();

@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
@@ -145,6 +146,7 @@ public class RhythmSingleLineWithTwoTypeBoxBaseView extends RhythmSingleLineView
     public void codeChangedReDraw(){
         //        codesInSections =newCodes2Dimension;//不传不行啊……并不能更新绘制结果（测试发现dus还改变了）
         this.codesInSections = RhythmHelper.codeParseIntoSections(bcRhythm.getCodeSerialByte(), rhythmType);
+//        Log.i(TAG, "codeChangedReDraw: cs in rhv="+bcRhythm.getCodeSerialByte());
         initDrawingUnits(false);//【计划中两个子类：RhvSLEditor、LyricEditor都会对编码进行改变】
     }
 
