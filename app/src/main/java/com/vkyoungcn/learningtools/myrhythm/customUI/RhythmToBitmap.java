@@ -12,23 +12,13 @@ import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.View;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
-import com.vkyoungcn.learningtools.myrhythm.models.Rhythm;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
-
-import static com.vkyoungcn.learningtools.myrhythm.customUI.DrawingUnit.PHRASE_EMPTY;
-import static com.vkyoungcn.learningtools.myrhythm.customUI.DrawingUnit.PHRASE_END;
-import static com.vkyoungcn.learningtools.myrhythm.customUI.DrawingUnit.PHRASE_MIDDLE;
-import static com.vkyoungcn.learningtools.myrhythm.customUI.DrawingUnit.PHRASE_START;
 
 
 public class RhythmToBitmap extends RhythmView {
@@ -43,12 +33,15 @@ public class RhythmToBitmap extends RhythmView {
     /* 绘制标题、描述的画笔*/
     Paint titlePaint;
     TextPaint descriptionPaint;
+    Paint whitePaint;
 
     String strTitle = "";
     String strDescription = "";
 
     StaticLayout myStaticLayout;
+    int whiteBackground;
 
+    float totalDrawingHeight = 0;
     /* 构造器*/
     public RhythmToBitmap(Context context) {
         super(context);
@@ -87,6 +80,9 @@ public class RhythmToBitmap extends RhythmView {
         curveOrLinesHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
         textBaseLineBottomGap = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
         curveNumSize =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 10, getResources().getDisplayMetrics());
+
+        whiteBackground = ContextCompat.getColor(mContext, R.color.rhythmView_sdMaskWhite);
+
     }
 
     @Override
@@ -104,6 +100,12 @@ public class RhythmToBitmap extends RhythmView {
         descriptionPaint.setStrokeWidth(2);
         descriptionPaint.setStyle(Paint.Style.FILL_AND_STROKE);
         descriptionPaint.setColor(generalCharGray);
+
+        whitePaint = new Paint();
+        whitePaint.setStrokeWidth(2);
+        whitePaint.setStyle(Paint.Style.FILL);
+        whitePaint.setColor(whiteBackground);
+
     }
 
     //与基类不一致的行为必须覆写
@@ -116,7 +118,6 @@ public class RhythmToBitmap extends RhythmView {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        //合理的尺寸由外部代码及布局文件实现，这里不设计复杂的尺寸交互申请逻辑，而是直接使用结果。
         int measureWidth = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);//自由使用宽度
         int measureHeight = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
         setMeasuredDimension(measureWidth,measureHeight);
@@ -174,7 +175,7 @@ public class RhythmToBitmap extends RhythmView {
         strDescription = rhythmBasedCompound.getDescription()==null?"":rhythmBasedCompound.getDescription();
 
         if(!strDescription.isEmpty()){
-            Log.i(TAG, "initStrings: (sizeChangedWidth-2*padding)="+(sizeChangedWidth-2*padding));
+//            Log.i(TAG, "initStrings: (sizeChangedWidth-2*padding)="+(sizeChangedWidth-2*padding));
             myStaticLayout = new StaticLayout(strDescription,descriptionPaint,(int)(sizeChangedWidth-2*padding),
                     Layout.Alignment.ALIGN_CENTER,1f,0f,false);
         }
@@ -186,18 +187,26 @@ public class RhythmToBitmap extends RhythmView {
     //后面的draw方法会产生对本方法的调用，在此控制实际绘制内容
     @Override
     protected void onDraw(Canvas canvas) {
-
+        //提供给外部显示时需要先绘制背景，否则背景是黑的。
+        canvas.drawRect(0,0,1080, totalDrawingHeight,whitePaint);
         //绘制上方标题
         canvas.drawText(strTitle,padding,padding+2*unitHeight,titlePaint);
 
 //        canvas.save();
 
         canvas.translate(0,unitHeight*2.5f);//向下移动，绘制节奏数据
+        //补充背景
+        canvas.drawRect(0, totalDrawingHeight-unitHeight*2.5f,1080, totalDrawingHeight,whitePaint);
+
+
+        //绘制节奏区域
         super.onDraw(canvas);
 
         //继续移动画布，在下方绘制描述文本
-        float shiftAmount = (lineCursor+1)* twoLinesTopYBetween;
-        canvas.translate(padding,padding+shiftAmount);
+        canvas.translate(0,padding+rhythmPartHeight);
+        //补充背景
+        canvas.drawRect(0, totalDrawingHeight-(padding-rhythmPartHeight),1080, totalDrawingHeight,whitePaint);
+
         myStaticLayout.draw(canvas);
 
 //        canvas.restore();
@@ -298,49 +307,12 @@ public class RhythmToBitmap extends RhythmView {
     }
 
 
-//与基类不同，
-//某些功能关闭
-    void initDrawingUnits_step1() {
-//        isFirstAvailableCode = true;//每次对全局进行重新初始计算时，要重置的变量之一。
 
-        //可用总长（控件宽扣除两侧缩进）
-        availableTotalWidth = sizeChangedWidth - padding * 2;
-        //临时指定起绘点（顶部高度，topY）位置
-        topDrawing_Y = padding;
 
-        //装载绘制信息的总列表（按小节区分子列表管理）
-        drawingUnits = new ArrayList<>();//初步初始（后面采用add方式，因而不需彻底初始）
 
-        lineRequiredLength =0;//每次重新计算时要重置。
-        //两行之间的标准间距，（包含行高在内，是否包含词显示区高度则取决于是否有词）
-        //其中*2的原因：上下加点区都要预留，总高为单侧加点*2；上方弧线、下方横线区都要预留。（不论相关内容是否存在）。
-        twoLinesTopYBetween =(unitHeight + additionalPointsHeight * 2 + curveOrLinesHeight * 2 + lineGap);
-        if(useLyric_2){//使用第二词序则直接预留两行高度，不论主词序是否存在（否则词序初始化方法中不好判断位置，简化处理）
-            twoLinesTopYBetween +=(unitHeight *2);
-        }else if(useLyric_1){
-            twoLinesTopYBetween += unitHeight;
-        }//两者皆不使用则高度差不做调整。
-
-        accumulationNumInCodeSerial = 0;//每次初始数据前，将该计数器重置为0
-        //在各按小节计算的方法中，对该全局变量直接操作；并将“当前”dU的对应位置（-1，索引位）存入dU。
-
-        initDrawingUnits_step1_rear();
-
+    public void callWhenReMeasureIsNeeded(){
+        //do nothing,纯为绕过基类。
     }
-
-    void doShiftVertically(){
-        //由于要在节奏的上方绘制标题，让出标题高度
-        /*for (ArrayList<DrawingUnit> drawingUnitSection: drawingUnits){
-            for (DrawingUnit du :drawingUnitSection) {
-                du.shiftEntirely(unitHeight, 0, padding,padding,sizeChangedWidth-padding, sizeChangedHeight-padding);
-            }
-        }
-        【以更简单的方式：移动画布执行】]
-        */
-
-
-    }
-
 
 
     public Bitmap makeBitmap() {
@@ -352,9 +324,9 @@ public class RhythmToBitmap extends RhythmView {
         //这里绘制成一个bitmap
         float descriptionHeight = myStaticLayout.getHeight();
 
-        float totalHeightNeeded = 2*padding+unitHeight*2.5f+(lineCursor+1)* twoLinesTopYBetween+descriptionHeight;
+        totalDrawingHeight = 2*padding+unitHeight*2.5f+rhythmPartHeight+descriptionHeight;
 
-        Bitmap bitmap = Bitmap.createBitmap(sizeChangedWidth, (int)totalHeightNeeded, Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap(sizeChangedWidth, (int) totalDrawingHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         draw(canvas);
 

@@ -16,7 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="42dp"
         android:background="#efefef"
-        android:text="@string/confirm_delete"
+        android:text="@string/preView"
         android:textSize="16sp"
         android:gravity="center"
         />
@@ -48,18 +48,6 @@
         >
 
         <TextView
-            android:id="@+id/btn_cancel_DSB"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:layout_margin="1dp"
-            android:text="@string/cancel"
-            android:textSize="16sp"
-            android:background="#efefef"
-            />
-
-        <TextView
             android:id="@+id/btn_ok_DSB"
             android:layout_width="0dp"
             android:layout_weight="2"
@@ -68,7 +56,7 @@
             android:layout_margin="1dp"
             android:text="@string/confirm"
             android:textSize="16sp"
-            android:background="#e57373"
+            android:background="@color/myRhythm_teal"
             />
     </LinearLayout>
 

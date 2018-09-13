@@ -58,10 +58,10 @@ public class ShowBitmapDiaFragment extends DialogFragment
         ImageView imv_ShowBM = (ImageView) rootView.findViewById(R.id.imv_showBitmap_DSB);
         imv_ShowBM.setImageBitmap(bitmap);
 //        TextView cancel = (TextView) rootView.findViewById(R.id.btn_cancel_DSB);
-//        TextView confirm = (TextView) rootView.findViewById(R.id.btn_ok_DSB);
+        TextView confirm = (TextView) rootView.findViewById(R.id.btn_ok_DSB);
 
         //部分需要添加事件监听
-//        confirm.setOnClickListener(this);
+        confirm.setOnClickListener(this);
 //        cancel.setOnClickListener(this);
 
         return rootView;
@@ -90,15 +90,12 @@ public class ShowBitmapDiaFragment extends DialogFragment
     @Override
     public void onClick(View view) {
         switch (view.getId()){
-/*
-            case R.id.btn_ok_DSB://删除分组，将位置发回给activity，由调用方负责去DB实际删除,并更新列表显示。
-                Bundle data = new Bundle();
-                data.putInt("MODEL_ID", bitmap);
-                mListener.onButtonClickingDfgInteraction(deleteType,data);
+            case R.id.btn_ok_DSB:
                 this.dismiss();
                 break;
 
 
+/*
             case R.id.btn_cancel_DSB:
                 this.dismiss();
                 break;

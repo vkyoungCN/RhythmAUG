@@ -150,6 +150,7 @@ public class BaseRhythmView extends View {
     float textBaseLineBottomGap;
 
     int sizeChangedHeight = 0;//是控件onSizeChanged后获得的尺寸之高度，也是传给onDraw进行线段绘制的canvas-Y坐标(单行时)
+    //注意，在RhV中由于外部改用Scv包裹，因而不在计算高度。
     int sizeChangedWidth = 0;//未获取数据前设置为0
 
 
@@ -254,7 +255,7 @@ public class BaseRhythmView extends View {
     protected void onSizeChanged(int w, int h, int old_w, int old_h) {
         sizeChangedHeight = h;
         sizeChangedWidth = w;
-
+        Log.i(TAG, "onSizeChanged: h="+h+",w="+w);
         if(codesInSections!=null&&!codesInSections.isEmpty()){
             //如果数据源此时非空，则代表数据源的设置早于onSC，也即数据源设置方法中的绘制信息初始化方法被中止，
             //需要再次再次初始化绘制信息（但是传入isTriggerFromSC标记，只初始绘制信息不进行刷新）
@@ -266,6 +267,7 @@ public class BaseRhythmView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         //合理的尺寸由外部代码及布局文件实现，这里不设计复杂的尺寸交互申请逻辑，而是直接使用结果。
+
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.getSize(heightMeasureSpec));
     }
 
@@ -290,6 +292,7 @@ public class BaseRhythmView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        Log.i(TAG, "onDraw: c.h="+canvas.getHeight());
         if(checkEmptyAndDraw(canvas)){
             return;
             //是空的，绘制一个空占位线条然后直接退出绘制即可。
@@ -531,12 +534,16 @@ public class BaseRhythmView extends View {
         initDrawingUnits_step2();
 
         if(!isTriggerFromSC){
+            Log.i(TAG, "initDrawingUnits: isTrigger = false");
             invalidate();
         }//onSC方法返回后会自动调用onD因而没必要调用invalidate方法。
+        callWhenReMeasureIsNeeded();
 
     }
 
-
+    public void callWhenReMeasureIsNeeded(){
+        //子类视情况决定
+    }
 
     /*（现已禁止直接传入编码数组，请传入混合Rhythm类）
     public void setRhythmViewData(ArrayList<ArrayList<Byte>> codesInSections, int rhythmType, String primaryLyricString, String secondLyricString, int codeSize, int unitWidth, int unithHeight){
@@ -815,7 +822,7 @@ public class BaseRhythmView extends View {
 
                 //在这一层循环的末尾，将本音符的时值累加到本小节的记录上；然后更新“tVBTCIS”记录以备下一音符的使用。
                 drawingUnitsInSection.add(drawingUnit);//添加本音符对应的绘制信息。
-                drawingUnit.checkIsOutOfUi(padding,padding,sizeChangedWidth-padding,sizeChangedHeight-padding);
+                checkIsSingleUnitOutOfUI(drawingUnit);//改为方法封装，以便由子类决定是否真正进行检测。
             }
 
             //注意位置要正确！（如果放在循环开头则所有记录大1。）
@@ -826,6 +833,10 @@ public class BaseRhythmView extends View {
 
     }
 
+    public void checkIsSingleUnitOutOfUI(DrawingUnit drawingUnit){
+        drawingUnit.checkIsOutOfUi(padding,padding,sizeChangedWidth-padding,sizeChangedHeight-padding);
+
+    }
 
     // 在初始化时，有时需要从本位置向前（已添加的）Du单元检索，
     // 将其中正确位置上的一个设为PHRASES_END等。

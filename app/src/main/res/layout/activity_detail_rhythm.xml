@@ -60,106 +60,124 @@
         android:background="#f5f5f5"
         />
 
-    <android.support.v7.widget.CardView
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:layout_margin="2dp"
-        app:cardCornerRadius="6dp">
-
-        <com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView
-            android:id="@+id/rhView_singleLine_RDA"
+        android:layout_height="240dp"
+        >
+        <com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView
+            android:id="@+id/rhView_RDA"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <!--相机图标-->
-        <ImageView
-            android:onClick="captureTest"
-            android:layout_width="36dp"
-            android:layout_height="32dp"
-            android:layout_gravity="end"
-            android:layout_margin="4dp"
-            android:src="@drawable/camera" />
-
-        <!--图片文字按键组件-->
-        <FrameLayout
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end|bottom"
-            android:layout_margin="4dp">
-            <!--节奏部分的修改-->
-            <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_gravity="end"
-                android:onClick="goEditRhythm"
-                android:padding="2dp"
-                android:src="@drawable/edit_1" />
+            />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end|bottom"
-                android:layout_marginBottom="4dp"
-                android:layout_marginEnd="40dp"
-                android:gravity="center"
-                android:text="@string/clickToEditRh" />
+    </ScrollView>
 
-        </FrameLayout>
-
-        <!--图片文字按键组件·2-->
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start|bottom"
-            android:onClick="goEditLyricA"
-            android:layout_margin="4dp">
-            <!--节奏部分的修改-->
-            <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_gravity="end|bottom"
-                android:padding="2dp"
-                android:src="@drawable/edit_1" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_marginBottom="4dp"
-                android:layout_marginEnd="40dp"
-                android:gravity="center"
-                android:text="@string/clickToEditLyA" />
-
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start|bottom"
-            android:layout_marginStart="100dp"
-            android:layout_marginBottom="4dp"
-            android:onClick="goEditLyricB"
+    <!--分割线-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginBottom="1dp"
+        android:background="#e0e0e0"
+        />
+    <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
             >
-        <!--节奏部分的修改-->
-        <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="end|bottom"
-            android:padding="2dp"
-            android:src="@drawable/edit_1" />
+            <!--相机图标-->
+            <ImageView
+                android:onClick="captureTest"
+                android:layout_width="48dp"
+                android:layout_height="38dp"
+                android:padding="3dp"
+                android:layout_gravity="end|bottom"
+                android:layout_marginBottom="2dp"
+                android:layout_marginEnd="118dp"
+                android:background="#efefef"
+                android:src="@drawable/camera" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_marginBottom="4dp"
-            android:layout_marginEnd="40dp"
-            android:gravity="center"
-            android:text="@string/clickToEditLyB" />
+            <!--编辑节奏编码-->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|bottom"
+                android:layout_marginBottom="4dp"
+                android:layout_marginEnd="8dp">
+                <!--节奏部分的修改-->
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="end"
+                    android:onClick="goEditRhythm"
+                    android:padding="2dp"
+                    android:src="@drawable/edit_1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|bottom"
+                    android:layout_marginBottom="4dp"
+                    android:layout_marginEnd="40dp"
+                    android:gravity="center"
+                    android:text="@string/clickToEditRh" />
+
+            </FrameLayout>
+
+            <!--图片文字按键组件-->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|bottom"
+                android:onClick="goEditLyricA"
+                android:layout_margin="4dp">
+                <!--节奏部分的修改-->
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="end|bottom"
+                    android:padding="2dp"
+                    android:src="@drawable/edit_1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginBottom="4dp"
+                    android:layout_marginEnd="40dp"
+                    android:gravity="center"
+                    android:text="@string/clickToEditLyA" />
+
+            </FrameLayout>
+
+            <!--图片文字按键组件B-->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|bottom"
+                android:layout_marginStart="90dp"
+                android:layout_marginBottom="4dp"
+                android:onClick="goEditLyricB"
+                >
+                <!--节奏部分的修改-->
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="end|bottom"
+                    android:padding="2dp"
+                    android:src="@drawable/edit_1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginBottom="4dp"
+                    android:layout_marginEnd="40dp"
+                    android:gravity="center"
+                    android:text="@string/clickToEditLyB" />
+            </FrameLayout>
+
+
         </FrameLayout>
-
-
-    </android.support.v7.widget.CardView>
 
     <!--分割线-->
     <TextView
@@ -218,87 +236,6 @@
         />
 
     <!--由于取消了多交叉的关系设计，因而暂不进行关联音、词的显示-->
-<!--
-    &lt;!&ndash;中1·横栏&ndash;&gt;
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="24dp"
-        android:background="#efefef"
-        android:gravity="center"
-        android:text="@string/linkingPitches"
-        android:textSize="16sp" />
-
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
-        >
-
-        <TextView
-            android:id="@+id/tv_mask1_RDA"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:gravity="center"
-            android:text="@string/hold_for_loading" />
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            >&lt;!&ndash;SV下只允许存在一个控件&ndash;&gt;
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/rv_linkingPitches_RDA"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-
-            </android.support.v7.widget.RecyclerView>
-
-        </ScrollView>
-
-
-    </FrameLayout>
-
-    &lt;!&ndash;中2·横栏&ndash;&gt;
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="24dp"
-        android:background="#efefef"
-        android:gravity="center"
-        android:text="@string/linkingPitches"
-        android:textSize="16sp" />
-
-
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
-        >
-        <TextView
-            android:id="@+id/tv_mask2_RDA"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/hold_for_loading"
-            android:gravity="center"
-            android:layout_marginTop="4dp"
-            />
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            >&lt;!&ndash;SV下只允许存在一个控件&ndash;&gt;
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/rv_linkingLyrics_RDA"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-
-            </android.support.v7.widget.RecyclerView>
-
-        </ScrollView>
-
-
-    </FrameLayout>-->
 
     <!--底横栏-->
     <TextView
@@ -317,12 +254,12 @@
         />
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         >
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginBottom="42dp"
             >
             <TextView
                 android:id="@+id/tv_description_RDA"
@@ -333,52 +270,44 @@
                 android:textSize="16sp"
 
                 />
-            <!--<EditText
-                android:id="@+id/edt_description_RDA"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:gravity="center"
-                android:textSize="16sp"
-                android:text="@string/descriptionHere"
-                />-->
 
         </ScrollView>
 
+        <!--底部信息及按键-->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:orientation="horizontal"
+            android:layout_gravity="bottom"
+            android:background="#efefef"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="4dp"
+                android:text="@string/clickToEdit"
+                />
+            <TextView
+                android:layout_width="96dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:gravity="center"
+                android:text="@string/modify"
+                android:background="@color/myRhythm_red"
+                android:onClick="toEditActivity"
+                />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/myRhythm_cyan"
+                android:layout_gravity="bottom"
+                />
+        </FrameLayout>
         <!--描述部分的修改-->
     </FrameLayout>
-    <!--底部信息及按键，横置覆盖于rv上层-->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="42dp"
-        android:orientation="horizontal"
-        android:layout_gravity="bottom"
-        android:background="#efefef"
-        >
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:paddingStart="12dp"
-            android:paddingEnd="4dp"
-            android:text="@string/clickToEdit"
-            />
-        <TextView
-            android:layout_width="96dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="end"
-            android:gravity="center"
-            android:text="@string/modify"
-            android:background="@color/myRhythm_red"
-            android:onClick="toEditActivity"
-            />
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/myRhythm_cyan"
-            android:layout_gravity="bottom"
-            />
-    </FrameLayout>
+
 
 
 

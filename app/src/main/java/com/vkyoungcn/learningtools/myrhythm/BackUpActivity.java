@@ -139,8 +139,8 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
 
     public void privateBackUp(View view) {
         SimpleDateFormat sdFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
-        Date data = new Date(System.currentTimeMillis());
-        String timeSuffix = sdFormat.format(data)+".vbk";
+        Date date = new Date(System.currentTimeMillis());
+        String timeSuffix = sdFormat.format(date)+".vbk";
         String fileName = "dbBack"+timeSuffix;
 
         File dbFile = getDatabasePath("MyRhythm.db");

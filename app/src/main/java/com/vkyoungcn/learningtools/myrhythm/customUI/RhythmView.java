@@ -1,8 +1,11 @@
 package com.vkyoungcn.learningtools.myrhythm.customUI;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
@@ -19,6 +22,7 @@ public class RhythmView extends BaseRhythmView {
 
     private static final String TAG = "RhythmView";
     float longestLineWidth = 0;
+    float rhythmPartHeight = 0;
 
     public RhythmView(Context context) {
         super(context);
@@ -37,12 +41,58 @@ public class RhythmView extends BaseRhythmView {
         super.setRhythmViewData(rhythmBasedCompound,16,20,20);
     }*/
 
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        //宽度由外部提供，高度不限（测试得0）。
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.makeMeasureSpec(1920,MeasureSpec.EXACTLY)); }
 
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+    }
+
+    /*@Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        Log.i(TAG, "onLayout: ");
+        super.onLayout(true, 0, 0, sizeChangedWidth, (int)rhythmPartHeight);
+
+    }
+*/
+    /*public void callWhenReMeasureIsNeeded(){
+        float heightNeeded = 2*padding+unitHeight*2.5f+rhythmPartHeight;
+        Log.i(TAG, "callWhenReMeasureIsNeeded: heihgtNeeded="+heightNeeded);
+
+        measure(MeasureSpec.makeMeasureSpec(sizeChangedWidth,MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec((int)heightNeeded, MeasureSpec.EXACTLY));
+        invalidate();
+    }*/
+
+    //与基类不同，
+//某些功能关闭
     void initDrawingUnits_step1() {
-        //本控件采用折行模式。
-        super.initDrawingUnits_step1();//完成部分初始化任务
+//        isFirstAvailableCode = true;//每次对全局进行重新初始计算时，要重置的变量之一。
 
-        initDrawingUnits_step1_rear();//独立设置的原因是便于其子类能不调用基类通用step1的情况下直接调用后续rear。
+        //可用总长（控件宽扣除两侧缩进）
+        availableTotalWidth = sizeChangedWidth - padding * 2;
+        //临时指定起绘点（顶部高度，topY）位置
+        topDrawing_Y = padding;
+
+        //装载绘制信息的总列表（按小节区分子列表管理）
+        drawingUnits = new ArrayList<>();//初步初始（后面采用add方式，因而不需彻底初始）
+
+        lineRequiredLength =0;//每次重新计算时要重置。
+        //两行之间的标准间距，（包含行高在内，是否包含词显示区高度则取决于是否有词）
+        //其中*2的原因：上下加点区都要预留，总高为单侧加点*2；上方弧线、下方横线区都要预留。（不论相关内容是否存在）。
+        twoLinesTopYBetween =(unitHeight + additionalPointsHeight * 2 + curveOrLinesHeight * 2 + lineGap);
+        if(useLyric_2){//使用第二词序则直接预留两行高度，不论主词序是否存在（否则词序初始化方法中不好判断位置，简化处理）
+            twoLinesTopYBetween +=(unitHeight *2);
+        }else if(useLyric_1){
+            twoLinesTopYBetween += unitHeight;
+        }//两者皆不使用则高度差不做调整。
+
+        accumulationNumInCodeSerial = 0;//每次初始数据前，将该计数器重置为0
+        //在各按小节计算的方法中，对该全局变量直接操作；并将“当前”dU的对应位置（-1，索引位）存入dU。
+
+        initDrawingUnits_step1_rear();
 
     }
 
@@ -163,14 +213,16 @@ public class RhythmView extends BaseRhythmView {
                 //其余情况下只是增加本行的小节数量记录即可，不必有其他处理。
             }
         }
-        Log.i(TAG, "initDrawingUnits_step1_rear: longest line ="+longestLineWidth);
+//        Log.i(TAG, "initDrawingUnits_step1_rear: longest line ="+longestLineWidth);
 
         //【这里应根据所需总高对各行进行平移】
         //【如果不处理则默认是顶部对齐的绘制方式】
-        doShiftVertically();
+        rhythmPartHeight = (lineCursor+1)* twoLinesTopYBetween;
+//        Log.i(TAG, "initDrawingUnits_step1_rear: rhHT="+rhythmPartHeight);
     }
 
-    void doShiftVertically(){
+    //现在要求Rh放在scv中，因而不再做高度调整；
+   /* void doShiftVertically(){
         float totalHeightNeeded = (lineCursor+1)* twoLinesTopYBetween;
         float totalAvailableHeight = sizeChangedHeight-2*padding;
         if(totalHeightNeeded<totalAvailableHeight){
@@ -181,7 +233,7 @@ public class RhythmView extends BaseRhythmView {
                 }
             }
         }
-    }
+    }*/
 
     //本行内的其他各节扩展宽度
     void extraOthersInLine(float availableTotalWidth,float lineRequiredLength,float sectionRequiredLength,int i,int sectionAmountInLine,float topDrawing_Y,int lineCursor,float unitWidth_extracted){
@@ -231,7 +283,8 @@ public class RhythmView extends BaseRhythmView {
     }
 
 
-
-
-
+    @Override
+    public void checkIsSingleUnitOutOfUI(DrawingUnit drawingUnit) {
+        //折行模式的控件不存在超出边界的可能，略过。
     }
+}

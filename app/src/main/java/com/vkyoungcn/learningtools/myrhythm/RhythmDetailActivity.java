@@ -3,29 +3,26 @@ package com.vkyoungcn.learningtools.myrhythm;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmToBitmap;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
-import com.vkyoungcn.learningtools.myrhythm.fragments.SelectFileNameDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.fragments.ShowBitmapDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
+import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_LYPH_EDIT;
-import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_LY_EDIT;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_EDIT;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_OVERALL_EDIT;
-import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_OVERALL_EDIT_DONE;
-import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_PURE_EDIT_DONE;
 
 public class RhythmDetailActivity extends BaseModelDetailActivity {
 /* 由于暂时取消了多交叉复杂关系，暂不在本页面显示“相关的音序和歌词”
@@ -33,7 +30,7 @@ public class RhythmDetailActivity extends BaseModelDetailActivity {
 * */
 private static final String TAG = "RhythmDetailActivity";
     //rhythm下的特别控件
-    private RhythmSingleLineView rhythmView;
+    private RhythmView rhythmView;
 
 
     @Override
@@ -112,7 +109,7 @@ private static final String TAG = "RhythmDetailActivity";
         ckb_keepTop = findViewById(R.id.ckb_isKeepTop_RDA);
 
         //加载本类特有控件
-        rhythmView = findViewById(R.id.rhView_singleLine_RDA);
+        rhythmView = findViewById(R.id.rhView_RDA);
 
     }
 
@@ -130,6 +127,10 @@ private static final String TAG = "RhythmDetailActivity";
         //先测试单行模式的生成情况，实际使用时要按折行生成
 
         Bitmap bitmap = convertViewToBitmap(rhythmView);
+
+        if(!saveBitmapLocalPrivateTest(bitmap)){
+            return;
+        }
 
         //dfg中显示所生成的图片
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
@@ -153,11 +154,32 @@ private static final String TAG = "RhythmDetailActivity";
         rhythmToBitmap.setDataAndParams((RhythmBasedCompound) model,1080);
 
         Bitmap bitmap = rhythmToBitmap.makeBitmap();
-        Log.i(TAG, "convertViewToBitmap: bitmap created="+bitmap);
+//        Log.i(TAG, "convertViewToBitmap: bitmap created="+bitmap);
         return bitmap;
     }
 
 
+    public boolean saveBitmapLocalPrivateTest(Bitmap bitmap){
+        SimpleDateFormat sdFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        Date date = new Date(System.currentTimeMillis());
+        String timeSuffix = sdFormat.format(date)+".jpg";
+        String fileName = "Rhythm_"+timeSuffix;
+
+        try {
+
+            FileOutputStream outStream = openFileOutput(fileName, Context.MODE_PRIVATE);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+
+            outStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "失败。", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        Toast.makeText(this, "成功。", Toast.LENGTH_SHORT).show();
+        return true;
+    }
 
 
 

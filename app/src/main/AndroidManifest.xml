@@ -20,9 +20,10 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".RhythmCreateActivity" />
         <activity android:name=".AddRhythmFinalActivity" />
-        <activity android:name=".RhythmDetailActivity" />
+        <activity android:name=".RhythmDetailActivity"/>
         <activity android:name=".RhythmPureEditActivity" />
-        <activity android:name=".RhythmOverallEditActivity" />
+        <activity android:name=".RhythmOverallEditActivity"
+            android:windowSoftInputMode="adjustPan"/>
         <activity android:name=".AllRhythmsActivity" />
         <activity android:name=".RhythmRvBassActivity" />
         <activity android:name=".ThreadRvBassActivity" />

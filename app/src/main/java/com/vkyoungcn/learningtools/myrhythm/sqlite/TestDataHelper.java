@@ -16,7 +16,7 @@ public class TestDataHelper {
         Rhythm rhythm = new Rhythm();
 //        Log.i(TAG, "populateRhythm: rhm:"+rhythm.toString());
         rhythm.setTitle(String.valueOf(System.currentTimeMillis()%1000000));
-        rhythm.setDescription(String.valueOf(System.currentTimeMillis()));
+        rhythm.setDescription("这是一段测试节奏数据。/n测试说明——随机文字：统计分析与行业应用案例解析");
 
         long currentTime = System.currentTimeMillis();
         rhythm.setCreateTime(currentTime);
