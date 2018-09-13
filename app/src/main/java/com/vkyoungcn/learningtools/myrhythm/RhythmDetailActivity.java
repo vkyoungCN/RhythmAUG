@@ -1,15 +1,23 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.DialogFragment;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmSingleLineView;
+import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmToBitmap;
 import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
+import com.vkyoungcn.learningtools.myrhythm.fragments.SelectFileNameDiaFragment;
+import com.vkyoungcn.learningtools.myrhythm.fragments.ShowBitmapDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_LYPH_EDIT;
@@ -114,7 +122,43 @@ private static final String TAG = "RhythmDetailActivity";
         super.initUiData();
 //        Log.i(TAG, "initUiData: model="+model.toString());
         rhythmView.setRhythmViewData((RhythmBasedCompound) model);//比默认的尺寸（18/20/20）稍大
-        Log.i(TAG, "initUiData: rh.cs="+((RhythmBasedCompound) model).getCodeSerialByte().toString());
+//        Log.i(TAG, "initUiData: rh.cs="+((RhythmBasedCompound) model).getCodeSerialByte().toString());
     }
+
+
+    public void captureTest(View view){
+        //先测试单行模式的生成情况，实际使用时要按折行生成
+
+        Bitmap bitmap = convertViewToBitmap(rhythmView);
+
+        //dfg中显示所生成的图片
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        Fragment prev = getFragmentManager().findFragmentByTag("BITMAP_SHOW");
+
+        if (prev != null) {
+            Toast.makeText(getApplicationContext(), "Old DialogFg still there, removing first...", Toast.LENGTH_SHORT).show();
+            transaction.remove(prev);
+        }
+        DialogFragment dfg = ShowBitmapDiaFragment.newInstance(bitmap);
+        dfg.show(transaction, "BITMAP_SHOW");
+
+
+    }
+
+    public  Bitmap convertViewToBitmap(View view){
+//        view.buildDrawingCache();
+//        return view.getDrawingCache();
+
+        RhythmToBitmap rhythmToBitmap = new RhythmToBitmap(this);
+        rhythmToBitmap.setDataAndParams((RhythmBasedCompound) model,1080);
+
+        Bitmap bitmap = rhythmToBitmap.makeBitmap();
+        Log.i(TAG, "convertViewToBitmap: bitmap created="+bitmap);
+        return bitmap;
+    }
+
+
+
+
 
 }

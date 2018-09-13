@@ -956,52 +956,72 @@ public class BaseRhythmView extends View {
 
     public float standardLengthOfSection( ArrayList<Byte> codesInSingleSection) {
         //是按标准单位宽度计算的本节所需宽度，在与控件宽度比较之后，(可能)会进行压缩或扩展
+        return lengthCalculateForContinuousCodes(codesInSingleSection,unitWidth);
+    }
 
+
+    public float lengthCalculateForContinuousCodes(ArrayList<Byte> codesInContinue,float unitWidth){
         float requiredSectionLength = 0;
-        int totalValue = 0;//还是需要计算时值的，因为需要在节拍后面增加节拍间隔。
+        for (byte b : codesInContinue) {
+            //大于120的是特殊记号，不绘制为实体单元，不记录长度
+            //但是均分多连音收尾后可以稍加一个小间隔
+            //111是前缀音，可以占半宽
+            //本方法旧版按时值累加计算分拍（后来编码改进，增记126、127后得以改进为当前版本）
 
-        for (byte b : codesInSingleSection) {
-            //大于112的是特殊记号，不绘制为实体单元，不记录长度
-            if(b>73&&b<112){
+            if(b<120&&b>111){
+                //弧结尾
+                requiredSectionLength += (unitWidth*0.15);//旧版无
+            }else if(b==111){
+                requiredSectionLength += (unitWidth*0.5);
+            }else if(b>73&&b<111){
                 //均分多连音
-                requiredSectionLength += (unitWidth /2)*(b%10);
-                //时值计算
-                totalValue += valueOfBeat;
-            }else if(b==16||b==8||b==4||b==2) {
+                requiredSectionLength += (unitWidth*0.4)*(b%10);//旧版0.5
+            }else if(b==16||b==8||b==4||b==2||b==0|b==-2||b==-4||b==-8||b==-16) {
                 //是不带附点的音符,占据标准宽度
                 requiredSectionLength+= unitWidth;
-                //时值计算
-                totalValue+=b;
+            }else if(b==24||b==12||b==6||b==3||b==-3||b==-6||b==-12||b==-24){
+                //带附点，标准宽*1.5
+                requiredSectionLength += unitWidth *1.3;
+            }
+/*
+else if(b==16||b==8||b==4||b==2) {
+                //是不带附点的音符,占据标准宽度
+                requiredSectionLength+= unitWidth;
             }else if (b==0){
                 //延长音，且不是均分多连音；即
                 requiredSectionLength+= unitWidth;
-                //时值计算，独占节拍的延长音
-                totalValue+=valueOfBeat;
             }else if (b==-2||b==-4||b==-8||b==-16){
                 //空拍（不带附点时）也占标准宽
                 requiredSectionLength+= unitWidth;
-                //时值计算：空拍带时值，时值绝对值与普通音符相同
-                totalValue-=b;
             }else if(b==24||b==12||b==6||b==3){
                 //带附点，标准宽*1.5
                 requiredSectionLength += unitWidth *1.5;
-                //时值计算
-                totalValue+=b;
             }else if(b==-3||b==-6||b==-12||b==-24){
                 //带附点，标准宽*1.5
                 requiredSectionLength += unitWidth *1.5;
-                //时值计算
-                totalValue-=b;
             }
-
+*/
             //拍间隔
-            if(totalValue%valueOfBeat==0){
+            if(b==126){
                 //到达一拍末尾
-                //另：大附点（基本音符附加附点）的宽度不再额外加入拍间隔（因为很难计算、逻辑不好处理；而且附点本身有一个间隔，绘制效果应该也还可以）
                 requiredSectionLength+=beatGap;
             }
         }
         return requiredSectionLength;
+    }
+
+    public float finalLengthOfSections( ArrayList<Integer> sectionIndexes,float unitWidthChanged) {
+        //是按标准单位宽度计算的本节所需宽度，在与控件宽度比较之后，(可能)会进行压缩或扩展
+        ArrayList<Byte> codesInSeveralSections = new ArrayList<>();
+        if(sectionIndexes.isEmpty()){
+            return 0f;
+        }
+        for(int i:sectionIndexes){
+            codesInSeveralSections.addAll(codesInSections.get(i));
+        }
+
+        return lengthCalculateForContinuousCodes(codesInSeveralSections,unitWidthChanged);
+
     }
 
     //在基本dUs信息计算完毕后调用，要根据dUs的已有信息才能处理

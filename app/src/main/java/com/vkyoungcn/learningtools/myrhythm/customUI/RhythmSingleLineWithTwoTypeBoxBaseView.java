@@ -237,8 +237,8 @@ public class RhythmSingleLineWithTwoTypeBoxBaseView extends RhythmSingleLineView
                 }
             }
         }
-        tempDuSectionIndex =-1;
-        tempDuUnitIndex = -1;
+        tempDuSectionIndex =0;
+        tempDuUnitIndex = 0;//调试阶段返回-1使问题暴露化，主调试阶段完成改返回0以提升健壮。
 //        return ;//找不到
     }
 

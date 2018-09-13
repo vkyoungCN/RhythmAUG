@@ -243,5 +243,6 @@
     <string name="test">测试</string>
     <string name="plh_fileChose">选定：%1$s，请点击确定→</string>
     <string name="chooseFile">备份文件选择</string>
+    <string name="actionWitdCaution">恢复操作以不可逆方式直接覆盖数据，请谨慎操作！</string>
 
 </resources>

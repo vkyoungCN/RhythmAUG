@@ -45,7 +45,7 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
             return;
         }
         File[] files = privateFile.listFiles();
-        Log.i(TAG, "localRecover: file.length="+files.length);
+//        Log.i(TAG, "localRecover: file.length="+files.length);
         for (File file : files) {
             if (file.getName().contains(".vbk")) {
                 fileNamesForChoose.add(file.getName());
@@ -163,6 +163,38 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
     }
 
 
+    public void privateRecovery(String sourceFileName) {
+//        File sourceFile;
+       /* try {
+            sourceFile = new File(getFilesDir().getPath()+sourceFileName) ;
+        } catch (Exception e) {
+            e.printStackTrace();
+//            Log.i(TAG, "localRecover: wrong.");
+            return;
+        }*/
+        File dbFile = getDatabasePath("MyRhythm.db");
+
+        try {
+            FileInputStream inStream = new FileInputStream(getFilesDir().getPath()+"/"+sourceFileName);
+            FileOutputStream outStream = new FileOutputStream(getDatabasePath("MyRhythm.db").getPath());
+            //如果用openFileOutput，要求路径中不能有分隔符/
+
+            byte[] buff = new byte[1024];
+            int n = 0;
+            while ((n = inStream.read(buff)) > 0) {
+                outStream.write(buff, 0, n);
+            }
+            inStream.close();
+            outStream.close();
+            Toast.makeText(this, "成功。", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+
     public boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) {
@@ -184,6 +216,8 @@ StorageManager sm = (StorageManager)getSystemService(Context.STORAGE_SERVICE);
     public void onButtonClickingDfgInteraction(int dfgType, Bundle data) {
         switch (dfgType){
             case SELECT_FILE:
+                String fileName = data.getString("FILE_NAME");
+                privateRecovery(fileName);
 
                 break;
         }
