@@ -2,6 +2,7 @@ package com.vkyoungcn.learningtools.myrhythm;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
@@ -14,7 +15,7 @@ import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_OVERALL_EDIT_CANCEL;
 
 public class LyricEditActivity extends BaseModelEditActivity {
-
+    private static final String TAG = "LyricEditActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,6 +37,7 @@ public class LyricEditActivity extends BaseModelEditActivity {
 
     @Override
     public void confirmAndBack(View view) {
+        Log.i(TAG, "confirmAndBack: ");
         super.confirmAndBack(view);
         //直接使用基类即可，会转而调用本类的分支方法实现
         // （由于布局文件中需要相应的方法，所以这里必须写一遍）

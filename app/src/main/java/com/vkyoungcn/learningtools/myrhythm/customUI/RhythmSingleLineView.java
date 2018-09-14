@@ -178,6 +178,7 @@ public class RhythmSingleLineView extends BaseRhythmView {
         //所以在此重写了主initDU
 //        Log.i(TAG, "initDrawingUnits: useLy1"+useLyric_1);
         initDrawingUnits_step2();
+
         if(!isTriggerFromSC){
             invalidate();
         }//onSC方法返回后会自动调用onD因而没必要调用invalidate方法。

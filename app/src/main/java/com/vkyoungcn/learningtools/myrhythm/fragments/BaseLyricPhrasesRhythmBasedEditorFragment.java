@@ -135,6 +135,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
         ly_editor_LE = rootView.findViewById(R.id.rh_editor_LE);
         ly_editor_LE.setRhythmViewData(rhythmBasedCompound, isModifyPrimary);
         ly_editor_LE.setCodeChangeListener(this);
+//        ly_editor_LE.checkBoxInitPosition();【空指针错】]
         ly_editor_LE.requestFocus();
 
         tv_lastSection = rootView.findViewById(R.id.tv_lastPhrase_LE);
@@ -251,7 +252,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
                 int resultNum = csRhythmHelper.addPhrasesTagAfter(currentUnitCsIndex);
                 if(resultNum<0){
                     Toast.makeText(getContext(), "Something goes wrong...", Toast.LENGTH_SHORT).show();
-//                    Log.i(TAG, "onClick: resultNum="+resultNum);
+                    Log.i(TAG, "onClick: resultNum="+resultNum);
                 }else {
                     Toast.makeText(getContext(), "成功。", Toast.LENGTH_SHORT).show();
                     ly_editor_LE.codeChangedReDraw();
@@ -536,8 +537,9 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
     }
 
     @Override
-    public void onCodeChanged() {
+    public void onCodeChanged(int indexInCs) {
 //        int designSizeCurrentPhase = checkCurrentPhraseDesignSize(ly_editor_LE.getCurrentDuCsIndex());
+        currentUnitCsIndex = indexInCs;
         tv_bottomInfoAmount.setText(String.format(getResources().getString(R.string.plh_currentAmount),ly_editor_LE.getCurrentPhaseRealSize()));
     }
 

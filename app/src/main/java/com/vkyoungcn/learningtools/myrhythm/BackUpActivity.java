@@ -18,6 +18,7 @@ import com.vkyoungcn.learningtools.myrhythm.helper.BackupTask;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -129,11 +130,16 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
         // Get the directory for the user's public directory.
         File file = new File(Environment.getExternalStoragePublicDirectory(//共享/外部的顶层目录
                 Environment.DIRECTORY_DOWNLOADS), docName);
+        Log.i(TAG, "getPublicDocumentStorageDir: file ext path="+file.getPath());
         //如果getExternalStorageDirectory，则是获取SD目录（？区别，待）；
 //        File file = new File("/sdcard/aaa");
-            if (!file.mkdirs()) {//mkdirs()
+        try {
+            if (!file.createNewFile()) {//mkdirs()
                 Log.e(TAG, "Directory not created");
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return file;
     }
 
@@ -162,6 +168,34 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
 
     }
 
+
+    public void sdBackUp(View view) {
+        SimpleDateFormat sdFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        Date date = new Date(System.currentTimeMillis());
+        String timeSuffix = sdFormat.format(date)+".vbk";
+        String fileName = "dbBack"+timeSuffix;
+
+        File dbFile = getDatabasePath("MyRhythm.db");
+
+        ;
+
+        try {
+            FileInputStream inStream = new FileInputStream(dbFile);
+            FileOutputStream outStream = new FileOutputStream(getPublicDocumentStorageDir(fileName));
+//            FileOutputStream outStream = openFileOutput(fileName, Context.MODE_PRIVATE);
+
+            byte[] buff = new byte[1024];
+            int n = 0;
+            while ((n = inStream.read(buff)) > 0) {
+                outStream.write(buff, 0, n);
+            }
+            inStream.close();
+            outStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
 
     public void privateRecovery(String sourceFileName) {
 //        File sourceFile;

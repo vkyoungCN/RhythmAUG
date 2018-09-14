@@ -32,11 +32,17 @@
         android:layout_height="1dp"
         android:background="@color/myRhythm_light_green"
         />
-    <com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView
-        android:id="@+id/rhView_ARFA"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="120dp"
-        />
+        >
+        <com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView
+            android:id="@+id/rhView_ARFA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
+
+    </ScrollView>
     <!--横分割线-->
     <TextView
         android:layout_width="match_parent"
@@ -178,7 +184,7 @@
             android:layout_below="@+id/description_top"
             android:layout_above="@+id/tv_confirm_ARFA"
             android:gravity="center"
-            android:text="@string/descriptionHere"
+            android:hint="@string/descriptionHere"
             />
         <TextView
             android:id="@+id/tv_confirm_ARFA"

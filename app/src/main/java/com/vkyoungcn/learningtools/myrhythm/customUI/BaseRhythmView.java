@@ -255,7 +255,7 @@ public class BaseRhythmView extends View {
     protected void onSizeChanged(int w, int h, int old_w, int old_h) {
         sizeChangedHeight = h;
         sizeChangedWidth = w;
-        Log.i(TAG, "onSizeChanged: h="+h+",w="+w);
+//        Log.i(TAG, "onSizeChanged: h="+h+",w="+w);
         if(codesInSections!=null&&!codesInSections.isEmpty()){
             //如果数据源此时非空，则代表数据源的设置早于onSC，也即数据源设置方法中的绘制信息初始化方法被中止，
             //需要再次再次初始化绘制信息（但是传入isTriggerFromSC标记，只初始绘制信息不进行刷新）
@@ -292,7 +292,7 @@ public class BaseRhythmView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        Log.i(TAG, "onDraw: c.h="+canvas.getHeight());
+//        Log.i(TAG, "onDraw: c.h="+canvas.getHeight());
         if(checkEmptyAndDraw(canvas)){
             return;
             //是空的，绘制一个空占位线条然后直接退出绘制即可。
@@ -534,7 +534,7 @@ public class BaseRhythmView extends View {
         initDrawingUnits_step2();
 
         if(!isTriggerFromSC){
-            Log.i(TAG, "initDrawingUnits: isTrigger = false");
+//            Log.i(TAG, "initDrawingUnits: isTrigger = false");
             invalidate();
         }//onSC方法返回后会自动调用onD因而没必要调用invalidate方法。
         callWhenReMeasureIsNeeded();

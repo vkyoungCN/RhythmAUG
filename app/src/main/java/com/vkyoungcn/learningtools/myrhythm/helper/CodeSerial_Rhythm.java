@@ -862,37 +862,59 @@ public class CodeSerial_Rhythm {
     //被除最后一个位置外的区域覆盖
     public boolean checkCurveFrontCovering(int index){
         int duSpan = 0;//【这个span是codeSerial的跨度，126等也要计入其内！】
-        int curveEndIndex = -1; //初始值采用不可能值
-        int curveRearStartIndex = -1;
-        int skipNum = 0;
         int endIndex = Math.min(codeSerial.size(),index+32);
-
+[本方法已修改，其他方法应参照此算法做修改]
         //找弧结束标记
         for(int i=index;i<endIndex;i++){
             //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
             byte b = codeSerial.get(i);
-            if(b >125){
-                skipNum++;
-            }else if(b>111&&b<125){
+            if(b>111&&b<125){
                 //112~125是连音弧结束标记
-                duSpan = b-101;
+                duSpan = b-110;
 
-                //还要额外对连音弧与其所属音符code之间的skip数量做计算
+                //计算连音弧的codeSpan(从弧尾标记到弧首的音符对应cs位置)；转换为连音弧弧首音符的索引
+                //并计算弧末最后一个音符的对应cs索引
                 int skipNum2 = 0;
+                int skipNum3 = 0;
+                int duAmount = 0;
+
                 for(int j=i;j>=index;j--){
                     byte b2 = codeSerial.get(j);
-                    if(b2<25){
-                        break;
+                    if(b2<25&&b2>0){
+                        duAmount++;
+                        if(duAmount==duSpan){
+                            break;
+                        }
                     }
                     if(b2>120){
                         skipNum2++;
                     }
                 }
-                curveEndIndex = i-1-skipNum2;//结尾index向前调整（原就是i）以让出最后一个位置(编码位置)。
-                curveRearStartIndex = i-duSpan-skipNum;//编码的跨度，需要再加上无dU的编码数（由于向前，实际是减去）。
-                return ((curveRearStartIndex<=index)&&(curveEndIndex>index));
+
+                //检测倒数第二个音符与弧尾标记之间的skipNum（当然也包括弧尾本身）
+                int amount = 0;
+                for(int j=i;j>=index;j--){
+                    byte b2 = codeSerial.get(j);
+                    if(b2<25&&b2>0){
+                        amount++;
+                        if(amount==2) {
+                            break;
+                        }
+                    }
+                    if(b2>120){
+                        skipNum3++;
+                    }
+                }
+
+                int codeSpan = duSpan+skipNum2;
+                int curveStartUnitIndex = i-codeSpan;
+                int curveEndSecondUnitIndex = i-skipNum3-1;//（还有那个最后的实体音符本身也要加上）
+
+                Log.i(TAG, "checkCurveFrontCovering: duSpan="+duSpan);
+                return ((curveStartUnitIndex<=index)&&(curveEndSecondUnitIndex>=index));
                 //前提是不允许多层连音弧。
             }
+            break;
         }
         return false;
     }
@@ -1921,7 +1943,7 @@ public class CodeSerial_Rhythm {
         //未退出，说明条件符合可以添加
         //在当前code之后（紧邻）
         codeSerial.add(currentIndex+1,(byte)125);
-        Log.i(TAG, "addPhrasesTagAfter: cs="+codeSerial);
+//        Log.i(TAG, "addPhrasesTagAfter: cs="+codeSerial);
 
         return currentIndex;
     }
@@ -1932,7 +1954,7 @@ public class CodeSerial_Rhythm {
         byte code = codeSerial.get(currentIndex+1);
         if(code == 125){
             codeSerial.remove(currentIndex+1);
-            Log.i(TAG, "deletePhrasesTagAt: cs="+codeSerial.toString());
+//            Log.i(TAG, "deletePhrasesTagAt: cs="+codeSerial.toString());
             return currentIndex;
         }else {
             return -4;//后面（紧邻）不是结尾【现在添加逻辑是紧邻添加的。】

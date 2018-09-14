@@ -95,7 +95,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         // need to pass relevant arguments related to the event triggered
 
         /* 输入一个字符时触发 */
-        void onCodeChanged();
+        void onCodeChanged(int indexInCs);//改变后，光标可能移动，将移动后的光标位置传递给调用方
 
     }
 
@@ -235,7 +235,8 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
 
         }
         primaryPhrases.set(phraseIndex-1,tempSbd.toString());
-        mListener.onCodeChanged();
+        mListener.onCodeChanged(moveBoxNextWord());
+        invalidate();
     }
 
 
@@ -250,11 +251,104 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         if(currentBoxIndexInPhrase<tempSbd.length()){
             //安全，删除
             tempSbd.deleteCharAt(currentBoxIndexInPhrase);
-
+            primaryPhrases.set(phraseIndex-1,tempSbd.toString());
+            mListener.onCodeChanged(moveBoxLastWord());
+            invalidate();
         }//不足时删除无意义，无反应
+    }
 
-        primaryPhrases.set(phraseIndex-1,tempSbd.toString());
-        mListener.onCodeChanged();
+    public int moveBoxLastWord(){
+        //向前移动一个字的位置（在乐句内，暂定不跨句）
+        //如果当前单元不是PmStart，则移动（要求格式一定严谨）
+        if(drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).phraseMark!=PHRASE_START){
+            return checkLastTillAvailable(blueBoxSectionIndex,blueBoxUnitIndex);
+        }
+
+        //如果已到句末，直接不移动。
+        return drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).indexInCodeSerial;
+        //当前值，无移动。
+    }
+
+
+    int checkLastTillAvailable(int currentSectionIndex,int currentUnitIndex){
+        if(currentUnitIndex>0){
+            //可以在节内移动
+            int tempUnitIndex = currentUnitIndex-1;
+            if(drawingUnits.get(currentSectionIndex).get(tempUnitIndex).phraseMark!=PHRASE_EMPTY){
+                blueBoxSectionIndex = currentSectionIndex;
+                blueBoxUnitIndex = tempUnitIndex;
+                //就是它了
+                wordInPhraseIndex--;
+                //phraseIndex不调整（原则上不跨句。）
+                return drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).indexInCodeSerial;
+            }else {
+                checkLastTillAvailable(currentSectionIndex,tempUnitIndex);
+            }
+        }else if(currentSectionIndex>0) {//要跨节，可以跨节
+            int tempSectionIndex = blueBoxSectionIndex-1;
+            int tempUnitIndex = drawingUnits.get(tempSectionIndex).size()-1;
+            if(drawingUnits.get(tempSectionIndex).get(tempUnitIndex).phraseMark!=PHRASE_EMPTY){
+                blueBoxSectionIndex = tempSectionIndex;
+                blueBoxUnitIndex = tempUnitIndex;
+
+                wordInPhraseIndex--;
+                return drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).indexInCodeSerial;
+            }else {
+                checkLastTillAvailable(tempSectionIndex,tempUnitIndex);
+            }
+
+        }
+
+        return drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).indexInCodeSerial;
+        //当前值，无移动。
+
+    }
+
+
+
+    public int moveBoxNextWord(){
+        //向后移动一个字的位置（在乐句内，暂定不跨句）
+        //如果当前单元不是PmEnd，则向后移动（要求格式一定严谨，如果后面没End就惨了）
+        if(drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).phraseMark!=PHRASE_END){
+            return checkNextTillAvailable(blueBoxSectionIndex,blueBoxUnitIndex);
+        }
+
+        //如果已到句末，直接不移动。
+        return drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).indexInCodeSerial;
+        //当前值，无移动。
+    }
+
+    int checkNextTillAvailable(int currentSectionIndex,int currentUnitIndex){
+        if(currentUnitIndex<drawingUnits.get(currentSectionIndex).size()-1){
+            //可以在节内移动
+            int tempUnitIndex = currentUnitIndex+1;
+            if(drawingUnits.get(currentSectionIndex).get(tempUnitIndex).phraseMark!=PHRASE_EMPTY){
+                blueBoxSectionIndex = currentSectionIndex;
+                blueBoxUnitIndex = tempUnitIndex;
+                //就是它了
+                wordInPhraseIndex++;
+                //phraseIndex不调整（原则上不跨句。）
+                return drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).indexInCodeSerial;
+            }else {
+                checkNextTillAvailable(currentSectionIndex,tempUnitIndex);
+            }
+        }else if(currentSectionIndex<drawingUnits.size()-1) {//要跨节，可以跨节
+            int tempUnitIndex = 0;
+            int tempSectionIndex = blueBoxSectionIndex+1;
+            if(drawingUnits.get(tempSectionIndex).get(tempUnitIndex).phraseMark!=PHRASE_EMPTY){
+                blueBoxSectionIndex = tempSectionIndex;
+                blueBoxUnitIndex = tempUnitIndex;
+
+                wordInPhraseIndex++;
+                return drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).indexInCodeSerial;
+            }else {
+                checkNextTillAvailable(tempSectionIndex,tempUnitIndex);
+            }
+
+        }
+
+        return drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).indexInCodeSerial;
+        //当前值，无移动。
 
     }
 
@@ -276,14 +370,17 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         float bkBottom_Y;
         for(ArrayList<DrawingUnit> duList:drawingUnits){
             for (DrawingUnit drawingUnit :duList) {
-                bkTop_Y = drawingUnit.bottomNoLyric+4;
-                bkBottom_Y = drawingUnit.bottomNoLyric+unitHeight*2-4;
+                if(drawingUnit.phraseMark != PHRASE_EMPTY) {
+//                    Log.i(TAG, "onDraw: du.pmk="+drawingUnit.phraseMark+",code="+drawingUnit.code);
+                    bkTop_Y = drawingUnit.bottomNoLyric + 4;
+                    bkBottom_Y = drawingUnit.bottomNoLyric + unitHeight * 2 - 4;
 
-                canvas.drawRect(drawingUnit.left+4, bkTop_Y, drawingUnit.right-4, bkBottom_Y, unEmptyUnitBkgPaint);
-                //左右留出间隔
-                if(drawingUnit.phraseMark==PHRASE_END){//绘制容量数字
+                    canvas.drawRect(drawingUnit.left + 4, bkTop_Y, drawingUnit.right - 4, bkBottom_Y, unEmptyUnitBkgPaint);
+                    //左右留出间隔
+                    if (drawingUnit.phraseMark == PHRASE_END) {//绘制容量数字
 //                    Log.i(TAG, "onDraw: du End");
-                    canvas.drawText(String.valueOf(drawingUnit.orderNumInPharse),drawingUnit.codeCenterX,drawingUnit.bottomNoLyric+2.8f*unitHeight, phraseNumPaint);
+                        canvas.drawText(String.valueOf(drawingUnit.orderNumInPharse), drawingUnit.codeCenterX, drawingUnit.bottomNoLyric + 2.8f * unitHeight, phraseNumPaint);
+                    }
                 }
             }
         }
@@ -417,6 +514,26 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             //当运行到尺寸确定的方法（onSc）时，会对数据情况进行检查，如果有数据则会触发再次计算。
         }
         initDrawingUnits(false);
+
+    }
+
+
+    @Override
+    void initDrawingUnits(boolean isTriggerFromSC) {
+        super.initDrawingUnits(isTriggerFromSC);
+//        Log.i(TAG, "initDrawingUnits: ");
+        checkBoxInitPosition();
+    }
+
+    //默认将box二维索引设为0，0但有时候首位是不可承载音符，需要调整
+    public void checkBoxInitPosition(){
+        if(drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex).phraseMark==PHRASE_EMPTY){
+            //要向后调整
+            int csIndex = checkNextTillAvailable(blueBoxSectionIndex,blueBoxUnitIndex);//由于句计数器默认1初始，应不需改。
+//            Log.i(TAG, "checkBoxInitPosition: bs="+blueBoxSectionIndex+",bu="+blueBoxUnitIndex);
+            mListener.onCodeChanged(csIndex);
+            invalidate();
+        }
 
     }
 
@@ -575,7 +692,6 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         tempDuSectionIndex =-1;
         tempDuUnitIndex = -3;
     }
-
 
 
 

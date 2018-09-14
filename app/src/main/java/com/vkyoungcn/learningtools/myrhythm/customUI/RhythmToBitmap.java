@@ -176,8 +176,8 @@ public class RhythmToBitmap extends RhythmView {
 
         if(!strDescription.isEmpty()){
 //            Log.i(TAG, "initStrings: (sizeChangedWidth-2*padding)="+(sizeChangedWidth-2*padding));
-            myStaticLayout = new StaticLayout(strDescription,descriptionPaint,(int)(sizeChangedWidth-2*padding),
-                    Layout.Alignment.ALIGN_CENTER,1f,0f,false);
+            myStaticLayout = new StaticLayout(strDescription,descriptionPaint,900,
+                    Layout.Alignment.ALIGN_NORMAL,1f,0f,true);
         }
 
     }
