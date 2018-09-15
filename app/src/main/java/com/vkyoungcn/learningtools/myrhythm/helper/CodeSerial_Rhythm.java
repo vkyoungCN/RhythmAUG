@@ -804,60 +804,6 @@ public class CodeSerial_Rhythm {
         return 3077;
     }
 
-    /* 辅助方法*/
-    //检测当前符号是否位于连音弧覆盖之下【后有升级版，检测指定区域是否在（偏差调整后的）弧的覆盖之下】
-  /*  public boolean checkCurveCovering(int index){
-        int duSpan = 0;//【这个span是codeSerial的跨度，126等也要计入其内！】
-        int curveEndIndex = -1; //初始值采用不可能值
-        int curveStartIndex = -1;
-        int skipNum = 0;
-        int endIndex = Math.min(codeSerial.size(),index+32);
-        for(int i=index;i<endIndex;i++){
-            //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
-            byte b = codeSerial.get(i);
-            if(b >125){
-                skipNum++;
-            }else if(b>111&&b<125){
-                //112~125是连音弧结束标记
-                duSpan = b-110;
-//                Log.i(TAG, "checkCurveCovering: Curvel end index="+i+",span="+duSpan+",current index="+index);
-                curveEndIndex = i;//结尾index是curve结束标记所在位置(编码位置)。
-                curveStartIndex = i-duSpan-skipNum;//编码的跨度，需要再加上无dU的编码数（由于向前，实际是减去）。
-                //从end按span、skipNum计算start时，由于code位比du位多1，且span按du计，因而不必多减1【已实测。】
-//                Log.i(TAG, "checkCurveCovering: curve start index="+curveStartIndex+"curve end index="+curveEndIndex
-//                        +"current index="+index);
-                return ((curveStartIndex<=index)&&(curveEndIndex>index));
-                //前提是不允许多层连音弧。
-            }
-        }
-        return false;
-    }*/
-
-    //当前位置是否被弧跨（的非首位位置）覆盖（用在判断本位置的音符能否承载字词）【被升级后的区域方法取代】
-   /* public boolean checkCurveRearCovering(int index){
-        int duSpan = 0;//【这个span是codeSerial的跨度，126等也要计入其内！】
-        int curveEndIndex = -1; //初始值采用不可能值
-        int curveRearStartIndex = -1;
-        int skipNum = 0;
-        int endIndex = Math.min(codeSerial.size(),index+32);
-
-        //找弧的结尾
-        for(int i=index;i<endIndex;i++){
-            //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
-            byte b = codeSerial.get(i);
-            if(b >125){
-                skipNum++;
-            }else if(b>111&&b<125){
-                //112~125是连音弧结束标记
-                duSpan = b-109;//少减1（原来是-110）就是判断弧跨后半部（即非首位位置）
-                curveEndIndex = i;//结尾index是curve结束标记所在位置(编码位置)。
-                curveRearStartIndex = i-duSpan-skipNum;//编码的跨度，需要再加上无dU的编码数（由于向前，实际是减去）。
-                return ((curveRearStartIndex<=index)&&(curveEndIndex>index));
-                //前提是不允许多层连音弧。
-            }
-        }
-        return false;
-    }*/
 
     //检测指定区域是否在（偏差调整后的）弧的覆盖之下；
     // ①startIndex=endIndex时是点检测；②如果endUnitOffSet=x则是弧下最后x个音符不算在检测之内；
@@ -942,6 +888,13 @@ public class CodeSerial_Rhythm {
         //前提是不允许多层连音弧。
     }
 
+    public boolean checkCurveAreaCovering(int startIndex){
+        return checkCurveAreaCovering(startIndex,startIndex,0,0);//之前把旧代码全按新形参列表改了一遍，其实只需重载一下旧可以了……
+    }
+
+    public boolean checkCurveAreaCovering(int startIndex,int endIndex){
+        return checkCurveAreaCovering(startIndex,endIndex,0,0);//之前把旧代码全按新形参列表改了一遍，其实只需重载一下旧可以了……
+    }
 
     public ArrayList<Byte> getCurrentSection(int index){
         int startIndex= 0;
@@ -1060,30 +1013,7 @@ public class CodeSerial_Rhythm {
             codeSerial.set(nextRealIndex,(byte)valueOfBeat);//改为一个X
             return valueOfBeat;
         }
-         /*【原方案太复杂。】
-         byte next_1 = codeSerial.get(currentIndex+1);
-         if(next_1 < 111 ){
-             return 3017;//是其他实际音符
-         }else if(next_1<126){
-             return 3015;//连音弧结束标记（其实在调用前已经被其他分支排除了该可能）
-         }else if(next_1==126){
-             //后续编码位要求必须为126，然后分两种情况
-             if((codeSerial.get(currentIndex+2)==0)){
-                 //再后一个是0，延音符，符合
-                 codeSerial.set(currentIndex+2,(byte)valueOfBeat);//改为一个X
-                 return valueOfBeat;
-             }else if((codeSerial.get(currentIndex+2)==127)){
-                 if(currentIndex+2==codeSerial.size()-1){
-                     //已到末尾
-                     return 3099;
-                 }else if(codeSerial.get(currentIndex+3)==0){
-                         //节尾127后是延音符【由于简化设计，暂时允许节首（非全列第一时）出现 - 】
-                         codeSerial.set(currentIndex + 3, (byte) valueOfBeat);//改为一个X
-                         return valueOfBeat;
-                     }
-                 }
 
-         }*/
          return 3018;//未知错误，所有条件无一符合
      }
 
@@ -1837,23 +1767,7 @@ public class CodeSerial_Rhythm {
         }
         //循环完了都没找到则是最后一个了
         return true;
-/*
-        int endIndexOfThisSection = -1;
-        for(int i=generalCurrentIndex; i<codeSerial.size();i++){
-            if(codeSerial.get(i)==127){
-                //本节结尾
-                endIndexOfThisSection = i;
-                break;
-            }
-        }
-        //本节一定有节尾127编码，否则是错误的。（是否要考虑错误处理？）
-        for(int i=endIndexOfThisSection; i<codeSerial.size();i++){
-            if(codeSerial.get(i)<110){
-                //有普通音符
-                return false;
-            }
-        }
-*/
+
     }
 
 
@@ -1986,6 +1900,5 @@ public class CodeSerial_Rhythm {
 
 
     }
-
 
 }

@@ -465,7 +465,8 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             return;
             //当运行到尺寸确定的方法（onSc）时，会对数据情况进行检查，如果有数据则会触发再次计算。
         }
-        initDrawingUnits(false);
+        new Thread(new CalculateDrawingUnits()).start();
+//        initDrawingUnits(false);
     }
 
     @Override
@@ -489,7 +490,8 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             return;
             //当运行到尺寸确定的方法（onSc）时，会对数据情况进行检查，如果有数据则会触发再次计算。
         }
-        initDrawingUnits(false);
+        new Thread(new CalculateDrawingUnits()).start();
+//        initDrawingUnits(false);
     }
 
     @Override
@@ -513,15 +515,16 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             return;
             //当运行到尺寸确定的方法（onSc）时，会对数据情况进行检查，如果有数据则会触发再次计算。
         }
-        initDrawingUnits(false);
+        new Thread(new CalculateDrawingUnits()).start();
+//        initDrawingUnits(false);
 
     }
 
 
     @Override
-    void initDrawingUnits(boolean isTriggerFromSC) {
-        super.initDrawingUnits(isTriggerFromSC);
-//        Log.i(TAG, "initDrawingUnits: ");
+    void initDrawingUnits(boolean needReFresh) {
+        super.initDrawingUnits(needReFresh);
+//        Log.i(TAG, "initDrawingUnits:Of LEBORSLE.. ");
         checkBoxInitPosition();
     }
 

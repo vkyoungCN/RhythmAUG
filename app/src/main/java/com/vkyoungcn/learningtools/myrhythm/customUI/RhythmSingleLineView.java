@@ -173,13 +173,13 @@ public class RhythmSingleLineView extends BaseRhythmView {
     }
 
     @Override
-    void initDrawingUnits(boolean isTriggerFromSC){
+    void initDrawingUnits(boolean needReFresh){
         initDrawingUnits_step1(h_shiftedAmount);//因为要调用的方法虽然与基类同名但实际签名不同从而无法由基类直接调用。
         //所以在此重写了主initDU
 //        Log.i(TAG, "initDrawingUnits: useLy1"+useLyric_1);
         initDrawingUnits_step2();
 
-        if(!isTriggerFromSC){
+        if(needReFresh){
             invalidate();
         }//onSC方法返回后会自动调用onD因而没必要调用invalidate方法。
 
@@ -274,7 +274,7 @@ public class RhythmSingleLineView extends BaseRhythmView {
             slidingBarCenterBox = new RectF(middleX-5,padding-2,middleX+5,padding+slidingVerticalBarMedium+3);
 
         }
-
+        //【这个刷新可能要修改，这是在使用新线程绘制之前的事情】
         invalidate();//别忘了哦，这样才能绘制出去
     }
 
@@ -347,6 +347,7 @@ public class RhythmSingleLineView extends BaseRhythmView {
 
         //单次滑动结束，标志变量置否
         isSlidingModeOn = false;
+        //【这个刷新可能要修改，这是在使用新线程绘制之前的事情】
 
         invalidate();//别忘了哦，这样才能绘制出去
     }

@@ -147,7 +147,8 @@ public class RhythmSingleLineWithTwoTypeBoxBaseView extends RhythmSingleLineView
         //        codesInSections =newCodes2Dimension;//不传不行啊……并不能更新绘制结果（测试发现dus还改变了）
         this.codesInSections = RhythmHelper.codeParseIntoSections(bcRhythm.getCodeSerialByte(), rhythmType);
 //        Log.i(TAG, "codeChangedReDraw: cs in rhv="+bcRhythm.getCodeSerialByte());
-        initDrawingUnits(false);//【计划中两个子类：RhvSLEditor、LyricEditor都会对编码进行改变】
+        new Thread(new CalculateDrawingUnits()).start();
+//        initDrawingUnits(false);//【计划中两个子类：RhvSLEditor、LyricEditor都会对编码进行改变】
     }
 
     public void boxAreaChangedReDraw(int startIndex, int endIndex,boolean freeModeOn){
@@ -170,7 +171,7 @@ public class RhythmSingleLineWithTwoTypeBoxBaseView extends RhythmSingleLineView
             //判断是否超出绘制区
             checkAndShiftWhenOutOfUI(blueBoxSectionIndex,blueBoxUnitIndex);
         }
-        invalidate();
+        invalidate();//不涉及绘制信息单元列表的重新计算，可以直接重绘
     }
 
     public void boxMovedSuccessReDraw(int indexAfterMove,boolean saStart, boolean saEnd){

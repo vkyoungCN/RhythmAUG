@@ -431,7 +431,7 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                     realIndex = currentUnitIndex;
                 }
 
-                if(csRhythmHelper.checkCurveCovering(realIndex)){
+                if(csRhythmHelper.checkCurveAreaCovering(realIndex,realIndex,0,0)){
                     Toast.makeText(getContext(), "请先取消连音弧。", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -567,7 +567,7 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 break;
 
             case R.id.tv_toHaveSpot:
-                if(csRhythmHelper.checkAreaUnderCurve(selectStartIndex,selectEndIndex)){
+                if(csRhythmHelper.checkCurveAreaCovering(selectStartIndex,selectEndIndex,0,0)){
                     Toast.makeText(getContext(), "请先删除区域内的连音弧", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -641,7 +641,7 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 break;
 
             case R.id.tv_rwd16:
-                if(csRhythmHelper.checkAreaUnderCurve(selectStartIndex,selectEndIndex)){
+                if(csRhythmHelper.checkCurveAreaCovering(selectStartIndex,selectEndIndex,0,0)){
                     Toast.makeText(getContext(), "请先删除区域内的连音弧", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -689,7 +689,7 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 break;
 
             case R.id.tv_fwd16:
-                if(csRhythmHelper.checkAreaUnderCurve(selectStartIndex,selectEndIndex)){
+                if(csRhythmHelper.checkCurveAreaCovering(selectStartIndex,selectEndIndex,0,0)){
                     Toast.makeText(getContext(), "请先删除区域内的连音弧", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -744,7 +744,7 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 if(selectStartIndex!=selectEndIndex){
                     //是多个音符选中状态，新增操作
                     //判断是否符合
-                    if(csRhythmHelper.checkAreaUnderCurve(selectStartIndex,selectEndIndex)){
+                    if(csRhythmHelper.checkCurveAreaCovering(selectStartIndex,selectEndIndex,0,0)){
                         Toast.makeText(getContext(), "暂不允许层叠。用单点模式删除。", Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -765,7 +765,7 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                         realIndex = currentUnitIndex;
                     }
 //                    Log.i(TAG, "onClick: getCurrentSection="+ csRhythmHelper.getCurrentSection(realIndex).toString());
-                    if(csRhythmHelper.checkCurveCovering(realIndex)){
+                    if(csRhythmHelper.checkCurveAreaCovering(realIndex,realIndex,0,0)){
                         //删除
                         if(csRhythmHelper.removeCurve(realIndex,true)<3000){
                             rh_editor_EM.codeChangedReDraw();

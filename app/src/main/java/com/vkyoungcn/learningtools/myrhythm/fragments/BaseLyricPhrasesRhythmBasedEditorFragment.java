@@ -252,7 +252,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
                 int resultNum = csRhythmHelper.addPhrasesTagAfter(currentUnitCsIndex);
                 if(resultNum<0){
                     Toast.makeText(getContext(), "Something goes wrong...", Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "onClick: resultNum="+resultNum);
+//                    Log.i(TAG, "onClick: resultNum="+resultNum);
                 }else {
                     Toast.makeText(getContext(), "成功。", Toast.LENGTH_SHORT).show();
                     ly_editor_LE.codeChangedReDraw();

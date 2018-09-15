@@ -162,7 +162,8 @@ public class RhythmToBitmap extends RhythmView {
                 break;
         }
         // 以及此处改为true（强行关闭其刷新绘制）
-        initDrawingUnits(true);
+        new Thread(new CalculateDrawingUnits(false)).start();
+//        initDrawingUnits(true);
         initStrings(rhythmBasedCompound);
 
         //重设部分尺寸

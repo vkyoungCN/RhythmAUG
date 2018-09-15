@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -15,6 +17,7 @@ import com.vkyoungcn.learningtools.myrhythm.R;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 import com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper;
 
+import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -67,8 +70,9 @@ public class BaseRhythmView extends View {
      * （废弃）124乐句开始标志（虽然是“开始标记”，但也要位于音符之后）
      * */
     static final String TAG = "BaseRhythmView";
-
+    public static final int MESSAGE_REFRESH = 8501;
     Context mContext;
+//    Handler handler = new RhythmViewHandler(this);【使用postInvalidate则不需要Handler，直接线程中调用即可】
 
     RhythmBasedCompound bcRhythm; //数据源
     int rhythmType;//节拍类型（如4/4），会影响分节的绘制。【不能直接传递在本程序所用的节奏编码方案下的时值总长，因为3/4和6/8等长但绘制不同】
@@ -159,6 +163,52 @@ public class BaseRhythmView extends View {
     int generalColor_LightGray;
     int generalCharGray;
 
+    /*final static class RhythmViewHandler extends Handler {
+        final WeakReference<BaseRhythmView> activityWeakReference;
+
+        RhythmViewHandler(BaseRhythmView view) {
+            this.activityWeakReference = new WeakReference<>(view);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            BaseRhythmView rhythmView = activityWeakReference.get();
+            if (rhythmView != null) {
+                rhythmView.handleMessage(msg);
+            }
+        }
+    }
+
+    void handleMessage(Message message) {
+        switch (message.what){
+            case MESSAGE_REFRESH:
+                invalidate();
+
+                break;
+        }
+
+    }*/
+
+    public class CalculateDrawingUnits implements Runnable{
+        boolean needReFresh = false;
+
+        public CalculateDrawingUnits() {
+        }
+
+        public CalculateDrawingUnits(boolean needReFresh) {
+            this.needReFresh = needReFresh;
+        }
+
+        @Override
+        public void run() {
+            initDrawingUnits(false);//子类可以通过覆写该方法实现自定义行为
+
+            //不需要封装消息，直接调用线程刷新
+            if(needReFresh) {
+                postInvalidate();
+            }
+        }
+    }
 
     /* 构造器*/
     public BaseRhythmView(Context context) {
@@ -259,7 +309,8 @@ public class BaseRhythmView extends View {
         if(codesInSections!=null&&!codesInSections.isEmpty()){
             //如果数据源此时非空，则代表数据源的设置早于onSC，也即数据源设置方法中的绘制信息初始化方法被中止，
             //需要再次再次初始化绘制信息（但是传入isTriggerFromSC标记，只初始绘制信息不进行刷新）
-            initDrawingUnits(true);
+            new Thread(new CalculateDrawingUnits()).start();
+//            initDrawingUnits(true);
         }
         super.onSizeChanged(w, h, old_w, old_h);
     }
@@ -523,17 +574,18 @@ public class BaseRhythmView extends View {
             return;
             //当运行到尺寸确定的方法（onSc）时，会对数据情况进行检查，如果有数据则会触发再次计算。
         }
-        initDrawingUnits(false);
+        new Thread(new CalculateDrawingUnits()).start();
+//        initDrawingUnits(false);在线程中自动进行初始计算，计算完成后自动刷新
 
     }
 
-    void initDrawingUnits(boolean isTriggerFromSC){
+    void initDrawingUnits(boolean needReFresh){
 //        Log.i(TAG, "initDrawingUnits: cs="+co);
         initDrawingUnits_step1();
 
         initDrawingUnits_step2();
 
-        if(!isTriggerFromSC){
+        if(needReFresh){
 //            Log.i(TAG, "initDrawingUnits: isTrigger = false");
             invalidate();
         }//onSC方法返回后会自动调用onD因而没必要调用invalidate方法。
@@ -1293,12 +1345,14 @@ else if(b==16||b==8||b==4||b==2) {
     // 需要重新计算绘制信息
     public void zoomOut(){
         setSizeOfCodeAndUnit(codeSizeDip+=2,unitWidthDip+=2,unitHeightDip+=2);
-        initDrawingUnits(false);
+        new Thread(new CalculateDrawingUnits()).start();
+//        initDrawingUnits(false);
     }
 
     public void zoomIn(){
         setSizeOfCodeAndUnit(codeSizeDip-=2,unitWidthDip-=2,unitHeightDip-=2);
-        initDrawingUnits(false);
+        new Thread(new CalculateDrawingUnits()).start();
+//        initDrawingUnits(false);
     }
 
 }
