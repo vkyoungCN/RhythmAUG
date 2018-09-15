@@ -242,7 +242,7 @@ public class CodeSerial_Rhythm {
             return 3015;
         } else {
             //不能位于连音弧下方
-            if (checkCurveCovering(index)) {
+            if (checkCurveAreaCovering(index,index,0,0)) {
                 return 3016;
             }
 
@@ -299,7 +299,7 @@ public class CodeSerial_Rhythm {
     }
 
     public int changeAreaToDvd(int startIndex,int endIndex){
-        if(checkAreaUnderCurve(startIndex,endIndex)){
+        if(checkCurveAreaCovering(startIndex,endIndex,0,0)){
             return 3077;//被连音弧覆盖，退出。
         }
         //不必检测区域时值是否符合，调用方限定1整拍、2整拍，单点单拍三种情形
@@ -407,7 +407,7 @@ public class CodeSerial_Rhythm {
 
 
     public int changeAreaToBar(int startIndex,int endIndex){
-        if(checkAreaUnderCurve(startIndex,endIndex)){
+        if(checkCurveAreaCovering(startIndex,endIndex,0,0)){
             return 3077;//被连音弧覆盖，退出。
         }
         //不必检测区域时值是否符合，调用方限定1整拍、单点单拍情形
@@ -438,7 +438,7 @@ public class CodeSerial_Rhythm {
 
 
     public int replaceAreaToMultiDivided(int startIndex,int endIndex){
-        if(checkAreaUnderCurve(startIndex,endIndex)){
+        if(checkCurveAreaCovering(startIndex,endIndex,0,0)){
             return 3077;//被连音弧覆盖，退出。
         }
 
@@ -459,7 +459,7 @@ public class CodeSerial_Rhythm {
         return areaValue;
     }
 
-    public boolean checkAreaUnderCurve(int startIndex,int endIndex){
+    /*public boolean checkAreaUnderCurve(int startIndex,int endIndex){
         //检测内部
         for(int i=startIndex;i<=endIndex;i++){
             if(codeSerial.get(i)>111&&codeSerial.get(i)<125){
@@ -468,9 +468,9 @@ public class CodeSerial_Rhythm {
         }
 
         //检测后方
-        return checkCurveCovering(endIndex);
+        return checkCurveAreaCovering(endIndex);
 
-    }
+    }*/
 
 
 
@@ -513,7 +513,7 @@ public class CodeSerial_Rhythm {
                     //条件②满足，前一音符也是独占整拍
 
                    //最后一项条件：不允许位于连音弧内
-                   if(checkCurveCovering(index)){
+                   if(checkCurveAreaCovering(index,index,0,0)){
                        return 3016;//位于连音弧下，按【当前原则】不允许直接修改请先删除连音弧（后期可能做更精细的改进）
                    }
 
@@ -580,7 +580,7 @@ public class CodeSerial_Rhythm {
             return 3015;
         }
         //不能位于连音弧下方
-        if (checkCurveCovering(index)) {
+        if(checkCurveAreaCovering(index,index,0,0)){
             return 3016;
         }
 
@@ -630,7 +630,7 @@ public class CodeSerial_Rhythm {
         byte currentCode = codeSerial.get(index);
 
         //不能位于连音弧下方
-        if (checkCurveCovering(index)) {
+        if(checkCurveAreaCovering(index,index,0,0)){
             return 3077;
         }
 
@@ -683,7 +683,7 @@ public class CodeSerial_Rhythm {
             return 3015;
         } else {
             //不能位于连音弧下方
-            if (checkCurveCovering(index)) {
+            if(checkCurveAreaCovering(index,index,0,0)){
                 return 3016;
             }
 
@@ -738,7 +738,7 @@ public class CodeSerial_Rhythm {
         //主要是判断原音符的值
         byte currentCode = codeSerial.get(index);
             //不能位于连音弧下方
-            if (checkCurveCovering(index)) {
+        if(checkCurveAreaCovering(index,index,0,0)){
                 return 3077;
             }
 
@@ -805,8 +805,8 @@ public class CodeSerial_Rhythm {
     }
 
     /* 辅助方法*/
-    //检测当前符号是否位于连音弧覆盖之下
-    public boolean checkCurveCovering(int index){
+    //检测当前符号是否位于连音弧覆盖之下【后有升级版，检测指定区域是否在（偏差调整后的）弧的覆盖之下】
+  /*  public boolean checkCurveCovering(int index){
         int duSpan = 0;//【这个span是codeSerial的跨度，126等也要计入其内！】
         int curveEndIndex = -1; //初始值采用不可能值
         int curveStartIndex = -1;
@@ -831,10 +831,10 @@ public class CodeSerial_Rhythm {
             }
         }
         return false;
-    }
+    }*/
 
-    //当前位置是否被弧跨（的非首位位置）覆盖（用在判断本位置的音符能否承载字词）
-    public boolean checkCurveRearCovering(int index){
+    //当前位置是否被弧跨（的非首位位置）覆盖（用在判断本位置的音符能否承载字词）【被升级后的区域方法取代】
+   /* public boolean checkCurveRearCovering(int index){
         int duSpan = 0;//【这个span是codeSerial的跨度，126等也要计入其内！】
         int curveEndIndex = -1; //初始值采用不可能值
         int curveRearStartIndex = -1;
@@ -857,67 +857,91 @@ public class CodeSerial_Rhythm {
             }
         }
         return false;
-    }
+    }*/
 
-    //被除最后一个位置外的区域覆盖
-    public boolean checkCurveFrontCovering(int index){
+    //检测指定区域是否在（偏差调整后的）弧的覆盖之下；
+    // ①startIndex=endIndex时是点检测；②如果endUnitOffSet=x则是弧下最后x个音符不算在检测之内；
+    // ③如果frontUnitOffSet=x则是弧下开头x个音符不在检测之内（用于比如乐句检测，开头一个符号是可承载的。）
+    public boolean checkCurveAreaCovering(int startIndex,int endIndex,int frontUnitOffSet,int endUnitOffSet){
         int duSpan = 0;//【这个span是codeSerial的跨度，126等也要计入其内！】
-        int endIndex = Math.min(codeSerial.size(),index+32);
-[本方法已修改，其他方法应参照此算法做修改]
-        //找弧结束标记
-        for(int i=index;i<endIndex;i++){
-            //从当前（准备修改的目标位置）开始，向后遍历查找连音弧结尾
-            byte b = codeSerial.get(i);
-            if(b>111&&b<125){
-                //112~125是连音弧结束标记
-                duSpan = b-110;
+        int loopEndIndex = Math.min(codeSerial.size(),endIndex+32);//【基于当前的编码规则curveEnd位置向前最多跨越32个Code位置】
 
-                //计算连音弧的codeSpan(从弧尾标记到弧首的音符对应cs位置)；转换为连音弧弧首音符的索引
-                //并计算弧末最后一个音符的对应cs索引
-                int skipNum2 = 0;
-                int skipNum3 = 0;
-                int duAmount = 0;
+        int skipNum2 = 0;
+        int skipNum3 = 0;
+        int duAmount = 0;
 
-                for(int j=i;j>=index;j--){
-                    byte b2 = codeSerial.get(j);
-                    if(b2<25&&b2>0){
-                        duAmount++;
-                        if(duAmount==duSpan){
-                            break;
-                        }
-                    }
-                    if(b2>120){
-                        skipNum2++;
-                    }
-                }
+        int curveEndIndex = endIndex;
 
-                //检测倒数第二个音符与弧尾标记之间的skipNum（当然也包括弧尾本身）
-                int amount = 0;
-                for(int j=i;j>=index;j--){
-                    byte b2 = codeSerial.get(j);
-                    if(b2<25&&b2>0){
-                        amount++;
-                        if(amount==2) {
-                            break;
-                        }
-                    }
-                    if(b2>120){
-                        skipNum3++;
-                    }
-                }
 
-                int codeSpan = duSpan+skipNum2;
-                int curveStartUnitIndex = i-codeSpan;
-                int curveEndSecondUnitIndex = i-skipNum3-1;//（还有那个最后的实体音符本身也要加上）
-
-                Log.i(TAG, "checkCurveFrontCovering: duSpan="+duSpan);
-                return ((curveStartUnitIndex<=index)&&(curveEndSecondUnitIndex>=index));
-                //前提是不允许多层连音弧。
+        //检测内部是否有连音弧结束标记
+        for(int i=startIndex;i<=endIndex;i++){
+            if(codeSerial.get(i)>111&&codeSerial.get(i)<125){
+                return true;
             }
-            break;
         }
-        return false;
+
+
+        //向后找弧结束标记
+        for(int i=endIndex+1;i<loopEndIndex;i++) {
+            //从当前（准备修改的目标位置）+1开始，向后遍历查找连音弧结尾
+            byte b = codeSerial.get(i);
+            if (b > 111 && b < 125) {
+                //112~125是连音弧结束标记
+                curveEndIndex = i;
+                duSpan = b - 110;
+            }
+        }
+        //错误逻辑控制1
+        if(endUnitOffSet<0||frontUnitOffSet<0||(endUnitOffSet+frontUnitOffSet)>=duSpan){
+            Log.e(TAG, "checkCurveAreaCovering: OffSet Amount wrong setting." );
+            return true;
+        }
+
+
+        //检查覆盖情况
+        //计算连音弧的codeSpan(从弧尾标记到弧首的音符对应cs位置)；转换为连音弧弧首音符的索引
+        if(frontUnitOffSet>0) {
+            for (int j = curveEndIndex; j >= startIndex; j--) {
+                byte b2 = codeSerial.get(j);
+                if (b2 < 25 && b2 > 0) {
+                    duAmount++;
+                    if (duAmount == duSpan - frontUnitOffSet) {
+                        break;
+                    }
+                }
+                if (b2 > 120) {
+                    skipNum2++;
+                }
+            }
+        }
+
+        //弧下后部目标音符与弧尾标记之间的skipNum（当然也包括弧尾本身）
+        if(endUnitOffSet>0) {
+            int rearShipAmount = 0;
+            for (int j = curveEndIndex; j >= startIndex; j--) {
+                byte b2 = codeSerial.get(j);
+                if (b2 < 25 && b2 > 0) {
+                    rearShipAmount++;
+                    if (rearShipAmount == endUnitOffSet + 1) {//到弧尾最后一个音符就是1了，所以额外偏差量要+1
+                        break;
+                    }
+                }
+                if (b2 > 120) {
+                    skipNum3++;
+                }
+            }
+        }
+
+        //计算覆盖区域的前后unit的cs索引
+        int codeSpan = duSpan+skipNum2;
+        int curveStartUnitIndex = curveEndIndex-codeSpan;
+        int curveEndUnitIndex = curveEndIndex-skipNum3-1;//（还有那个最后的实体音符本身也要加上）
+
+//                Log.i(TAG, "checkCurveAreaCovering: duSpan="+duSpan);
+        return ((curveStartUnitIndex<=endIndex)&&(curveEndUnitIndex>=startIndex));//弧首小于区域尾；弧尾大于区域头则是被覆盖（包括部分覆盖、点覆盖）
+        //前提是不允许多层连音弧。
     }
+
 
     public ArrayList<Byte> getCurrentSection(int index){
         int startIndex= 0;
@@ -1118,7 +1142,7 @@ public class CodeSerial_Rhythm {
              return 3015;
          }
          //不能位于连音弧下方
-         if (checkCurveCovering(index)) {
+         if (checkCurveAreaCovering(index,index,0,0)) {
              return 3016;
          }
 
@@ -1190,7 +1214,7 @@ public class CodeSerial_Rhythm {
             return 3015;
         }
         //不能位于连音弧下方
-        if (checkCurveCovering(index)) {
+        if (checkCurveAreaCovering(index,index,0,0)) {
             return 3016;
         }
 
@@ -1616,7 +1640,7 @@ public class CodeSerial_Rhythm {
             if(codeSerial.get(i)<110&&codeSerial.get(i)>0){
                 //其后仍然 有实际音符
                 //判断该音符是否在弧跨下（非首位）
-                if(!checkCurveRearCovering(i)){
+                if(!checkCurveAreaCovering(i,i,1,0)){
                     return false;
                     //如果不在弧跨后部，则可以承载字词；
                     //否则继续寻找看后方是否还有。
@@ -1632,7 +1656,7 @@ public class CodeSerial_Rhythm {
             if(codeSerial.get(i)<110&&codeSerial.get(i)>0){
 //                Log.i(TAG, "getNextAvailableRealUnit: code="+codeSerial.get(i)+",+"+i);
                 //判断该音符是否在弧跨下（非首位）
-                if(!checkCurveRearCovering(i)){
+                if(!checkCurveAreaCovering(i,i,1,0)){
 //                    Log.i(TAG, "getNextAvailableRealUnit: cI="+currentIndex+",resultI="+i);
                     return i;
                     //如果不在弧跨后部，则可以承载字词；
@@ -1673,7 +1697,7 @@ public class CodeSerial_Rhythm {
     public int getLastAvailableRealUnit(int currentIndex){
         for(int i=currentIndex-1; i>=0;i--){
             if(codeSerial.get(i)<110&&codeSerial.get(i)>0){
-                if(!checkCurveRearCovering(i)){
+                if(!checkCurveAreaCovering(i,i,1,0)){
                     return i;
                     //如果不在弧跨后部，则可以承载字词；
                     //否则继续寻找看后方是否还有。
@@ -1769,7 +1793,7 @@ public class CodeSerial_Rhythm {
             }
 
             if((b>0&&b<110)&&encounterUnAvailable){//暗含>0
-                if(!checkCurveRearCovering(i)){
+                if(!checkCurveAreaCovering(i,i,1,0)){
                     return i;
                 }
             }
@@ -1877,7 +1901,7 @@ public class CodeSerial_Rhythm {
             }
 
             if ((b > 0 && b < 110) && encounterUnAvailable) {//暗含>0
-                if (!checkCurveRearCovering(i)) {
+                if (!checkCurveAreaCovering(i,i,1,0)) {
                     return i;
                     //如果不在弧跨后部，则可以承载字词；
                     //否则继续寻找看后方是否还有。
@@ -1914,7 +1938,7 @@ public class CodeSerial_Rhythm {
             }
         }
         //检测是否在连音弧之下（弧下最后一个位置可以）
-        if(checkCurveFrontCovering(tempLastAvaIndex)){
+        if(checkCurveAreaCovering(tempLastAvaIndex,tempLastAvaIndex,0,1)){
             return -2;
         }
 
@@ -1936,7 +1960,7 @@ public class CodeSerial_Rhythm {
             }
         }
         //检测是否在连音弧之下（弧下最后一个位置可以）
-        if(checkCurveFrontCovering(tempNextAvaIndex)){
+        if(checkCurveAreaCovering(tempNextAvaIndex,tempLastAvaIndex,0,1)){
             return -4;
         }
 //        Log.i(TAG, "addPhrasesTagAfter: cs="+codeSerial.toString());
