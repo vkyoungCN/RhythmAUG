@@ -3,10 +3,10 @@ package com.vkyoungcn.learningtools.myrhythm.customUI;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.os.Message;
 import android.support.v4.content.ContextCompat;
 import android.text.InputType;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
@@ -50,7 +50,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
 //    （不可对dU结构再做改动若觉得不合适退出先改dU【本逻辑后期可能改进】）
     private static final String TAG = "LyricEditorBaseOnRSLE";
 
-    private LyricPhrasesInputListener mListener;
+    private OnLyricPhraseChangeListner mListener;
 
     /* 本类特有 */
     boolean modifyPrimary = true;
@@ -89,15 +89,6 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
     }
 
 
-    //调用方（activity）实现本接口。VE中获取对调用方Activity的引用，然后调用这两个方法进行通信
-    public interface LyricPhrasesInputListener {
-        // These methods are the different events and
-        // need to pass relevant arguments related to the event triggered
-
-        /* 输入一个字符时触发 */
-        void onCodeChanged(int indexInCs);//改变后，光标可能移动，将移动后的光标位置传递给调用方
-
-    }
 
     void initSizeAndColor() {
         super.initSizeAndColor();
@@ -139,9 +130,6 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         setFocusableInTouchMode(true);
     }
 
-    public void setCodeChangeListener(LyricPhrasesInputListener listener) {
-        this.mListener = listener;
-    }
 
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         // outAttrs就是我们需要设置的输入法的各种类型最重要的就是:
@@ -207,6 +195,20 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
     }
 
 
+    //调用方（activity）实现本接口。VE中获取对调用方Activity的引用，然后调用这两个方法进行通信
+    public interface OnLyricPhraseChangeListner {
+        // These methods are the different events and
+        // need to pass relevant arguments related to the event triggered
+
+        /* 输入一个字符时触发 */
+        void onCodeChanged(int indexInCs);//改变后，光标可能移动，将移动后的光标位置传递给调用方
+
+
+    }
+
+    public void setCodeChangeListener(OnLyricPhraseChangeListner listener) {
+        this.mListener = listener;
+    }
 
 
     /* 安全设置新数据，检测当前蓝框所在位置对应的乐句位置是否数据越界；若是，补齐；然后改动或添加数据*/
@@ -465,7 +467,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             return;
             //当运行到尺寸确定的方法（onSc）时，会对数据情况进行检查，如果有数据则会触发再次计算。
         }
-        new Thread(new CalculateDrawingUnits()).start();
+        new Thread(new CalculateDrawingUnits(true)).start();
 //        initDrawingUnits(false);
     }
 
@@ -490,7 +492,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             return;
             //当运行到尺寸确定的方法（onSc）时，会对数据情况进行检查，如果有数据则会触发再次计算。
         }
-        new Thread(new CalculateDrawingUnits()).start();
+        new Thread(new CalculateDrawingUnits(true)).start();
 //        initDrawingUnits(false);
     }
 
@@ -515,7 +517,7 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             return;
             //当运行到尺寸确定的方法（onSc）时，会对数据情况进行检查，如果有数据则会触发再次计算。
         }
-        new Thread(new CalculateDrawingUnits()).start();
+        new Thread(new CalculateDrawingUnits(true)).start();
 //        initDrawingUnits(false);
 
     }
@@ -534,12 +536,28 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             //要向后调整
             int csIndex = checkNextTillAvailable(blueBoxSectionIndex,blueBoxUnitIndex);//由于句计数器默认1初始，应不需改。
 //            Log.i(TAG, "checkBoxInitPosition: bs="+blueBoxSectionIndex+",bu="+blueBoxUnitIndex);
-            mListener.onCodeChanged(csIndex);
-            invalidate();
+
+            Message msg = new Message();
+            msg.what = CALL_LISTENER_WITH_CS_INDEX;
+            msg.arg1 = csIndex;
+            handler.sendMessage(msg);
+//            mListener.onCodeChanged(csIndex);
+//            postInvalidate();
         }
 
     }
 
+    void handleMessage(Message message) {
+        switch (message.what){
+            case CALL_LISTENER_WITH_CS_INDEX:
+//                invalidate();
+            mListener.onCodeChanged(message.arg1);//基类没有监听器引用。
+                invalidate();
+
+                break;
+        }
+
+    }
 
     void checkAndSetThreeStates(){
         useLyric_1 = true;

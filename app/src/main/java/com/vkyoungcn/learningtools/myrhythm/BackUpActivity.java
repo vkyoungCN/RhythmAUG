@@ -177,8 +177,6 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
 
         File dbFile = getDatabasePath("MyRhythm.db");
 
-        ;
-
         try {
             FileInputStream inStream = new FileInputStream(dbFile);
             FileOutputStream outStream = new FileOutputStream(getPublicDocumentStorageDir(fileName));

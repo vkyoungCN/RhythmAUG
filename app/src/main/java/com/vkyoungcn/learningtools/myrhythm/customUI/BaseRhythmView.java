@@ -8,7 +8,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Toast;
@@ -70,9 +69,10 @@ public class BaseRhythmView extends View {
      * （废弃）124乐句开始标志（虽然是“开始标记”，但也要位于音符之后）
      * */
     static final String TAG = "BaseRhythmView";
-    public static final int MESSAGE_REFRESH = 8501;
+    public static final int CALL_LISTENER_WITH_CS_INDEX = 8501;
+
     Context mContext;
-//    Handler handler = new RhythmViewHandler(this);【使用postInvalidate则不需要Handler，直接线程中调用即可】
+    Handler handler = new RhythmViewHandler(this);//【使用postInvalidate则不需要Handler，直接线程中调用postInvalidate即可，但是和调用方view的交互需要handler】
 
     RhythmBasedCompound bcRhythm; //数据源
     int rhythmType;//节拍类型（如4/4），会影响分节的绘制。【不能直接传递在本程序所用的节奏编码方案下的时值总长，因为3/4和6/8等长但绘制不同】
@@ -163,7 +163,7 @@ public class BaseRhythmView extends View {
     int generalColor_LightGray;
     int generalCharGray;
 
-    /*final static class RhythmViewHandler extends Handler {
+    final static class RhythmViewHandler extends Handler {
         final WeakReference<BaseRhythmView> activityWeakReference;
 
         RhythmViewHandler(BaseRhythmView view) {
@@ -181,13 +181,15 @@ public class BaseRhythmView extends View {
 
     void handleMessage(Message message) {
         switch (message.what){
-            case MESSAGE_REFRESH:
-                invalidate();
+            case CALL_LISTENER_WITH_CS_INDEX:
+//                invalidate();
+//            mListener.onCodeChanged(csIndex);
+
 
                 break;
         }
 
-    }*/
+    }
 
     public class CalculateDrawingUnits implements Runnable{
         boolean needReFresh = false;
@@ -195,6 +197,7 @@ public class BaseRhythmView extends View {
         public CalculateDrawingUnits() {
         }
 
+        //用在RtB时，关闭刷新。
         public CalculateDrawingUnits(boolean needReFresh) {
             this.needReFresh = needReFresh;
         }
@@ -232,6 +235,9 @@ public class BaseRhythmView extends View {
         init(attributeset);
 //        this.listener = null;
     }
+
+
+
 
 //【当子类调用的父类方法进一步调用了二者都有的同名方法时，测试发现，实际调用的会是子类的】
     void init(AttributeSet attributeset) {
@@ -309,7 +315,7 @@ public class BaseRhythmView extends View {
         if(codesInSections!=null&&!codesInSections.isEmpty()){
             //如果数据源此时非空，则代表数据源的设置早于onSC，也即数据源设置方法中的绘制信息初始化方法被中止，
             //需要再次再次初始化绘制信息（但是传入isTriggerFromSC标记，只初始绘制信息不进行刷新）
-            new Thread(new CalculateDrawingUnits()).start();
+            new Thread(new CalculateDrawingUnits(true)).start();
 //            initDrawingUnits(true);
         }
         super.onSizeChanged(w, h, old_w, old_h);
@@ -333,6 +339,24 @@ public class BaseRhythmView extends View {
             //条带总宽40像素。
 
             canvas.drawRect(fromX,fromY,toX,toY, grayEmptyPaint);
+            canvas.drawText("codeInSections Null or Empty.",sizeChangedWidth/2,sizeChangedHeight/2,codePaint);
+            return true;//空，返回真
+        }else {
+            return false;//有数据，不执行操作，返回假。
+        }
+    }
+
+    boolean checkDuEmptyAndDraw(Canvas canvas){
+        if(drawingUnits==null||drawingUnits.isEmpty()) {
+            //此时节奏数据还未设置，只在中间高度绘制一条背景
+            float fromX = padding;
+            float fromY = sizeChangedHeight/2-20;
+            float toX = sizeChangedWidth - padding;
+            float toY = sizeChangedHeight/2+20;
+            //条带总宽40像素。
+
+            canvas.drawRect(fromX,fromY,toX,toY, grayEmptyPaint);
+            canvas.drawText("DrawingUnits Null or Empty.",sizeChangedWidth/2,sizeChangedHeight/2,codePaint);
             return true;//空，返回真
         }else {
             return false;//有数据，不执行操作，返回假。
@@ -348,6 +372,11 @@ public class BaseRhythmView extends View {
             return;
             //是空的，绘制一个空占位线条然后直接退出绘制即可。
         }
+        if(checkDuEmptyAndDraw(canvas)){
+            return;
+            //是空的，绘制一个空占位线条然后直接退出绘制即可。
+        }
+
 
         //未退出则继续绘制主体内容
         //逐小节逐音符绘制(主体部分：各乐符、下划线、乐符间隔、拍子间隔、小节间隔、节间小节线、均分多连音、跨音符的上方连音弧线)
@@ -574,7 +603,7 @@ public class BaseRhythmView extends View {
             return;
             //当运行到尺寸确定的方法（onSc）时，会对数据情况进行检查，如果有数据则会触发再次计算。
         }
-        new Thread(new CalculateDrawingUnits()).start();
+        new Thread(new CalculateDrawingUnits(true)).start();
 //        initDrawingUnits(false);在线程中自动进行初始计算，计算完成后自动刷新
 
     }
@@ -1345,13 +1374,13 @@ else if(b==16||b==8||b==4||b==2) {
     // 需要重新计算绘制信息
     public void zoomOut(){
         setSizeOfCodeAndUnit(codeSizeDip+=2,unitWidthDip+=2,unitHeightDip+=2);
-        new Thread(new CalculateDrawingUnits()).start();
+        new Thread(new CalculateDrawingUnits(true)).start();
 //        initDrawingUnits(false);
     }
 
     public void zoomIn(){
         setSizeOfCodeAndUnit(codeSizeDip-=2,unitWidthDip-=2,unitHeightDip-=2);
-        new Thread(new CalculateDrawingUnits()).start();
+        new Thread(new CalculateDrawingUnits(true)).start();
 //        initDrawingUnits(false);
     }
 

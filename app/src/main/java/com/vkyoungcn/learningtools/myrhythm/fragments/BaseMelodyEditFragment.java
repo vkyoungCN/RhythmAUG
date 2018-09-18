@@ -455,6 +455,7 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                     moveAreaStart = true;//强制按前端选定模式
                     moveAreaEnd = false;
                     //通知UI（改框色、改起止范围）
+//                    Log.i(TAG, "onClick: ssI="+selectStartIndex+",seI="+selectEndIndex);
                     rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
                     checkMoveModeAndSetBottomInfo();
                 }else {
@@ -545,7 +546,9 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                     }else {
                         realIndex = currentUnitIndex;
                     }
-                    if(csRhythmHelper.changeCodeToZeroAt(realIndex)<25){
+                    int resultNum =csRhythmHelper.changeCodeToZeroAt(realIndex);
+//                    Log.i(TAG, "onClick: code To Zero, resultNum="+resultNum);
+                    if(resultNum<25){
                         rh_editor_EM.codeChangedReDraw();
 
                     }

@@ -5,7 +5,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +14,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.vkyoungcn.learningtools.myrhythm.R;
+import com.vkyoungcn.learningtools.myrhythm.RhythmDetailActivity;
+import com.vkyoungcn.learningtools.myrhythm.customUI.BaseRhythmView;
 import com.vkyoungcn.learningtools.myrhythm.customUI.LyricEditorBaseOnRSLE;
+import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmToBitmap;
 import com.vkyoungcn.learningtools.myrhythm.helper.CodeSerial_Rhythm;
 import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
@@ -24,7 +26,7 @@ import java.util.ArrayList;
 
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
 public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
-        implements View.OnClickListener,LyricEditorBaseOnRSLE.LyricPhrasesInputListener {
+        implements View.OnClickListener,LyricEditorBaseOnRSLE.OnLyricPhraseChangeListner{
     /*
     * 【已取消124编码】
     * 125改为辅助分隔标记。乐句划分要求依照节奏布局规则进行，暂不实现手动调整乐句结构。
@@ -542,7 +544,5 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
         currentUnitCsIndex = indexInCs;
         tv_bottomInfoAmount.setText(String.format(getResources().getString(R.string.plh_currentAmount),ly_editor_LE.getCurrentPhaseRealSize()));
     }
-
-
 
 }

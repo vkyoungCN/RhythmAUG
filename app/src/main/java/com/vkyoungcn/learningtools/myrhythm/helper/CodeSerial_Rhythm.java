@@ -739,7 +739,7 @@ public class CodeSerial_Rhythm {
         byte currentCode = codeSerial.get(index);
             //不能位于连音弧下方
         if(checkCurveAreaCovering(index,index,0,0)){
-                return 3077;
+                return 3079;
             }
 
             //以下几种情况，都可以对音符做出修改，但是要分别做一些其他操作
@@ -816,7 +816,7 @@ public class CodeSerial_Rhythm {
         int skipNum3 = 0;
         int duAmount = 0;
 
-        int curveEndIndex = endIndex;
+        int curveEndIndex = -5;
 
 
         //检测内部是否有连音弧结束标记
@@ -836,6 +836,10 @@ public class CodeSerial_Rhythm {
                 curveEndIndex = i;
                 duSpan = b - 110;
             }
+        }
+        if(curveEndIndex == -5){
+            //没有弧，直接返回false
+            return false;
         }
         //错误逻辑控制1
         if(endUnitOffSet<0||frontUnitOffSet<0||(endUnitOffSet+frontUnitOffSet)>=duSpan){
@@ -1656,6 +1660,7 @@ public class CodeSerial_Rhythm {
     }
 
     public int getNextRealUnitIndex(int currentIndex){
+//        Log.i(TAG, "getNextRealUnitIndex: cI="+currentIndex);
         for(int i = currentIndex+1; i< codeSerial.size(); i++){
             if(codeSerial.get(i)<110){
                 //其后的首个实际音符

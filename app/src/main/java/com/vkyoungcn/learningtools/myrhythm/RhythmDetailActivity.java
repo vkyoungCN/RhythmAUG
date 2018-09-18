@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -16,6 +17,7 @@ import com.vkyoungcn.learningtools.myrhythm.customUI.RhythmView;
 import com.vkyoungcn.learningtools.myrhythm.fragments.ShowBitmapDiaFragment;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -24,13 +26,14 @@ import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_COD
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_EDIT;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_RH_OVERALL_EDIT;
 
-public class RhythmDetailActivity extends BaseModelDetailActivity {
+public class RhythmDetailActivity extends BaseModelDetailActivity implements RhythmToBitmap.OnRtbDataReady {
 /* 由于暂时取消了多交叉复杂关系，暂不在本页面显示“相关的音序和歌词”
 * 其实这种互相关联的功能已经涉及到了创作的部分，暂时先实现记录，再谋求创作。
 * */
 private static final String TAG = "RhythmDetailActivity";
     //rhythm下的特别控件
     private RhythmView rhythmView;
+    RhythmToBitmap rhythmToBitmap;//用于转换
 
 
     @Override
@@ -124,14 +127,32 @@ private static final String TAG = "RhythmDetailActivity";
 
 
     public void captureTest(View view){
-        //先测试单行模式的生成情况，实际使用时要按折行生成
 
-        Bitmap bitmap = convertViewToBitmap(rhythmView);
+        //需要通过RhythmToBitmap生成Bitmap转换
+        rhythmToBitmap = new RhythmToBitmap(this);
+        rhythmToBitmap.setRtbReadyListener(this);
+        rhythmToBitmap.setDataAndParams((RhythmBasedCompound) model,1080);
+        //到此，等待Rtb计算完毕后，再继续执行后续转换（因为）
+//        Bitmap bitmap = convertViewToBitmap(rhythmView);
 
-        if(!saveBitmapLocalPrivateTest(bitmap)){
+
+
+
+    }
+
+
+
+    public void captureActionStep_2(){
+        Bitmap bitmap = rhythmToBitmap.makeBitmap();
+
+        if(!saveBitmapLocalTest(bitmap)){
             return;
         }
 
+        /*if(!saveBitmapLocalPrivateTest(bitmap)){
+            return;
+        }
+*/
         //dfg中显示所生成的图片
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
         Fragment prev = getFragmentManager().findFragmentByTag("BITMAP_SHOW");
@@ -142,11 +163,9 @@ private static final String TAG = "RhythmDetailActivity";
         }
         DialogFragment dfg = ShowBitmapDiaFragment.newInstance(bitmap);
         dfg.show(transaction, "BITMAP_SHOW");
-
-
     }
 
-    public  Bitmap convertViewToBitmap(View view){
+    /*public  Bitmap convertViewToBitmap(View view){
 //        view.buildDrawingCache();
 //        return view.getDrawingCache();
 
@@ -156,7 +175,7 @@ private static final String TAG = "RhythmDetailActivity";
         Bitmap bitmap = rhythmToBitmap.makeBitmap();
 //        Log.i(TAG, "convertViewToBitmap: bitmap created="+bitmap);
         return bitmap;
-    }
+    }*/
 
 
     public boolean saveBitmapLocalPrivateTest(Bitmap bitmap){
@@ -182,5 +201,56 @@ private static final String TAG = "RhythmDetailActivity";
     }
 
 
+    public boolean saveBitmapLocalTest(Bitmap bitmap){
+        /* Checks if external storage is available for read and write */
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            Log.e(TAG, "saveBitmapLocalTest: mounted.");
+        }else {
+            return false;
 
+        }
+
+        SimpleDateFormat sdFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        Date date = new Date(System.currentTimeMillis());
+        String timeSuffix = sdFormat.format(date)+".jpg";
+        String fileName = "Rhythm_"+model.getTitle()+"_"+timeSuffix;
+
+        try {
+            File outFile = new File(getPublicStorageDir("RhythmSep"),fileName);
+            if (!outFile.createNewFile()) {
+                Log.e(TAG, "File not created");
+                return false;
+            }
+
+            FileOutputStream outStream = new FileOutputStream(outFile);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+
+            outStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "失败。", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        Toast.makeText(this, "成功。", Toast.LENGTH_SHORT).show();
+        return true;
+    }
+
+
+
+    public File getPublicStorageDir(String dirName) {
+        // Get the directory for the user's public pictures directory.
+        File file = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), dirName);
+        if (!file.mkdirs()) {
+            Log.e(TAG, "Directory not created.99");
+        }
+        return file;
+    }
+
+    @Override
+    public void onRtbDataReady() {
+        captureActionStep_2();
+    }
 }

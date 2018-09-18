@@ -147,7 +147,7 @@ public class RhythmSingleLineWithTwoTypeBoxBaseView extends RhythmSingleLineView
         //        codesInSections =newCodes2Dimension;//不传不行啊……并不能更新绘制结果（测试发现dus还改变了）
         this.codesInSections = RhythmHelper.codeParseIntoSections(bcRhythm.getCodeSerialByte(), rhythmType);
 //        Log.i(TAG, "codeChangedReDraw: cs in rhv="+bcRhythm.getCodeSerialByte());
-        new Thread(new CalculateDrawingUnits()).start();
+        new Thread(new CalculateDrawingUnits(true)).start();
 //        initDrawingUnits(false);//【计划中两个子类：RhvSLEditor、LyricEditor都会对编码进行改变】
     }
 
@@ -158,10 +158,11 @@ public class RhythmSingleLineWithTwoTypeBoxBaseView extends RhythmSingleLineView
             changeOneDimCsIndexToTwoDimDuIndex(startIndex);
             sAreaStartSectionIndex = tempDuSectionIndex;
             sAreaStartUnitIndex = tempDuUnitIndex;
-
+//            Log.i(TAG, "boxAreaChangedReDraw: tDSI="+tempDuSectionIndex+",tDUI="+tempDuUnitIndex);
             changeOneDimCsIndexToTwoDimDuIndex(endIndex);
             sAreaEndSectionIndex = tempDuSectionIndex;
             sAreaEndUnitIndex = tempDuUnitIndex;
+//            Log.i(TAG, "boxAreaChangedReDraw: tDSI="+tempDuSectionIndex+",tDUI="+tempDuUnitIndex);
             //原来的蓝框必然（？）在画面中，因而在此不移动du列表。（暂简化）
         }else {
             selectionAreaMode = false;
@@ -171,7 +172,10 @@ public class RhythmSingleLineWithTwoTypeBoxBaseView extends RhythmSingleLineView
             //判断是否超出绘制区
             checkAndShiftWhenOutOfUI(blueBoxSectionIndex,blueBoxUnitIndex);
         }
-        invalidate();//不涉及绘制信息单元列表的重新计算，可以直接重绘
+//        invalidate();//不涉及绘制信息单元列表的重新计算，可以直接重绘
+        new Thread(new CalculateDrawingUnits(true)).start();
+        //如果不重新计算，如果Du产生替换，会出错。
+
     }
 
     public void boxMovedSuccessReDraw(int indexAfterMove,boolean saStart, boolean saEnd){

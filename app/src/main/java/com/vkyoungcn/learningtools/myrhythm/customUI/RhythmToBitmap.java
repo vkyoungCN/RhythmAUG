@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.os.Message;
 import android.support.v4.content.ContextCompat;
 import android.text.Layout;
 import android.text.StaticLayout;
@@ -28,6 +29,8 @@ public class RhythmToBitmap extends RhythmView {
 
     public static final int SIZE_1080 = 1080;
     public static final int SIZE_720 = 720;
+    public static final int RTB_READY = 8052;
+    private OnRtbDataReady mListener;
 
 
     /* 绘制标题、描述的画笔*/
@@ -133,6 +136,35 @@ public class RhythmToBitmap extends RhythmView {
     public void setRhythmViewData(RhythmBasedCompound rhythmBasedCompound, int codeSize, int unitWidth, int unitHeight) {
     }
 
+
+    //调用方（activity）实现本接口。VE中获取对调用方Activity的引用，然后调用这两个方法进行通信
+    public interface OnRtbDataReady {
+        // These methods are the different events and
+        // need to pass relevant arguments related to the event triggered
+
+        /* Rtb计算完毕后，调用方才能够安全的调用makeBitmap()方法*/
+        void onRtbDataReady();
+    }
+
+    public void setRtbReadyListener(OnRtbDataReady listener) {
+        this.mListener = listener;
+    }
+
+    void handleMessage(Message message) {
+        switch (message.what){
+            case RTB_READY:
+//                Log.i(TAG, "handleMessage: ");
+                mListener.onRtbDataReady();
+//                invalidate();
+//            mListener.onCodeChanged(csIndex);
+
+
+                break;
+        }
+
+    }
+
+
     //新设置方法
     public void setDataAndParams(RhythmBasedCompound rhythmBasedCompound,int size) {
         this.bcRhythm = rhythmBasedCompound;
@@ -161,14 +193,29 @@ public class RhythmToBitmap extends RhythmView {
                 sizeChangedWidth = SIZE_1080;
                 break;
         }
-        // 以及此处改为true（强行关闭其刷新绘制）
-        new Thread(new CalculateDrawingUnits(false)).start();
-//        initDrawingUnits(true);
-        initStrings(rhythmBasedCompound);
 
         //重设部分尺寸
         titlePaint.setTextSize(textSize);
         descriptionPaint.setTextSize(textSize);
+//        initStrings(rhythmBasedCompound);
+
+        // （此处原设计为false，强行关闭其刷新绘制；发现后来设置bitmap为新画布后，再draw得到的结果是刷新前的。暂不懂？）
+        new Thread(new CalculateDrawingUnits(false)).start();
+//        initDrawingUnits(true);
+
+
+    }
+
+
+    @Override
+    void initDrawingUnits(boolean needReFresh) {
+        super.initDrawingUnits(needReFresh);
+        initStrings(bcRhythm);
+        Message msg = new Message();
+        msg.what = RTB_READY;
+        handler.sendMessage(msg);
+//        mListener.onRtbDataReady();
+
     }
 
     public void initStrings(RhythmBasedCompound rhythmBasedCompound){
@@ -177,7 +224,7 @@ public class RhythmToBitmap extends RhythmView {
 
         if(!strDescription.isEmpty()){
 //            Log.i(TAG, "initStrings: (sizeChangedWidth-2*padding)="+(sizeChangedWidth-2*padding));
-            myStaticLayout = new StaticLayout(strDescription,descriptionPaint,900,
+            myStaticLayout = new StaticLayout(strDescription,descriptionPaint,1080,
                     Layout.Alignment.ALIGN_NORMAL,1f,0f,true);
         }
 
@@ -207,7 +254,7 @@ public class RhythmToBitmap extends RhythmView {
         canvas.translate(0,padding+rhythmPartHeight);
         //补充背景
         canvas.drawRect(0, totalDrawingHeight-(padding-rhythmPartHeight),1080, totalDrawingHeight,whitePaint);
-
+//        Log.i(TAG, "onDraw: msL to Draw");
         myStaticLayout.draw(canvas);
 
 //        canvas.restore();
@@ -329,7 +376,7 @@ public class RhythmToBitmap extends RhythmView {
 
         Bitmap bitmap = Bitmap.createBitmap(sizeChangedWidth, (int) totalDrawingHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
-        draw(canvas);
+        draw(canvas);//【这里绘制的结果和之前onDraw的一致，所以难道并不是一次额外的draw？】
 
         return bitmap;
 
