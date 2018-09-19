@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
@@ -15,7 +16,7 @@ import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_PURE_EDIT_DONE;
 
-public class RhythmPureEditActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
+public class RhythmPureEditActivity extends Activity implements OnGeneralDfgInteraction {
     private static final String TAG = "RhythmPureEditActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {

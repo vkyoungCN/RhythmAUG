@@ -3,11 +3,12 @@ package com.vkyoungcn.learningtools.myrhythm.customUI;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.RectF;
+import android.graphics.Point;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Toast;
@@ -131,6 +132,7 @@ public class BaseRhythmView extends View {
 
     /* 画笔组*/
     Paint bottomLinePaint;
+    Paint PointPaint;
     Paint codePaint;//绘制音符
     Paint curveNumPaint;//用于绘制均分多连音弧线中间的小数字，其字符尺寸较小
     Paint grayEmptyPaint;//在无数据时，在字符行绘制背景替代。
@@ -301,6 +303,11 @@ public class BaseRhythmView extends View {
         bottomLinePaint.setStrokeWidth(2);//
         bottomLinePaint.setStyle(Paint.Style.STROKE);
 
+        PointPaint = new Paint();
+        PointPaint.setColor(generalCharGray);
+        PointPaint.setStrokeWidth(8);//
+        PointPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+
         //注意文本的尺寸此时尚未获取到，只能默认的设置为14（36px）.
         codePaint = new Paint();
         codePaint.setTextSize(36);
@@ -439,19 +446,23 @@ public class BaseRhythmView extends View {
                     }
 
                     //绘制上下加点（旋律模式下）（*如果没有加点则不会进入）
-                    for (RectF point : drawingUnit.additionalPoints) {
-                        canvas.drawOval(point, bottomLinePaint);
+                    for (Point point : drawingUnit.additionalPoints) {
+                        canvas.drawPoint(point.x,point.y, PointPaint);
                     }
 
                     //均分多连音的弧线和弧线内数字
                     if (drawingUnit.mCurveNumber != 0) {
                         //弧中数字
-                        canvas.drawText(String.valueOf(drawingUnit.mCurveNumber), drawingUnit.mCurveNumCenterX, drawingUnit.mCurveNumBaseY, curveNumPaint);
+                        canvas.drawText(String.valueOf(drawingUnit.mCurveNumber), drawingUnit.mCurveNumCenterX,
+                                drawingUnit.mCurveNumBaseY, curveNumPaint);
 
                         //弧线
-                        canvas.drawArc(drawingUnit.left, drawingUnit.top + additionalPointsHeight + curveOrLinesHeight / 3,
-                                drawingUnit.right, drawingUnit.top + additionalPointsHeight + curveOrLinesHeight, 0, 180, false, bottomLinePaint);//是角度数
-                        //【椭圆划过的角度待调整】
+                        canvas.drawArc(drawingUnit.left, drawingUnit.top + additionalPointsHeight,
+                                drawingUnit.right, drawingUnit.top + additionalPointsHeight + curveOrLinesHeight,
+                                0, -75, false, bottomLinePaint);//是角度数
+                        canvas.drawArc(drawingUnit.left, drawingUnit.top + additionalPointsHeight,
+                                drawingUnit.right, drawingUnit.top + additionalPointsHeight + curveOrLinesHeight,
+                                -105, -75, false, bottomLinePaint);//是角度数
 
                     }
 
@@ -638,7 +649,7 @@ public class BaseRhythmView extends View {
     }
 
     void initDrawingUnits(boolean needReFresh){
-//        Log.i(TAG, "initDrawingUnits: cs="+co);
+//        Log.i(TAG, "initDrawingUnits: baseRhv");
         initDrawingUnits_step1();
 
         initDrawingUnits_step2();
@@ -846,7 +857,7 @@ public class BaseRhythmView extends View {
 
                 //字符位置（字符按照给定左下起点方式绘制）
                 //【为了保证①字符基本位于水平中央、②字符带不带附点时的起始位置基本不变，因而采用：左+三分之一单位宽度折半值 方式，后期据情况调整】
-                drawingUnit.codeCenterX = drawingUnit.left + unitWidthChanged / 2;//。
+                drawingUnit.codeCenterX = drawingUnit.left + unitWidthChanged / 2;//只是普通字符的位置，多连音要改变。
                 drawingUnit.codeBaseY = drawingUnit.bottomNoLyric - additionalPointsHeight - curveOrLinesHeight - 8;//暂定减8像素。
                 //这样所有长度的字串都指定同一起始点即可。
 
@@ -902,13 +913,15 @@ public class BaseRhythmView extends View {
                     //有几个音符
                     StringBuilder codeBuilder = new StringBuilder();
                     int codeNum = code % 10;
-                    for (int k = 1; k < codeNum; k++) {
-                        codeBuilder.append(X);
+                    for (int k = 0; k < codeNum; k++) {
+                        codeBuilder.append("X");
                     }
                     drawingUnit.right = drawingUnit.left + (unitWidthChanged*2/3) * (codeNum);
                     drawingUnit.code = codeBuilder.toString();
+//                    Log.i(TAG, "initSectionDrawingUnit: code="+drawingUnit.code);
                     drawingUnit.mCurveNumber = codeNum;
                     drawingUnit.mCurveNumCenterX = (drawingUnit.right - drawingUnit.left) / 2 + drawingUnit.left;
+                    drawingUnit.codeCenterX = drawingUnit.mCurveNumCenterX;
                     drawingUnit.mCurveNumBaseY = drawingUnit.top + additionalPointsHeight + curveOrLinesHeight / 3;//【注意，稍后画弧线时，顶部也应留出1/3距离】
 
                     //下划线处理

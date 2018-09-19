@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
@@ -19,7 +20,7 @@ import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_COD
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_DONE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_CREATE_FAILURE;
 
-public class RhythmCreateActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
+public class RhythmCreateActivity extends Activity implements OnGeneralDfgInteraction {
     private static final String TAG = "RhythmCreateActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {

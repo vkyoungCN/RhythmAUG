@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -23,7 +24,7 @@ import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_OVERALL_EDIT_DONE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_PURE_EDIT_DONE;
 
-public class BaseModelDetailActivity extends AppCompatActivity {
+public class BaseModelDetailActivity extends Activity {
     private static final String TAG = "BaseModelDetailActivity";
     BaseModel model;
 

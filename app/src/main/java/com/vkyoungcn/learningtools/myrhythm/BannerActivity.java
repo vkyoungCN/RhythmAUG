@@ -3,6 +3,7 @@ package com.vkyoungcn.learningtools.myrhythm;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
+import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,7 +17,7 @@ import android.widget.ImageView;
  * email: yangsheng@ouc.edu.cn
  * 2018.08.04
  * */
-public class BannerActivity extends AppCompatActivity {
+public class BannerActivity extends Activity {
 //* 程序第一个页面，过渡性页面（结束后不可返回）
 //* 功能：欢迎（Logo动画）；
 

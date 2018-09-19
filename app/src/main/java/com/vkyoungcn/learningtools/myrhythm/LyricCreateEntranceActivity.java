@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -11,7 +12,7 @@ import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.REQUEST_CODE_LY_CREATE_FREE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_LY_CREATED;
 
-public class LyricCreateEntranceActivity extends AppCompatActivity {
+public class LyricCreateEntranceActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

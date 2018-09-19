@@ -1269,14 +1269,48 @@ public class CodeSerial_Rhythm {
         return codeDivided;
     }
 
+
+    public int tertiaryDividingAt(int index){
+        //目标位置和主数据列表检查
+        int checkNum = checkIndexAndList(index);
+        if(checkNum!=2000){
+            return checkNum;
+        }//=2000时成功，则继续。
+
+        byte currentCode = codeSerial.get(index);
+
+        int codeDivided = (valueOfBeat/4+6)*10+3;//构造编码
+        //（说明）在拆分时，拆分后的音符也不能作为延音的首位音符，故而其后如果是延音符也要处理。
+        if (currentCode == 16||currentCode == 8) {
+            checkAndChangeNextWhenBar(index);
+        }else if(currentCode == 2){
+            return 3022;//过小+附点不能拆分两种情况。(不可对1/32再做拆分)             }
+        }
+
+        //修改（仍然是占据一个编码位，一个dU位）
+        codeSerial.set(index,(byte)codeDivided);
+
+        return codeDivided;
+    }
+
     public boolean checkIsMulti(int index){
         byte currentCode = codeSerial.get(index);
         return (currentCode>73&&currentCode<110);
     }
 
+    public boolean checkIsEmpty(int index){
+        byte currentCode = codeSerial.get(index);
+        return currentCode < 0;
+    }
+
     public boolean checkIsBar(int index){
         byte currentCode = codeSerial.get(index);
         return currentCode == 0;
+    }
+
+    public boolean checkIsHaveSpot(int index){
+        byte currentCode = codeSerial.get(index);
+        return (currentCode==3||currentCode==6||currentCode==12||currentCode==24);
     }
 
     /* 添加 */

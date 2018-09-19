@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm.customUI;
 
+import android.graphics.Point;
 import android.graphics.RectF;
 
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ public class DrawingUnit {
     public float word_2_BaseY;
 */
     public ArrayList<BottomLine> bottomLines = new ArrayList<>();//已实例化，直接add即可。
-    public RectF[] additionalPoints = new RectF[]{};//上下加点
+    public Point[] additionalPoints = new Point[]{};//上下加点
 
     public int mCurveNumber = 0;//在均分多连音情况下，顶弧中间有一个小数字；
     public float mCurveNumCenterX;
@@ -163,11 +164,11 @@ public class DrawingUnit {
         this.bottomLines = bottomLines;
     }
 
-    public RectF[] getAdditionalPoints() {
+    public Point[] getAdditionalPoints() {
         return additionalPoints;
     }
 
-    public void setAdditionalPoints(RectF[] additionalPoints) {
+    public void setAdditionalPoints(Point[] additionalPoints) {
         this.additionalPoints = additionalPoints;
     }
 
@@ -268,11 +269,9 @@ public class DrawingUnit {
             bl.toY+=v_shiftAmount;
         }
 
-        for (RectF rf :additionalPoints) {
-            rf.left+=h_shiftAmount;
-            rf.right+=h_shiftAmount;
-            rf.top+=v_shiftAmount;
-            rf.bottom+=v_shiftAmount;
+        for (Point pt :additionalPoints) {
+            pt.x+=h_shiftAmount;
+            pt.y+=v_shiftAmount;
         }
 
         this.mCurveNumCenterX +=h_shiftAmount;

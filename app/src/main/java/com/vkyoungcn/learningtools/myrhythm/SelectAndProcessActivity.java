@@ -1,9 +1,10 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.Activity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class SelectAndProcessActivity extends AppCompatActivity {
+public class SelectAndProcessActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

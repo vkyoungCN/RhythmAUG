@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -17,7 +18,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 public class ThreadRvBassActivity<T extends BaseModel,K extends RecyclerView.Adapter >
-        extends AppCompatActivity implements OnGeneralDfgInteraction {
+        extends Activity implements OnGeneralDfgInteraction {
     public static final int MESSAGE_PRE_DB_FETCHED = 5505;
     public static final int MESSAGE_RE_FETCHED = 5506;
     public static final int MESSAGE_RH_RE_FETCHED = 5507;

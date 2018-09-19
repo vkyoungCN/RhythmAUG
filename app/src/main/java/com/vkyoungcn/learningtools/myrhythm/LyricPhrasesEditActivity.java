@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
@@ -15,7 +16,7 @@ import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_LYPH_EDIT_DONE;
 import static com.vkyoungcn.learningtools.myrhythm.MyRhythmConstants.RESULT_CODE_RH_PURE_EDIT_DONE;
 
-public class LyricPhrasesEditActivity extends AppCompatActivity implements OnGeneralDfgInteraction{
+public class LyricPhrasesEditActivity extends Activity implements OnGeneralDfgInteraction{
     RhythmBasedCompound rhythmBasedCompound;
     boolean trueIfModifyPrimary;
     int lyricPrId;

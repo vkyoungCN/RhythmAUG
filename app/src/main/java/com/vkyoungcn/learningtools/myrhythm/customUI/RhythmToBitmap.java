@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.RectF;
 import android.os.Message;
 import android.support.v4.content.ContextCompat;
@@ -280,8 +281,8 @@ public class RhythmToBitmap extends RhythmView {
                     }
 
                     //绘制上下加点（旋律模式下）（*如果没有加点则不会进入）
-                    for (RectF point : drawingUnit.additionalPoints) {
-                        canvas.drawOval(point, bottomLinePaint);
+                    for (Point point : drawingUnit.additionalPoints) {
+                        canvas.drawPoint(point.x,point.y, PointPaint);
                     }
 
                     //均分多连音的弧线和弧线内数字

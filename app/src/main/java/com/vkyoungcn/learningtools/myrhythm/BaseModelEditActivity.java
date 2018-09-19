@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -16,7 +17,7 @@ import com.vkyoungcn.learningtools.myrhythm.sqlite.MyRhythmDbHelper;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class BaseModelEditActivity extends AppCompatActivity {
+public class BaseModelEditActivity extends Activity {
 /* 由于暂时取消了多交叉复杂关系，暂不在本页面显示“相关的音序和歌词”
 * 其实这种互相关联的功能已经涉及到了创作的部分，暂时先实现记录，再谋求创作。
 * */

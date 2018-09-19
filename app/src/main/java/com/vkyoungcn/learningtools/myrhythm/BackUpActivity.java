@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.Activity;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
@@ -23,7 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
+public class BackUpActivity extends Activity implements OnGeneralDfgInteraction {
     private static final String TAG = "BackUpActivity";
     public static final String SD_DIR ="RhythmSepBak";
     public static final String BK_FILE_EXT = ".rhmbk";

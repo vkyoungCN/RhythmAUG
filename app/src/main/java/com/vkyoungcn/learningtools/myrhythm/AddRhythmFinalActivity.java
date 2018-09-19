@@ -1,5 +1,6 @@
 package com.vkyoungcn.learningtools.myrhythm;
 
+import android.app.Activity;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
@@ -28,7 +29,7 @@ import static com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper.RHYTHM_TY
 import static com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper.RHYTHM_TYPE_44;
 import static com.vkyoungcn.learningtools.myrhythm.helper.RhythmHelper.RHYTHM_TYPE_68;
 
-public class AddRhythmFinalActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
+public class AddRhythmFinalActivity extends Activity implements OnGeneralDfgInteraction {
     private static final String TAG = "";
     private RhythmView rhythmView;
     private TextView tv_rhythmType;

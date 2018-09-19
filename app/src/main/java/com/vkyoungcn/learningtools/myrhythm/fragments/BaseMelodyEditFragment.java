@@ -3,6 +3,7 @@ package com.vkyoungcn.learningtools.myrhythm.fragments;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -442,6 +443,11 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                     Toast.makeText(getContext(), "不可直接拆分多连音。", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                if(csRhythmHelper.checkIsHaveSpot(realIndex)){
+                    Toast.makeText(getContext(), "不可拆分带附点值。", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
 
                 if(csRhythmHelper.binaryDividingAt(realIndex)<25){
                     //准备转选区模式（原位置+包含后一个）
@@ -471,14 +477,49 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                     Toast.makeText(getContext(), "仅对单个符号进行操作。", Toast.LENGTH_SHORT).show();
                     return;//三种合法情形均不满足，不能执行操作
                 }
-                if(!csRhythmHelper.checkAreaInsideBeat(selectStartIndex,selectEndIndex)){
-                    //跨拍子，不符合要求；
+
+                if(freeAreaModeOn){//【现在已经看不懂折断设计的意义了？！但是又不敢轻易的改】
+                    realIndex = selectStartIndex;
+                }else {
+                    realIndex = currentUnitIndex;
+                }
+
+                if(csRhythmHelper.checkCurveAreaCovering(realIndex,realIndex,0,0)){
+                    Toast.makeText(getContext(), "请先取消连音弧。", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                //在拍子内部，还需要判断选区是否在弧下；时值是否合理，合理则替换（相关逻辑由编码类负责）
-                if(csRhythmHelper.replaceAreaToMultiDivided(selectStartIndex,selectEndIndex)<25){
+                if(csRhythmHelper.checkIsBar(realIndex)){
+                    Toast.makeText(getContext(), "不可直接拆分-。", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(csRhythmHelper.checkIsEmpty(realIndex)){//均分连音不可对0操作，无意义
+                    Toast.makeText(getContext(), "不可拆分0。", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(csRhythmHelper.checkIsHaveSpot(realIndex)){
+                    Toast.makeText(getContext(), "不可拆分带附点值。", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(csRhythmHelper.checkIsMulti(realIndex)){
+                    Toast.makeText(getContext(), "不可直接拆分多连音。", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                int resultNum = csRhythmHelper.tertiaryDividingAt(realIndex);
+//                Log.i(TAG, "onClick: resultNum="+resultNum);
+                if(resultNum>72&&resultNum<110) {
+                    //三分多连音仍是一个dU，光标位置实际不变。
+                    //拆分完成，应刷新控件
                     rh_editor_EM.codeChangedReDraw();
                 }
+                    //通知UI（改框色、改起止范围）
+//                    Log.i(TAG, "onClick: ssI="+selectStartIndex+",seI="+selectEndIndex);
+//                    rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+                    checkMoveModeAndSetBottomInfo();
+
+                /*if(csRhythmHelper.replaceAreaToMultiDivided(selectStartIndex,selectEndIndex)<25){
+                    rh_editor_EM.codeChangedReDraw();
+                }*/
 
                 break;
 
@@ -546,9 +587,9 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                     }else {
                         realIndex = currentUnitIndex;
                     }
-                    int resultNum =csRhythmHelper.changeCodeToZeroAt(realIndex);
+                    int resultNum2 =csRhythmHelper.changeCodeToZeroAt(realIndex);
 //                    Log.i(TAG, "onClick: code To Zero, resultNum="+resultNum);
-                    if(resultNum<25){
+                    if(resultNum2<25){
                         rh_editor_EM.codeChangedReDraw();
 
                     }
