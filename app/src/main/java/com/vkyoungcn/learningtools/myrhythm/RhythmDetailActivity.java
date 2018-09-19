@@ -120,7 +120,7 @@ private static final String TAG = "RhythmDetailActivity";
     @Override
     void initUiData(){
         super.initUiData();
-//        Log.i(TAG, "initUiData: model="+model.toString());
+        Log.i(TAG, "initUiData: model="+model.toString());
         rhythmView.setRhythmViewData((RhythmBasedCompound) model);//比默认的尺寸（18/20/20）稍大
 //        Log.i(TAG, "initUiData: rh.cs="+((RhythmBasedCompound) model).getCodeSerialByte().toString());
     }

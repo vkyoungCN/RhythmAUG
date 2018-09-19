@@ -430,6 +430,8 @@ public class BaseRhythmView extends View {
     }
 
     void drawByEachUnit(Canvas canvas){
+//        Log.i(TAG, "onDraw: BRh dus="+drawingUnits.toString());
+
         for (int i = 0;i<drawingUnits.size();i++) {
             ArrayList<DrawingUnit> sectionDrawingUnits = drawingUnits.get(i);
 
@@ -1169,6 +1171,10 @@ else if(b==16||b==8||b==4||b==2) {
 
 
     void initPrimaryLyric(boolean onlyCurrentPhrase,int currentPhraseIndex){
+       /* if(primaryPhrases==null||primaryPhrases.isEmpty()){
+         //又一次报length=0下标-1.{加上这段并不能免错}
+            return;
+        }*/
 //        int charAmountAccumulation = 0;//dU位置和文字位置不一一对应（-、0、前缀要跳过，多连音、弧跨算作一个）
         //且要在换句时归零。
         int phrIndex = -1;//乐句的索引（乐句在lyric列表的位置和du在dU中的位置不对应，要转换）
@@ -1180,7 +1186,7 @@ else if(b==16||b==8||b==4||b==2) {
             ArrayList<DrawingUnit> currentDuSection = drawingUnits.get(i);
             for (int k=0;k<currentDuSection.size();k++) {
                 DrawingUnit drawingUnit = currentDuSection.get(k);
-//                Log.i(TAG, "initPrimaryLyric: du.pmk="+drawingUnit.phraseMark);
+//                Log.i(TAG, "initPrimaryLyric: du.pmk="+drawingUnit.phraseMark+","+i+"."+k+"of Dus="+drawingUnits.toString());
                 if(onlyCurrentPhrase){
                     if(drawingUnit.phraseMark!= PHRASE_START&&phrIndex!=currentPhraseIndex){
                         continue;//未到本句，直接跳过，不更新
@@ -1271,7 +1277,11 @@ else if(b==16||b==8||b==4||b==2) {
 
 
     void initSecondLyric(boolean onlyCurrentPhrase,int currentPhraseIndex){
-//        int phraseNum-1 = 0;//dU位置和文字位置不一一对应（-、0、前缀要跳过，多连音、弧跨算作一个）
+        if(secondPhrases==null||secondPhrases.isEmpty()){
+            //又一次报length=0下标-1.
+            return;
+        }
+        //        int phraseNum-1 = 0;//dU位置和文字位置不一一对应（-、0、前缀要跳过，多连音、弧跨算作一个）
         //且要在换句时归零。
         int phrIndex = -1;//乐句的索引（乐句在lyric列表的位置和du在dU中的位置不对应，要转换）
         int phraseNum = 0;

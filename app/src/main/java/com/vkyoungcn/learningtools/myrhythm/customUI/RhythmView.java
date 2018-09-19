@@ -68,7 +68,7 @@ public class RhythmView extends BaseRhythmView {
     //与基类不同，
 //某些功能关闭
     void initDrawingUnits_step1() {
-//        isFirstAvailableCode = true;//每次对全局进行重新初始计算时，要重置的变量之一。
+        isFirstAvailableCode = true;//每次对全局进行重新初始计算时，要重置的变量之一。
 
         //可用总长（控件宽扣除两侧缩进）
         availableTotalWidth = sizeChangedWidth - padding * 2;
@@ -77,6 +77,7 @@ public class RhythmView extends BaseRhythmView {
 
         //装载绘制信息的总列表（按小节区分子列表管理）
         drawingUnits = new ArrayList<>();//初步初始（后面采用add方式，因而不需彻底初始）
+//        Log.i(TAG, "initDrawingUnits_step1: dus="+drawingUnits.toString());
 
         lineRequiredLength =0;//每次重新计算时要重置。
         //两行之间的标准间距，（包含行高在内，是否包含词显示区高度则取决于是否有词）
@@ -98,6 +99,7 @@ public class RhythmView extends BaseRhythmView {
     void initDrawingUnits_step1_rear(){
         lineCursor = 0;//重置
         ArrayList<Integer> indexesOfThisLine = new ArrayList<>();
+        sectionAmountInLine = 0;
 
         //开始计算绘制信息。以小节为单位进行（根据折行规则具体实现）。
         for (int i = 0; i < codesInSections.size(); i++) {
@@ -240,6 +242,7 @@ public class RhythmView extends BaseRhythmView {
         float sectionStartX = padding;
 
         //先对行内首节进行计算
+//        Log.i(TAG, "extraOthersInLine: i="+i+",sectionAmountInLine="+sectionAmountInLine);
         ArrayList<DrawingUnit> sectionDrawingUnit = initSectionDrawingUnit(codesInSections.get(i-sectionAmountInLine+1), topDrawing_Y, lineCursor, sectionStartX, unitWidth_extracted);
         //并添加到总记录
         drawingUnits.add(sectionDrawingUnit);//添加到dUs列表

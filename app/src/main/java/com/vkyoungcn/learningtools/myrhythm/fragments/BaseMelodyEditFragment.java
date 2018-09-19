@@ -604,7 +604,14 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 }else {
                     //选区或单点之一符合，统一暂按选区模式转变（兼容）
                     if(csRhythmHelper.changeAreaToDvd(selectStartIndex,selectEndIndex)<33){//允许双整拍
-                        rh_editor_EM.codeChangedReDraw();
+
+                        currentUnitIndex = selectStartIndex;//先按单点重绘
+                        selectEndIndex = selectStartIndex;
+                        rh_editor_EM.codeAndAreaChangedReDraw(currentUnitIndex,currentUnitIndex,false);
+//                            Log.i(TAG, "onClick: cs="+codeSerial.toString());
+
+                        //简便起见，暂不做复杂处理。单点处置。
+                        checkMoveModeAndSetBottomInfo();
 
                     }
                 }
@@ -619,16 +626,11 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                     //选区模式下（包括两端实质相等时）
                     //检测选区是否恰为1或2个拍子（如不得是半+半、半+1+半等的形式；且时值符合1或2beat）
                     if(csRhythmHelper.checkAreaOneNicelyBeat(selectStartIndex,selectEndIndex)){
+                        //整1拍，可以改
                         if(csRhythmHelper.replaceAreaToHaveSpot(selectStartIndex,selectEndIndex)<33){
-                            //整1拍，可以改
+                            //先按单点重新计算并绘制一下
                             currentUnitIndex = selectStartIndex;//先改一个光标（统一位置）
-                            rh_editor_EM.boxMovedSuccessReDraw(currentUnitIndex,false,false);
-//                            Log.i(TAG, "onClick: to Single Spot");
-                            //这样在rhV中，区域模式关闭，不绘制区域选框。（在du数量减小时，不越界）
-                            // 更新后再改为选区。不能直接改选区，如【形如8 8 126 16的编码段，直接改为选区
-                            // (ssi,ssi+2)的后端恰=126，转换不到正确的dU，会返回-1（稍后或可对该转换方法改进？）
-                            rh_editor_EM.codeChangedReDraw();
-//                            Log.i(TAG, "onClick: cs="+codeSerial.toString());
+                            rh_editor_EM.codeAndAreaChangedReDraw(currentUnitIndex,currentUnitIndex,false);
 
                             //然后改选区，调边界
                             selectEndIndex = selectStartIndex+1;//【1拍的附点后面没有126，两拍有一个，因而需要+2】
@@ -641,12 +643,11 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                         if(csRhythmHelper.replaceAreaToHaveSpot(selectStartIndex,selectEndIndex)<33){
 
                             currentUnitIndex = selectStartIndex;//先改一个光标（统一位置）
-                            rh_editor_EM.boxMovedSuccessReDraw(currentUnitIndex,false,false);
 //                            Log.i(TAG, "onClick: to Single Spot");
                             //这样在rhV中，区域模式关闭，不绘制区域选框。（在du数量减小时，不越界）
                             // 更新后再改为选区。不能直接改选区，如【形如8 8 126 16的编码段，直接改为选区
                             // (ssi,ssi+2)的后端恰=126，转换不到正确的dU，会返回-1（稍后或可对该转换方法改进？）
-                            rh_editor_EM.codeChangedReDraw();
+                            rh_editor_EM.codeAndAreaChangedReDraw(currentUnitIndex,currentUnitIndex,false);
 //                            Log.i(TAG, "onClick: cs="+codeSerial.toString());
 
                             //然后改选区，调边界
@@ -666,16 +667,16 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                         return;
                     }else {
                         if(csRhythmHelper.replaceAreaToHaveSpot(selectStartIndex,selectEndIndex)<33){
-                            rh_editor_EM.codeChangedReDraw();
-
                             //转选区模式（原位置+包含后一个）
                             selectEndIndex = selectStartIndex+1;//单点模式下肯定不是双排，中间没有126
                             tv_topInfo.setText("选区模式");
                             freeAreaModeOn = true;
                             moveAreaStart = true;//强制按前端选定模式
                             moveAreaEnd = false;
-                            //通知UI（改框色、改起止范围）
-                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+
+                            rh_editor_EM.codeAndAreaChangedReDraw(selectStartIndex,selectEndIndex,true);
+
+//                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
                             checkMoveModeAndSetBottomInfo();
 
                         }
@@ -699,15 +700,16 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                         //可以改
                         //音符是变多的，不需转单点
                         if(csRhythmHelper.changeAreaToRwd16(selectStartIndex,selectEndIndex)<25){
-                            rh_editor_EM.codeChangedReDraw();
-                            //调整选区边界
                             resetSelectionAreaToTotalBeat();
                             oneBeatModeOn = true;
+
+                            rh_editor_EM.codeAndAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+                            //调整选区边界
                             /*if(selectStartIndex!=selectEndIndex){
                                 freeAreaModeOn = true;
                             }*/
                             //通知UI（改框色、改起止范围）
-                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+//                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
                             checkMoveModeAndSetBottomInfo();
                         }
                     }
@@ -718,14 +720,15 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                         return;
                     }else {
                         if(csRhythmHelper.changeAreaToRwd16(selectStartIndex,selectEndIndex)<33){
-                            rh_editor_EM.codeChangedReDraw();
                             //转选区
                             resetSelectionAreaToTotalBeat();
                             tv_topInfo.setText("选区模式");
                             oneBeatModeOn = true;
                             freeAreaModeOn = true;//进入单拍选定后必须附带的
+
+                            rh_editor_EM.codeAndAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
                             //通知UI（改框色、改起止范围）
-                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+//                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
                             checkMoveModeAndSetBottomInfo();
                         }
                     }
@@ -747,15 +750,16 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                         //可以改
                         //音符是变多的，不需转单点
                         if(csRhythmHelper.changeAreaToFwd16(selectStartIndex,selectEndIndex)<25){
-                            rh_editor_EM.codeChangedReDraw();
                             //调整选区边界
                             resetSelectionAreaToTotalBeat();
                             oneBeatModeOn = true;
+
+                            rh_editor_EM.codeAndAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
                             /*if(selectStartIndex!=selectEndIndex){
                                 freeAreaModeOn = true;
                             }*/
                             //通知UI（改框色、改起止范围）
-                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+//                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
                             checkMoveModeAndSetBottomInfo();
                         }
                     }
@@ -766,14 +770,15 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                         return;
                     }else {
                         if(csRhythmHelper.changeAreaToFwd16(selectStartIndex,selectEndIndex)<25){
-                            rh_editor_EM.codeChangedReDraw();
                             //转选区
                             resetSelectionAreaToTotalBeat();
                             tv_topInfo.setText("选区模式");
                             oneBeatModeOn = true;
                             freeAreaModeOn = true;//进入单拍选定后必须附带的
+
+                            rh_editor_EM.codeAndAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
                             //通知UI（改框色、改起止范围）
-                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+//                            rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
                             checkMoveModeAndSetBottomInfo();
                         }
                     }

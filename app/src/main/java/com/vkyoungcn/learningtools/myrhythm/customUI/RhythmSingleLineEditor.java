@@ -42,6 +42,7 @@ public class RhythmSingleLineEditor extends RhythmSingleLineWithTwoTypeBoxBaseVi
         //本类特有：蓝框、绿框。【各种模式下，蓝框均绘制】
         if(!selectionAreaMode){
             //单点选择模式，绘制蓝框
+//            Log.i(TAG, "onDraw: RSLE dus="+drawingUnits.toString());
             DrawingUnit drawingUnit = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
 //            Log.i(TAG, "onDraw: this du isOutOfUi = "+drawingUnit.isOutOfUi);
             canvas.drawRect(drawingUnit.left, drawingUnit.top, drawingUnit.right, drawingUnit.bottomNoLyric, blueBoxPaint);
@@ -51,21 +52,6 @@ public class RhythmSingleLineEditor extends RhythmSingleLineWithTwoTypeBoxBaseVi
             DrawingUnit duEnd = drawingUnits.get(sAreaEndSectionIndex).get(sAreaEndUnitIndex);
             canvas.drawRect(duStart.left, duStart.top, duEnd.right, duEnd.bottomNoLyric, greenBoxPaint);
         }
-
-        //橘框仅在添加连音弧线时绘制
-/*
-        if(curveModeOn){
-            DrawingUnit orange_dU = drawingUnits.get(orangeBoxSectionIndex).get(orangeBoxUnitIndex);
-            canvas.drawRect(orange_dU.left-2, orange_dU.top+additionalPointsHeight+curveOrLinesHeight, orange_dU.right+2, orange_dU.bottomNoLyric+2, blueBoxPaint);
-            //暂定比蓝框大一圈(但是高度比蓝框低，让出弧线位置)，万一重合也能分辨。
-
-            //弧线也绘制(非重合时)【暂时不考虑左右？判断太复杂了，左右坐标若设反是否存在问题，待。】
-            if(orangeBoxUnitIndex!=blueBoxUnitIndex && orangeBoxSectionIndex!=blueBoxSectionIndex){
-                canvas.drawArc(orange_dU.left,orange_dU.top+additionalPointsHeight,blue_dU.right,
-                        orange_dU.top+additionalPointsHeight+curveOrLinesHeight,
-                        0,180,false,bottomLinePaint);
-            }
-        }*/
 //            invalidate();
     }
 }
