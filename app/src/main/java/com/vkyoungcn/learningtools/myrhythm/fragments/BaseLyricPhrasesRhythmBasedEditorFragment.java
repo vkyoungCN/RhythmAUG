@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,8 @@ import com.vkyoungcn.learningtools.myrhythm.models.Lyric;
 import com.vkyoungcn.learningtools.myrhythm.models.RhythmBasedCompound;
 
 import java.util.ArrayList;
+
+import static com.vkyoungcn.learningtools.myrhythm.fragments.OnGeneralDfgInteraction.RHYTHM_PHRASE_EDIT_DONE;
 
 /* 提供基本的逻辑，由其编辑、新建两个方向上的子类分别实现各自要求*/
 public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
@@ -236,7 +239,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
                 syncFromRhv();//方法中自带对下方tv信息的更新时设置。
                 break;
 
-            case R.id.tv_confirmAddRhythm_EM:
+            case R.id.tv_confirm_LE:
                 checkNotEmptyAndCommitBack();
                 break;
 
@@ -335,6 +338,7 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
                     Toast.makeText(getContext(), "已在最后", Toast.LENGTH_SHORT).show();
                     return currentIndex; //已在最后，不移动
                 }else {
+                    Toast.makeText(getContext(), "如果只有一个乐句将跳至最后一字", Toast.LENGTH_SHORT).show();
                     return csRhythmHelper.getRealAvailableUnitIndexOfNextPhrase(currentIndex);
                     //此方法更新为“已在最后一句时自动返回最后一句的最后一词坐标”从而不必做额外处理。
                     //一切错误时返回当前位置（暂不是）。
@@ -518,10 +522,11 @@ public class BaseLyricPhrasesRhythmBasedEditorFragment extends Fragment
             }else {
                 rhythmBasedCompound.setSecondLyricPhrases(ly_editor_LE.getPrimaryPhrases());
             }*/
+//            Log.i(TAG, "checkNotEmptyAndCommitBack: ，，");
             bundleForSendBack = new Bundle();
             bundleForSendBack.putString("STRING", Lyric.toCodeSerialStringByPhrases(ly_editor_LE.getPrimaryPhrases()));
-            //子类实现后面的
-//        mListener.onButtonClickingDfgInteraction(RHYTHM_CREATE_EDITED, bundleForSendBack);
+            //子类实现后面的｛哪里有子类？｝
+            mListener.onButtonClickingDfgInteraction(RHYTHM_PHRASE_EDIT_DONE, bundleForSendBack);
         }
 
 /*

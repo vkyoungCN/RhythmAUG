@@ -374,8 +374,8 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
             for (DrawingUnit drawingUnit :duList) {
                 if(drawingUnit.phraseMark != PHRASE_EMPTY) {
 //                    Log.i(TAG, "onDraw: du.pmk="+drawingUnit.phraseMark+",code="+drawingUnit.code);
-                    bkTop_Y = drawingUnit.bottomNoLyric + 4;
-                    bkBottom_Y = drawingUnit.bottomNoLyric + unitHeight * 2 - 4;
+                    bkTop_Y = drawingUnit.bottomNoLyric -16;
+                    bkBottom_Y = drawingUnit.bottomNoLyric + unitHeight + 24;
 
                     canvas.drawRect(drawingUnit.left + 4, bkTop_Y, drawingUnit.right - 4, bkBottom_Y, unEmptyUnitBkgPaint);
                     //左右留出间隔
@@ -392,12 +392,12 @@ public class LyricEditorBaseOnRSLE extends RhythmSingleLineWithTwoTypeBoxBaseVie
         if(!selectionAreaMode){
             //单点选择模式，绘制蓝框
             DrawingUnit drawingUnit = drawingUnits.get(blueBoxSectionIndex).get(blueBoxUnitIndex);
-            canvas.drawRect(drawingUnit.left, drawingUnit.bottomNoLyric, drawingUnit.right, drawingUnit.bottomNoLyric+unitHeight*2, blueBoxPaint);
+            canvas.drawRect(drawingUnit.left, drawingUnit.bottomNoLyric-16, drawingUnit.right, drawingUnit.bottomNoLyric+unitHeight+24, blueBoxPaint);
         }else {
             //选区模式
             DrawingUnit duStart = drawingUnits.get(sAreaStartSectionIndex).get(sAreaStartUnitIndex);
             DrawingUnit duEnd = drawingUnits.get(sAreaEndSectionIndex).get(sAreaEndUnitIndex);
-            canvas.drawRect(duStart.left, duStart.bottomNoLyric, duEnd.right, duEnd.bottomNoLyric+unitHeight, greenBoxPaint);
+            canvas.drawRect(duStart.left, duStart.bottomNoLyric-16, duEnd.right, duEnd.bottomNoLyric+unitHeight+24, greenBoxPaint);
         }
 
         //起止位置特殊表现

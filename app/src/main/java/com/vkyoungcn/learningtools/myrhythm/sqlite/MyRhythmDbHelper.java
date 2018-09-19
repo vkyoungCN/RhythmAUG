@@ -399,6 +399,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         values.put(MyRhythmContract.Lyric.COLUMN_LAST_MODIFY_TIME,lyric.getLastModifyTime());
 
         l = mSQLiteDatabase.insert(MyRhythmContract.Lyric.TABLE_NAME, null, values);
+        //insert错误时返回的是-1
         closeDB();
 
         return l;
@@ -524,6 +525,33 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         return affectedRows;
     }
 
+
+    public int updateRhythmPLyIdByRid(int rhythmId,int lyId){
+        int affectedRows = 0;
+        getReadableDatabaseIfClosedOrNull();
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MyRhythmContract.Rhythm.COLUMN_PRIMARY_LYRIC_ID,lyId);
+
+        affectedRows = mSQLiteDatabase.update(MyRhythmContract.Rhythm.TABLE_NAME,contentValues,
+                MyRhythmContract.Rhythm._ID+" = ? ",new String[]{String.valueOf(rhythmId)} );
+        closeDB();
+        return affectedRows;
+    }
+
+    public int updateRhythmSLyIdByRid(int rhythmId,int lyId){
+        int affectedRows = 0;
+        getReadableDatabaseIfClosedOrNull();
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MyRhythmContract.Rhythm.COLUMN_SECOND_LYRIC_ID,lyId);
+
+        affectedRows = mSQLiteDatabase.update(MyRhythmContract.Rhythm.TABLE_NAME,contentValues,
+                MyRhythmContract.Rhythm._ID+" = ? ",new String[]{String.valueOf(rhythmId)} );
+        closeDB();
+        return affectedRows;
+    }
+
     public int updateRhythmCodesByRid(Rhythm rhythm){
         int affectedRows = 0;
         getReadableDatabaseIfClosedOrNull();
@@ -569,6 +597,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         getReadableDatabaseIfClosedOrNull();
 
         ContentValues values = new ContentValues();
+//        Log.i(TAG, "updateLyricCodeStringById: codeStr="+codeString+",LyId="+lyId);
         values.put(MyRhythmContract.Lyric.COLUMN_WORDS, codeString);//以字串形式存放
 
         affectedRows = mSQLiteDatabase.update(MyRhythmContract.Lyric.TABLE_NAME,values,
@@ -768,7 +797,6 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
         return lyris;
     }
-
 
     public ArrayList<Lyric> getAllLyrics(){
         ArrayList<Lyric> lyrics = new ArrayList<>();
@@ -1078,7 +1106,7 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         Cursor cursor = mSQLiteDatabase.rawQuery(selectQuery, null);
         String lyricStr = "";
         if(cursor.moveToFirst()){
-            lyricStr = cursor.getString(cursor.getColumnIndex(MyRhythmContract.Rhythm.COLUMN_C0DES));
+            lyricStr = cursor.getString(cursor.getColumnIndex(MyRhythmContract.Lyric.COLUMN_WORDS));
         }
 
         try {
@@ -1091,6 +1119,34 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
 
 //        closeDB();
         return lyricStr;
+    }
+
+
+    /*
+    * 要求Lyric新建时就要有最后修改时间的字段
+    * */
+    public int getLyricIdByModifyTime(long lastModifyTime){
+        String selectQuery = "SELECT "+MyRhythmContract.Lyric._ID+" FROM "+ MyRhythmContract.Lyric.TABLE_NAME+
+                " WHERE "+ MyRhythmContract.Lyric.COLUMN_LAST_MODIFY_TIME+" = "+lastModifyTime;
+
+        getReadableDatabaseIfClosedOrNull();
+//        mSQLiteDatabase.beginTransaction();
+        Cursor cursor = mSQLiteDatabase.rawQuery(selectQuery, null);
+        int lyId = 0;
+        if(cursor.moveToFirst()){
+            lyId = cursor.getInt(0);
+        }
+
+        try {
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+//        mSQLiteDatabase.setTransactionSuccessful();
+//        mSQLiteDatabase.endTransaction();
+
+        closeDB();
+        return lyId;
     }
 
 

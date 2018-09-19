@@ -35,6 +35,7 @@ public interface OnGeneralDfgInteraction {
 
     int RHYTHM_CREATE_EDITED = 2215;
     int RHYTHM_CREATE_DONE = 2216;
+    int RHYTHM_PHRASE_EDIT_DONE = 2218;
 
     int RHYTHM_PURE_EDIT_DONE = 2217;
 

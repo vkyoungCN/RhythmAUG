@@ -1228,7 +1228,7 @@ else if(b==16||b==8||b==4||b==2) {
                                 }//越界则留空
 
                                 drawingUnit.lyricWord_1 = singleWord;
-                                drawingUnit.lyricWord_1_BaseY = drawingUnit.bottomNoLyric + unitHeight;
+                                drawingUnit.lyricWord_1_BaseY = drawingUnit.bottomNoLyric + unitHeight-20;
                                 drawingUnit.lyricWord_1_CenterX = drawingUnit.codeCenterX;
 //                                charAmountAccumulation++;
 
@@ -1245,7 +1245,7 @@ else if(b==16||b==8||b==4||b==2) {
                                     subString = "";
                                 }
                                 drawingUnit.lyricWord_1 = subString;
-                                drawingUnit.lyricWord_1_BaseY = drawingUnit.bottomNoLyric + unitHeight;
+                                drawingUnit.lyricWord_1_BaseY = drawingUnit.bottomNoLyric + unitHeight-20;
                                 drawingUnit.lyricWord_1_CenterX = drawingUnit.codeCenterX;
                                 //【已查API：截取从起坐标本身到终坐标左侧（起坐标字符将算入，终坐标字符不算入，终坐标左侧临字符算入。）】
                                 //为容量计数器做补充
@@ -1331,7 +1331,7 @@ else if(b==16||b==8||b==4||b==2) {
                                 }//越界则留空
 
                                 drawingUnit.lyricWord_2 = singleWord;
-                                drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric + unitHeight;
+                                drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric + 2*unitHeight;
                                 drawingUnit.lyricWord_2_CenterX = drawingUnit.codeCenterX;
 
                             } else {  //均分多连音
@@ -1347,7 +1347,7 @@ else if(b==16||b==8||b==4||b==2) {
                                     subString = "";
                                 }
                                 drawingUnit.lyricWord_2 = subString;
-                                drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric + unitHeight;
+                                drawingUnit.lyricWord_2_BaseY = drawingUnit.bottomNoLyric + 2*unitHeight;
                                 drawingUnit.lyricWord_2_CenterX = drawingUnit.codeCenterX;
                                 //【已查API：截取从起坐标本身到终坐标左侧（起坐标字符将算入，终坐标字符不算入，终坐标左侧临字符算入。）】
                                 //为容量计数器做补充
