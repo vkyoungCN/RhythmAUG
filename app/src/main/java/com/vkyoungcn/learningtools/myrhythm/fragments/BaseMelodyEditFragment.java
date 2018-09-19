@@ -3,7 +3,6 @@ package com.vkyoungcn.learningtools.myrhythm.fragments;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -365,7 +364,7 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 oneBeatModeOn = false;
                 dualBeatModeOn = false;
                 generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
-                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_LAST_SECTION);
+                fakeResultIndex = moveBoxIndexInCS(generalCurrentIndex,MOVE_LAST_SECTION);
                 if(fakeResultIndex == -1){
                     return;
                 }
@@ -380,7 +379,7 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 oneBeatModeOn = false;
                 dualBeatModeOn = false;
                 generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
-                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_NEXT_SECTION);
+                fakeResultIndex = moveBoxIndexInCS(generalCurrentIndex,MOVE_NEXT_SECTION);
                 if(fakeResultIndex == -1){
                     return;
                 }
@@ -393,7 +392,7 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 oneBeatModeOn = false;
                 dualBeatModeOn = false;
                 generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
-                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_LAST_UNIT);
+                fakeResultIndex = moveBoxIndexInCS(generalCurrentIndex,MOVE_LAST_UNIT);
                 if(fakeResultIndex == -1){
                     return;
                 }
@@ -408,7 +407,7 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 dualBeatModeOn = false;
                 generalCurrentIndex = checkMoveModeAndGetCurrentIndex();
 //                Log.i(TAG, "onClick: current index="+generalCurrentIndex);
-                fakeResultIndex = moveBox(generalCurrentIndex,MOVE_NEXT_UNIT);
+                fakeResultIndex = moveBoxIndexInCS(generalCurrentIndex,MOVE_NEXT_UNIT);
                 if(fakeResultIndex == -1){
                     return;
                 }
@@ -445,18 +444,19 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 }
 
                 if(csRhythmHelper.binaryDividingAt(realIndex)<25){
-                    //拆分完成，应刷新控件
-                    rh_editor_EM.codeChangedReDraw();
-
-                    //转选区模式（原位置+包含后一个）
+                    //准备转选区模式（原位置+包含后一个）
                     selectEndIndex = realIndex+1;
                     tv_topInfo.setText("选区模式");
                     freeAreaModeOn = true;
                     moveAreaStart = true;//强制按前端选定模式
                     moveAreaEnd = false;
+
+                    //拆分完成，应刷新控件
+                    rh_editor_EM.codeAndAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+
                     //通知UI（改框色、改起止范围）
 //                    Log.i(TAG, "onClick: ssI="+selectStartIndex+",seI="+selectEndIndex);
-                    rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
+//                    rh_editor_EM.boxAreaChangedReDraw(selectStartIndex,selectEndIndex,freeAreaModeOn);
                     checkMoveModeAndSetBottomInfo();
                 }else {
                     Toast.makeText(getContext(), "拆分失败。可能是音符含附点、音符过小等原因。", Toast.LENGTH_SHORT).show();
@@ -820,14 +820,15 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                 if(sectionAddToEnd){
                     codeSerial.addAll(sectionForAdd);
 
-                    //只有在“光标不在最后而却要在最后添加”时，才刷新box的绘制。
-                    rh_editor_EM.codeChangedReDraw();//由于编码有变动，需要这种更新（仅更新框是不够的）
                     moveAreaStart=false;
                     moveAreaEnd=false;//添加后强行改为单点光标模式。
-                    fakeResultIndex = moveBox(selectStartIndex,MOVE_FINAL_SECTION);//移动到最后一节（新节）
+                    fakeResultIndex = moveBoxIndexInCS(selectStartIndex,MOVE_FINAL_SECTION);//移动到最后一节（新节）
                     indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);//统一各光标计数器
 
-                    rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);//根据新的位置，以单点模式重绘蓝框。
+                    //只有在“光标不在最后而却要在最后添加”时，才刷新box的绘制。
+                    rh_editor_EM.codeAndAreaChangedReDraw(indexAfterMove,indexAfterMove,false);//由于编码有变动，需要这种更新（仅更新框是不够的）
+                    //新逻辑下，直接在子线程中一并更新光标并重绘（因为后者要使用新计算的Dus信息，必须在同一线程内）
+//                    rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);//根据新的位置，以单点模式重绘蓝框。
                     checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
                 }else {
                     int nextIndex127 = csRhythmHelper.findNext127(selectStartIndex);
@@ -837,7 +838,7 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                         codeSerial.addAll(sectionForAdd);
                     }
 
-                    rh_editor_EM.codeChangedReDraw();//由于编码有变动，需要这种更新（仅更新框是不够的）
+                    rh_editor_EM.codeChangedReDraw();
 
 
                 }
@@ -863,13 +864,14 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
                     // 因而先移动box坐标再删除和重置绘制信息
                     moveAreaStart=false;
                     moveAreaEnd=false;//添加后强行改为单点光标模式。
-                    fakeResultIndex = moveBox(selectStartIndex,MOVE_ADJACENT_SECTION);
+                    fakeResultIndex = moveBoxIndexInCS(selectStartIndex,MOVE_ADJACENT_SECTION);
                     int tempIndex = selectStartIndex;//由于下面一句统一各光标计数器，故而另外保留一份旧值以供删除正确小节。
                     indexAfterMove = checkMoveModeAndSetResultIndex(fakeResultIndex);//统一各光标计数器
-                    rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);//根据新的位置，以单点模式重绘蓝框。
+                    //暂不重绘
+//                    rh_editor_EM.boxMovedSuccessReDraw(indexAfterMove,moveAreaStart,moveAreaEnd);//根据新的位置，以单点模式重绘蓝框。
 
                     if(csRhythmHelper.removeSection(tempIndex)!=-1){
-                        rh_editor_EM.codeChangedReDraw();
+                        rh_editor_EM.codeAndAreaChangedReDraw(selectStartIndex,selectStartIndex,false);
                     }
 
                     checkMoveModeAndSetBottomInfo();//注意顺序，要在rhUI更新后。
@@ -1057,16 +1059,16 @@ public class BaseMelodyEditFragment extends Fragment implements View.OnClickList
 
 
 
-    public int moveBox(int currentIndex,int moveType){
+    public int moveBoxIndexInCS(int currentIndex, int moveType){
         //移动完毕后，先经过检查（在调用方法中进行）再更新自定义UI；
         switch (moveType){
             case MOVE_NEXT_UNIT:
-//                Log.i(TAG, "moveBox: Next U.");
+//                Log.i(TAG, "moveBoxIndexInCS: Next U.");
                 if(csRhythmHelper.checkIsFinalRealUnit(currentIndex)){
                     Toast.makeText(getContext(), "已在最后", Toast.LENGTH_SHORT).show();
                     return -1; //已在最后，不移动
                 }else {
-//                    Log.i(TAG, "moveBox: currentIndex="+currentIndex);
+//                    Log.i(TAG, "moveBoxIndexInCS: currentIndex="+currentIndex);
                     return csRhythmHelper.getNextRealUnitIndex(currentIndex);
                 }
             case MOVE_NEXT_SECTION:

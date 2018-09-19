@@ -213,7 +213,36 @@ public class BaseRhythmView extends View {
         }
     }
 
-    /* 构造器*/
+    public class CalculateDuBoxAndReDraw implements Runnable{
+        int startIndex;
+        int endIndex;
+        boolean freeModeOn;
+
+
+        public CalculateDuBoxAndReDraw(int startIndex, int endIndex, boolean freeModeOn) {
+            this.startIndex = startIndex;
+            this.endIndex = endIndex;
+            this.freeModeOn = freeModeOn;
+        }
+
+        @Override
+        public void run() {
+            initDrawingUnits(false);//子类可以通过覆写该方法实现自定义行为
+
+            //由于移动框的光标需要使用新计算后的dU信息，因而必须在同一线程中按序执行。
+            changeBoxArea(startIndex,endIndex,freeModeOn);
+
+            //不需要封装消息，直接调用线程刷新
+            postInvalidate();
+        }
+    }
+
+    public void changeBoxArea(int startIndex, int endIndex,boolean freeModeOn){
+        //子类实现，只有带框RV才有使用此方法的必要
+    };
+
+
+        /* 构造器*/
     public BaseRhythmView(Context context) {
         super(context);
         mContext = context;

@@ -142,7 +142,7 @@ public class RhythmSingleLineWithTwoTypeBoxBaseView extends RhythmSingleLineView
     /* 设置方法使用基类的*/
     /* 蓝框特征不需在du中存储，只是额外持有两个索引坐标而已。*/
 
-    //编码数据改变，但位置不改变
+    //编码数据改变，但光标位置不改变
     public void codeChangedReDraw(){
         //        codesInSections =newCodes2Dimension;//不传不行啊……并不能更新绘制结果（测试发现dus还改变了）
         this.codesInSections = RhythmHelper.codeParseIntoSections(bcRhythm.getCodeSerialByte(), rhythmType);
@@ -151,7 +151,26 @@ public class RhythmSingleLineWithTwoTypeBoxBaseView extends RhythmSingleLineView
 //        initDrawingUnits(false);//【计划中两个子类：RhvSLEditor、LyricEditor都会对编码进行改变】
     }
 
-    public void boxAreaChangedReDraw(int startIndex, int endIndex,boolean freeModeOn){
+
+    /*
+    * 改变编码和选框光标位置，然后重绘
+    * */
+    public void codeAndAreaChangedReDraw(int startIndex, int endIndex,boolean freeModeOn){
+
+        //bcR的数据是引用式直接修改了的。
+        this.codesInSections = RhythmHelper.codeParseIntoSections(bcRhythm.getCodeSerialByte(), rhythmType);
+//        Log.i(TAG, "codeChangedReDraw: cs in rhv="+bcRhythm.getCodeSerialByte());
+        new Thread(new CalculateDuBoxAndReDraw(startIndex,endIndex,freeModeOn)).start();
+//        initDrawingUnits(false);//【计划中两个子类：RhvSLEditor、LyricEditor都会对编码进行改变】
+    }
+
+
+    /*
+    * 与后一方法的区别在于不刷新显示，只改变光标计数器
+    * 作为其他方法的部分提取使用
+    * （注意此方法需要用到一维转二维，必须在新dUs计算完毕后才能正确执行）
+    * */
+    public void changeBoxArea(int startIndex, int endIndex,boolean freeModeOn){
         if(freeModeOn) {
             //选区模式【单纯使用ss==se并不一定不是选区】
             selectionAreaMode = true;
@@ -172,12 +191,25 @@ public class RhythmSingleLineWithTwoTypeBoxBaseView extends RhythmSingleLineView
             //判断是否超出绘制区
             checkAndShiftWhenOutOfUI(blueBoxSectionIndex,blueBoxUnitIndex);
         }
-//        invalidate();//不涉及绘制信息单元列表的重新计算，可以直接重绘
-        new Thread(new CalculateDrawingUnits(true)).start();
-        //如果不重新计算，如果Du产生替换，会出错。
+//        new Thread(new CalculateDrawingUnits(true)).start();
 
     }
 
+    /*
+    * 移动选框位置
+    * 若主线程直接调用，则只能用在编码序列本身未变化情形下，否则由于不在同一线程，本方法内
+    * 所需的新dU数据可能尚未计算完毕，会出错。
+    * */
+    public void boxAreaChangedReDraw(int startIndex, int endIndex,boolean freeModeOn){
+        changeBoxArea(startIndex,endIndex,freeModeOn);
+        invalidate();//不涉及绘制信息单元列表的重新计算,只在原序列上改变box光标位置，可以直接重绘
+    }
+
+    /*
+    * 移动单点位置
+    * 该方法需要使用dUs信息，如果dUs信息会产生变化且要使用变化后的新数据，则应确保二者处于同一线程
+    * 且本方法的调用顺序靠后。（如果使用旧数据则无所谓。）
+    * */
     public void boxMovedSuccessReDraw(int indexAfterMove,boolean saStart, boolean saEnd){
         if(!saStart && !saEnd){
             //蓝框模式

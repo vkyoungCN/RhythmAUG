@@ -61,7 +61,6 @@ public class RhythmView extends BaseRhythmView {
     /*public void callWhenReMeasureIsNeeded(){
         float heightNeeded = 2*padding+unitHeight*2.5f+rhythmPartHeight;
         Log.i(TAG, "callWhenReMeasureIsNeeded: heihgtNeeded="+heightNeeded);
-
         measure(MeasureSpec.makeMeasureSpec(sizeChangedWidth,MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec((int)heightNeeded, MeasureSpec.EXACTLY));
         invalidate();
     }*/
