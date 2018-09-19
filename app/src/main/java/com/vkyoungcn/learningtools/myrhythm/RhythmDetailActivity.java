@@ -207,6 +207,7 @@ private static final String TAG = "RhythmDetailActivity";
         if (Environment.MEDIA_MOUNTED.equals(state)) {
             Log.e(TAG, "saveBitmapLocalTest: mounted.");
         }else {
+            Toast.makeText(this, "未检测到SD卡。", Toast.LENGTH_SHORT).show();
             return false;
 
         }

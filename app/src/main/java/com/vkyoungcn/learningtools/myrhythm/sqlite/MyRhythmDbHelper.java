@@ -166,12 +166,10 @@ public class MyRhythmDbHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_GROUPS);
         db.execSQL(SQL_CREATE_GROUP_CROSS);
 
-        //填充几个数据
+        //填充几个数据【开发完毕后注释掉】
 //        ArrayList<Rhythm> rhythmDefaultData = new ArrayList<>(2);
-        TestDataHelper tdh = new TestDataHelper();
-        createRhythmWithDb(db, tdh.populateRhythm(2));
-//        createRhythmWithDb(db,tdh.populateRhythm(2));
-//        createRhythmWithDb(db,tdh.populateRhythm(3));
+//        TestDataHelper tdh = new TestDataHelper();
+//        createRhythmWithDb(db, tdh.populateRhythm(2));
 //        createRhythmWithDb(db,tdh.populateRhythm(4));
 
     }

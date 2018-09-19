@@ -25,6 +25,8 @@ import java.util.Date;
 
 public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInteraction {
     private static final String TAG = "BackUpActivity";
+    public static final String SD_DIR ="RhythmSepBak";
+    public static final String BK_FILE_EXT = ".rhmbk";
 
     ArrayList<String> fileNamesForChoose = new ArrayList<>();
 
@@ -36,19 +38,61 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
     }
 
 
-    public void localRecover(View view){
+    public void localPrivateRecover(View view){
         File privateFile;
         try {
             privateFile = getFilesDir();
         } catch (Exception e) {
             e.printStackTrace();
-//            Log.i(TAG, "localRecover: wrong.");
+//            Log.i(TAG, "localPrivateRecover: wrong.");
             return;
         }
         File[] files = privateFile.listFiles();
-//        Log.i(TAG, "localRecover: file.length="+files.length);
+//        Log.i(TAG, "localPrivateRecover: file.length="+files.length);
         for (File file : files) {
-            if (file.getName().contains(".vbk")) {
+            if (file.getName().contains(BK_FILE_EXT)) {
+                fileNamesForChoose.add(file.getName());
+            }
+        }
+        if (fileNamesForChoose.isEmpty()){
+            Toast.makeText(this, "未找到备份文件", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        //弹出dfg，选择恢复文件
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        Fragment prev = getFragmentManager().findFragmentByTag("SELECT");
+
+        if (prev != null) {
+            Toast.makeText(getApplicationContext(), "Old DialogFg still there, removing first...", Toast.LENGTH_SHORT).show();
+            transaction.remove(prev);
+        }
+        DialogFragment dfg = SelectFileNameDiaFragment.newInstance(fileNamesForChoose);
+        dfg.show(transaction, "SELECT");
+
+    }
+
+    public void localSdRecover(View view){
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            Log.e(TAG, "saveBitmapLocalTest: mounted.");
+        }else {
+            Toast.makeText(this, "未检测到SD卡。", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        File sdBkDir;
+        try {
+            sdBkDir = getPublicStorageDir(SD_DIR);
+        } catch (Exception e) {
+            e.printStackTrace();
+//            Log.i(TAG, "localPrivateRecover: wrong.");
+            return;
+        }
+        File[] files = sdBkDir.listFiles();
+//        Log.i(TAG, "localPrivateRecover: file.length="+files.length);
+        for (File file : files) {
+            if (file.getName().contains(BK_FILE_EXT)) {
                 fileNamesForChoose.add(file.getName());
             }
         }
@@ -93,7 +137,7 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
     }
 
 
-    public void bakTest(View view){
+    /*public void bakTest(View view){
         //官方代码
         if(isExternalStorageWritable()){
             SimpleDateFormat sdFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
@@ -104,9 +148,9 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
 
             saveFileToFile(fileTo);
         }
-    }
+    }*/
 
-    public void saveFileToFile(File fileTo) {
+  /*  public void saveFileToFile(File fileTo) {
         File dbFile = getDatabasePath("MyRhythm.db");
 
         try {
@@ -124,29 +168,13 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
             e.printStackTrace();
         }
 
-    }
+    }*/
 
-    public File getPublicDocumentStorageDir(String docName) {
-        // Get the directory for the user's public directory.
-        File file = new File(Environment.getExternalStoragePublicDirectory(//共享/外部的顶层目录
-                Environment.DIRECTORY_DOWNLOADS), docName);
-        Log.i(TAG, "getPublicDocumentStorageDir: file ext path="+file.getPath());
-        //如果getExternalStorageDirectory，则是获取SD目录（？区别，待）；
-//        File file = new File("/sdcard/aaa");
-        try {
-            if (!file.createNewFile()) {//mkdirs()
-                Log.e(TAG, "Directory not created");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return file;
-    }
 
     public void privateBackUp(View view) {
         SimpleDateFormat sdFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
         Date date = new Date(System.currentTimeMillis());
-        String timeSuffix = sdFormat.format(date)+".vbk";
+        String timeSuffix = sdFormat.format(date)+BK_FILE_EXT;
         String fileName = "dbBack"+timeSuffix;
 
         File dbFile = getDatabasePath("MyRhythm.db");
@@ -170,16 +198,32 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
 
 
     public void sdBackUp(View view) {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            Log.e(TAG, "saveBitmapLocalTest: mounted.");
+        }else {
+            Toast.makeText(this, "未检测到SD卡。", Toast.LENGTH_SHORT).show();
+            return;
+
+        }
+
         SimpleDateFormat sdFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
         Date date = new Date(System.currentTimeMillis());
-        String timeSuffix = sdFormat.format(date)+".vbk";
-        String fileName = "dbBack"+timeSuffix;
+        String timeSuffix = sdFormat.format(date)+BK_FILE_EXT;
+        String fileName = "RhythmSepDBk"+timeSuffix;
 
         File dbFile = getDatabasePath("MyRhythm.db");
 
+
         try {
+            File outFile = new File(getPublicStorageDir(SD_DIR),fileName);
+            if (!outFile.createNewFile()) {
+                Log.e(TAG, "File not created");
+                return;
+            }
             FileInputStream inStream = new FileInputStream(dbFile);
-            FileOutputStream outStream = new FileOutputStream(getPublicDocumentStorageDir(fileName));
+            FileOutputStream outStream = new FileOutputStream(outFile);
+//            FileOutputStream outStream = new FileOutputStream(getPublicDocumentStorageDir(fileName));
 //            FileOutputStream outStream = openFileOutput(fileName, Context.MODE_PRIVATE);
 
             byte[] buff = new byte[1024];
@@ -193,7 +237,19 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
             e.printStackTrace();
         }
 
+        Toast.makeText(this, "成功。", Toast.LENGTH_SHORT).show();
+
     }
+
+        public File getPublicStorageDir(String dirName) {
+            // Get the directory for the user's public pictures directory.
+            File file = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOCUMENTS), dirName);
+            if (!file.mkdirs()) {
+                Log.e(TAG, "Directory not created.98");
+            }
+            return file;
+        }
 
     public void privateRecovery(String sourceFileName) {
 //        File sourceFile;
@@ -201,7 +257,7 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
             sourceFile = new File(getFilesDir().getPath()+sourceFileName) ;
         } catch (Exception e) {
             e.printStackTrace();
-//            Log.i(TAG, "localRecover: wrong.");
+//            Log.i(TAG, "localPrivateRecover: wrong.");
             return;
         }*/
         File dbFile = getDatabasePath("MyRhythm.db");
@@ -225,15 +281,55 @@ public class BackUpActivity extends AppCompatActivity implements OnGeneralDfgInt
 
     }
 
+    public void sdRecovery(String sourceFileName) {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            Log.e(TAG, "saveBitmapLocalTest: mounted.");
+        }else {
+            Toast.makeText(this, "未检测到SD卡。", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        File sdBkDir;
+        try {
+            sdBkDir = getPublicStorageDir(SD_DIR);
+        } catch (Exception e) {
+            e.printStackTrace();
+//            Log.i(TAG, "localPrivateRecover: wrong.");
+            return;
+        }
+
+        File dbFile = getDatabasePath("MyRhythm.db");
+
+        try {
+            FileInputStream inStream = new FileInputStream(sdBkDir.getPath()+"/"+sourceFileName);
+            FileOutputStream outStream = new FileOutputStream(getDatabasePath("MyRhythm.db").getPath());
+            //如果用openFileOutput，要求路径中不能有分隔符/
+
+            byte[] buff = new byte[1024];
+            int n = 0;
+            while ((n = inStream.read(buff)) > 0) {
+                outStream.write(buff, 0, n);
+            }
+            inStream.close();
+            outStream.close();
+        } catch (Exception e) {
+            Toast.makeText(this, "失败。", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+        Toast.makeText(this, "成功。", Toast.LENGTH_SHORT).show();
+
+    }
 
 
-    public boolean isExternalStorageWritable() {
+
+    /*public boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) {
             return true;
         }
         return false;
-    }
+    }*/
 
 
 

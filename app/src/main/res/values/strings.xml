@@ -11,7 +11,7 @@
     <string name="str_toAllRhythms">查看所有</string>
     <string name="str_Rhythms">Rhythms!</string>
     <string name="bar_star_bar">———☆———</string>
-    <string name="alpha_testing_string">（工程测试α-0.7.11）</string>
+    <string name="alpha_testing_string">（工程测试·α）</string>
     <string name="hold_for_loading">正则加载数据，请稍候……</string>
     <string name="str_pitchSerial_add">创作一组\n使用默认节奏的音高序列</string>
     <string name="str_wordsSerial_add">词创作</string>
@@ -243,7 +243,8 @@
     <string name="test">测试</string>
     <string name="plh_fileChose">选定：%1$s，请点击确定→</string>
     <string name="chooseFile">备份文件选择</string>
-    <string name="actionWitdCaution">恢复操作以不可逆方式直接覆盖数据，请谨慎操作！</string>
+    <string name="actionWitdCaution">恢复操作将以不可逆方式覆盖现有数据，请谨慎操作！</string>
     <string name="preView">结果预览</string>
+    <string name="warning2">请谨慎操作！\n备份覆盖是不可逆的。</string>
 
 </resources>

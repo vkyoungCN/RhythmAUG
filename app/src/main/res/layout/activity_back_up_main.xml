@@ -50,7 +50,7 @@
                 android:gravity="center"
                 android:text="@string/local_bak"
                 android:textColor="@color/myRhythm_orange"
-                android:onClick="privateBackUp"
+                android:onClick="sdBackUp"
                 android:textSize="24sp" />
 
         </FrameLayout>
@@ -64,9 +64,8 @@
             android:layout_marginBottom="28dp"
             android:background="#f5f5f5"
             android:gravity="center"
-            android:onClick="localRecover"
+            android:onClick="localSdRecover"
             android:text="@string/local_ReCover"
-            android:textSize="18sp"
             />
         <TextView
             android:layout_width="match_parent"
